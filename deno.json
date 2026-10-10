@@ -1,0 +1,30 @@
+{
+  "tasks": {
+    "dev": "deno run --watch --allow-net main.ts"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"],
+      "include": [
+        "no-explicit-any",
+        "no-throw-literal",
+        "no-eval",
+        "no-self-compare",
+        "no-sparse-arrays",
+        "prefer-as-const",
+        "prefer-const"
+      ]
+    }
+  },
+  "fmt": {
+    "semiColons": false,
+    "singleQuote": false
+  }
+}
