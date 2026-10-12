@@ -1,177 +1,233 @@
-# Project Proposal & Specification: Dirban (`dirban`)
+# Project Specification: Dirban (`dirban`)
 
-> **A Zero-Database, Agent-Native Kanban Engine & TUI Backed by the File System and Google Open Knowledge Format (OKF).**
+> **A Zero-Database, Agent-Native Kanban Engine & TUI Backed by the File System and Flexible Markdown (Supporting Google OKF).**
 
 ---
 
 ## 1. Executive Summary & Vision
 
-Modern software teams and autonomous AI coding agents (Claude Code, Cursor, Antigravity, GitHub Copilot) need lightweight, Git-native task management. However:
+Modern software developers and autonomous AI coding agents (Claude Code, Cursor, Antigravity, GitHub Copilot) need lightweight, Git-native task management. However:
 - **Cloud tools (Jira, Linear)** require external APIs, webhooks, auth tokens, and network connectivity that disrupt offline workflows and complicate AI agent access.
 - **Monolithic Markdown tools (Taskell, Obsidian Kanban)** store an entire board in a single file, resulting in git merge conflicts and excessive token context loads for AI agents.
-- **Generic flat-file tools** lack physical directory isolation and strict schema validation.
+- **Strict schema tools** impose brittle formatting requirements, rigid relationship graphs, and validation failures that create friction for fast iterations.
 
-**Dirban** (`dirban`) addresses this with:
-1. **Physical Columns**: Every column is an ordinary subdirectory on disk (e.g., `00-backlog/`, `01-ready/`, `02-in-progress/`, `03-done/`).
-2. **Atomic OKF Cards**: Every task is an isolated `.md` document formatted with standard **Google Open Knowledge Format (OKF)** YAML frontmatter.
-3. **Dual Interface**: A fast CLI + interactive Terminal UI (TUI) for developers, paired with a deterministic file interface for AI agents.
+**Dirban** (`dirban`) provides a radically pragmatic balance:
+1. **Physical Columns as Subdirectories**: Every active column is an ordinary subdirectory on disk (e.g., `01-ready/`, `02-doing/`, `03-done/`).
+2. **Markdown Tasks with Flexible OKF Support**: Every task is an isolated `.md` file. Full **Google Open Knowledge Format (OKF)** schemas are supported and recognized, but **strict OKF compliance is never required**. Frontmatter is completely optional; standard Markdown headings (`# Title`) and checklists (`- [ ]`) work out of the box.
+3. **Optional Priority & OKF Metadata**: If frontmatter exists (whether minimal YAML or full OKF schema), Dirban gracefully extracts metadata like `priority: p0 | p1 | p2 | p3`, `tags:`, `owner:`, and `id:`. If omitted, tasks default to the lowest priority (`p3`) without throwing parser errors.
+4. **Git is the Audit Log**: No in-file execution journals or database histories. File moves and diffs tracked by Git provide the immutable audit trail.
+5. **Dual Interface**: A fast CLI + interactive Terminal UI (TUI) for developers, paired with an interactive VS Code extension and deterministic file operations for AI agents.
 
+*(For detailed architectural positioning against Linear, Jira, Obsidian Kanban, and raw shell file exploration, see [Why Dirban](docs/concepts/why-dirban.md).)*
 
 ---
 
-## 2. Core Philosophy & Value Proposition
+## 2. Core Philosophy & Invariants
 
 - **Zero-Database, Zero-Cloud**: The filesystem and Git *are* the database. Merge, branch, diff, and review tasks like code.
-- **Agent-Native by Design**: AI agents do not require special SDKs or credentials—they manage work using native file operations (`ls`, `mv`, `cat`).
-- **Google OKF Strict Compliance**: Tasks carry machine-readable IDs, explicit priority levels (`p0`–`p3`), dependency graphs (`relationships.depends_on`, `relationships.blocks`), and verifiable acceptance criteria.
-- **Config-Driven Dynamic Hierarchy**: Works with any folder naming convention. Whether using `todo`/`doing`/`done` or numbered stages (`00-backlog`/`01-ready`), the engine auto-discovers columns and orders them via a simple configuration.
+- **Agent-Native by Design**: AI agents do not require special SDKs or credentials—they read, write, and move tasks using standard filesystem commands (`ls`, `mv`, `cat`).
+- **Markdown-First, OKF-Compatible**: Any valid `.md` file in a column folder is a recognized task. Strict OKF frontmatter is supported for structured teams, but never enforced—tasks will never fail to parse due to missing fields.
+- **Dual Workflow Modalities (Hyper-Flexible)**:
+  - **Macro-Workflow (Directory-Driven)**: Users can model workflow stages as directories (`backlog/` $\rightarrow$ `ready/` $\rightarrow$ `doing/` $\rightarrow$ `done/` $\rightarrow$ `archive/`).
+  - **Micro-Workflow (Document-Driven)**: Users who prefer minimal folder sprawl can keep tasks in a single folder and manage the entire workflow internally via **Markdown sections** (`## Spec`, `## Implementation`, `## Verification`) and **checkbox lists** (`- [ ]`).
+  - Both patterns can be combined seamlessly without engine restrictions.
+- **Target Audience: Solo Builders & Small Teams ($\le 5$ people)**:
+  - Designed specifically for indie hackers, solo developers, pair-programming pairs, and micro-teams working closely with AI agents.
+  - **Explicit Non-Goals (Why it's not for large teams)**:
+    - *No enterprise access control or permissions* (the filesystem has no role-based ACLs).
+    - *No distributed ID conflict resolution* (concurrent offline task generation by dozens of people would cause numbering collisions).
+    - *No automated git rename-conflict arbitration* (large teams moving tasks across concurrent feature branches will hit git rename collisions).
+    - *No forced workflow compliance* (no transition validators, approvals, or mandatory field guards).
+    - Teams requiring enterprise governance, ACLs, and hundreds of daily concurrent ticket moves should use Jira or Linear.
+- **Checkboxes for Breakdown**: Subtasks and acceptance criteria are standard Markdown `- [ ]` checkboxes within the file. No complex relational graphs (`depends_on`, `blocks`).
+- **Git is the Event Log**: Moving files between directories via Git commits naturally preserves timestamps, author history, and movement logs (`git log --follow`).
+- **Optional Task Assignment (Never Enforced)**: Developers can freely put their name on a task (e.g. `owner: alice`, `assignee: bob`, or `@username` in the markdown body), but it is never mandatory. Dirban functions completely without assignees, avoiding the need for user registries or auth configs.
+- **Zero Lock-In & Total Longevity**: Because tasks are plain OS directories and human-readable Markdown files, your project's roadmap and documentation survive independently of Dirban itself. If the CLI or extension is uninstalled or abandoned, the entire task board remains fully usable and editable with standard terminal commands (`mv`, `ls`, `cat`) and any text editor.
 
 ---
 
-## 3. Key Feature Specifications
+## 3. Directory Layout & Column Lifecycle
 
-### 1. Dynamic Column Discovery & Configurable Ordering
-- Scans a configured root directory (e.g., `docs/tasks/`).
-- Every subdirectory is discovered as a column.
-- User-defined sort configuration determines column presentation order, with unlisted directories gracefully appended alphabetically.
+Dirban partitions the workflow into three column tiers:
 
-### 2. Multi-Dimensional Sorting & Grouping
-Unlike static alphabetical views in IDE file explorers, OKF-Kanban dynamically sorts cards within columns by:
-- **Priority**: `p0` (Critical) $\rightarrow$ `p1` (High) $\rightarrow$ `p2` (Medium) $\rightarrow$ `p3` (Low).
-- **Recency**: By `last_updated` or `created_date`.
-- **Sequential ID**: By chronological task number (e.g., `26-001`).
-- **Tag / Subproject**: Filter or group by target application (e.g., `apps/safe-harbor-calc`).
+```text
+tasks/
+├── backlog/         # Mandatory staging queue (unbounded ideas & future backlog)
+├── 01-ready/        # Configurable active pipeline (default)
+├── 02-doing/        # Configurable active pipeline (default)
+├── 03-done/         # Configurable active pipeline (default)
+└── archive/         # Mandatory terminal storage (partitioned by year or topic)
+```
 
-### 3. Atomic Task Movement (`move`)
-Moving a task between columns:
-- Moves the physical `.md` file to the destination directory (`fs.rename`).
-- Automatically updates frontmatter `status:` to match the target column.
-- Touches `last_updated: "YYYY-MM-DD"`.
-- Appends an audit entry to the task's `## Execution Journal`.
-
-### 4. Detailed Card Inspection (`view`)
-Displays a human-friendly card overview in the terminal without opening raw markdown:
-- Metadata badges: ID, Priority, Tags, Assignee.
-- Graph relationships: Blocked by / Blocks links.
-- Interactive acceptance criteria progress bar (e.g., `Acceptance Criteria: [████░░░░░░] 2/5 completed`).
-- Direct shortcut to open the file in the active editor (`code`, `nvim`, `$EDITOR`).
-
-### 5. Task Mutation & Status Updates (`set` / `check`)
-- Quick CLI updates:
-  ```bash
-  okf-board set 26-001 --priority=p0 --assignee=andrew
-  ```
-- Toggle acceptance criteria directly from the terminal:
-  ```bash
-  okf-board check 26-001 2 # toggles checklist item #2
-  ```
+1. **`backlog/` (Mandatory Queue)**:
+   - Holds unscheduled, prioritized, or raw backlog tasks.
+   - May contain hundreds of files without cluttering active WIP boards.
+2. **Active Pipeline Columns (Configurable)**:
+   - Columns represent active work stages.
+   - Default: `["01-ready", "02-doing", "03-done"]` or `["todo", "doing", "done"]`.
+   - Number prefixes are optional (e.g., `ready/` is just as valid as `01-ready/`).
+3. **`archive/` (Mandatory Terminal State)**:
+   - Completed tasks moved out of the active board are stored here.
+   - Can be partitioned hierarchically (e.g., `archive/2026/`) to maintain high filesystem performance and clean navigation.
 
 ---
 
-## 4. Document Contract: Google OKF Task Schema
+## 4. Initialization & Configuration (`dirban init`)
 
-Each task conforms to Google Open Knowledge Format:
+Dirban provides an interactive `init` wizard to scaffold new workspaces and generate a configuration file.
 
+### Config Resolution Hierarchy
+Dirban resolves its configuration in the following order:
+1. Environment variable (`DIRBAN_PATH` / `DIRBAN_CONFIG`)
+2. Project configuration file (`dirban.json` or `.dirban.json`)
+3. VS Code Workspace settings (`.vscode/settings.json` under `dirban.*`)
+4. Built-in defaults
+
+### `dirban.json` Schema
+```json
+{
+  "$schema": "https://dirban.dev/schema.json",
+  "tasksDir": "./tasks",
+  "id": {
+    "mode": "none"
+  },
+  "columns": {
+    "backlog": "backlog",
+    "flow": [
+      "01-ready",
+      "02-doing",
+      "03-done"
+    ],
+    "archive": "archive"
+  },
+  "defaults": {
+    "priority": "p3"
+  }
+}
+```
+
+### Configuration Options
+- **`tasksDir`**: Path to tasks root directory (default: `./tasks` or `docs/tasks`).
+- **`id.mode`**:
+  - `"none"` (Default): Tasks identified by filename slug (e.g., `fix-auth-flow.md`).
+  - `"numeric"`: Auto-incrementing numerical prefix (e.g., `042-fix-auth-flow.md`).
+  - `"custom"`: Configurable pattern or script generator.
+- **`columns`**:
+  - `backlog`: Name of backlog folder (mandatory).
+  - `flow`: Ordered array of active column names.
+  - `archive`: Name of archive folder (mandatory).
+- **`defaults.priority`**: Default priority assigned when frontmatter lacks `priority` (default: `p3`).
+
+---
+
+## 5. Task Document Specification
+
+Tasks are Markdown files. **Full Google Open Knowledge Format (OKF) schemas are supported**, but **strict OKF compliance is not required**. Frontmatter can be full OKF, minimal YAML, or completely omitted.
+
+### Example A: Full Google OKF Task (Supported)
 ```markdown
 ---
 okf_version: "1.0"
-id: "task.project.<domain>.[YY]-[3-digit]"
-title: "<Concise Imperative Title>"
+id: "task.dirban.auth.26-001"
+title: "Fix authentication session expiration"
 type: "task"
-status: "todo"           # synced with column directory
-priority: "p1"           # p0 | p1 | p2 | p3
-owner: "developer"       # developer | agent | unassigned
+status: "ready"
+priority: "p1"
+owner: "developer"
 assigned_to: "unassigned"
-created_date: "YYYY-MM-DD"
-last_updated: "YYYY-MM-DD"
+created_date: "2026-10-12"
+last_updated: "2026-10-12"
 tags:
-  - backend
   - auth
-relationships:
-  depends_on:
-    - "task.project.core.26-001"
-  blocks: []
-  related_to: []
+  - backend
 ---
 
-# Task: <Concise Imperative Title>
+# Fix authentication session expiration
 
-## 1. Objective & Scope
-<Problem statement and clear business outcome.>
-
-## 2. Acceptance Criteria (Definition of Done)
-- [ ] Explicit measurable criterion 1
-- [ ] Explicit measurable criterion 2
-- [ ] Verification command passes
-
-## 3. Verification Plan
-```bash
-# Automated verification commands
-deno test
-deno lint
+- [ ] Investigate Redis session TTL key
+- [ ] Add regression test in auth suite
+- [ ] Update frontend refresh token interceptor
 ```
 
-## 4. Execution Journal
-- **YYYY-MM-DD**: Task initialized.
+### Example B: Lightweight YAML Frontmatter (Supported)
+```markdown
+---
+priority: p1
+tags: [auth, backend]
+---
+
+# Fix authentication session expiration
+
+- [x] Investigate Redis session TTL key
+- [ ] Add regression test in auth suite
+- [ ] Update frontend refresh token interceptor
 ```
 
----
+### Example C: Minimal Pure Markdown (Supported - No Frontmatter Required)
+```markdown
+# Fix authentication session expiration
 
-## 5. Architecture & Implementation Options
+Users are randomly logged out after 15 minutes instead of 7 days.
 
-| Component | Recommendation |
-| :--- | :--- |
-| **Runtime & Language** | **TypeScript (Deno / Bun)** for rapid scripting & portability, or **Rust** for a standalone single binary. |
-| **Distribution** | Native Deno script (`deno install -g`), npm package (`npx okf-board`), or standalone binary. |
-| **Terminal TUI Library** | [ink](https://github.com/vadimdemedes/ink) (React in CLI), [cliffy](https://deno.land/x/cliffy) (Deno), or [ratatui](https://github.com/ratatui-org/ratatui) (Rust). |
-| **Frontmatter Engine** | `gray-matter` / `yaml` parser with Zod or TypeBox schema validation. |
-| **Configuration** | Minimal `.okf-kanban.json` in workspace root. |
+## Checklist
+- [ ] Investigate Redis session TTL key
+- [ ] Add regression test in auth suite
+- [ ] Update frontend refresh token interceptor
+```
 
----
-
-## 6. Architectural Challenges, Edge Cases & Design Mitigations
-
-### 1. Concurrent Status Moves & Git Conflicts
-- **Concern**: Two branches moving the same task file or editing/moving simultaneously trigger Git `rename/modify` conflicts.
-- **Mitigation**: Tasks are designed to be worked on atomically by a single owner/agent. The CLI includes a validation/sync command to detect duplicate IDs or orphaned files across columns.
-
-### 2. Broken Relative Markdown Links
-- **Concern**: Relative paths like `../01-ready/26-001.md` break when the file moves to `02-in-progress/` or `03-done/`.
-- **Mitigation**: Standardize on **OKF ID linking** (`[Task 26-001](okf:task.raven.domain.26-001)` or short ID `26-001`). The engine resolves cards by ID regardless of which column directory they currently occupy.
-
-### 3. File System Scale & Clutter
-- **Concern**: As projects grow over months or years, hundreds of completed `.md` files in `03-done/` degrade IDE search performance and scan latency.
-- **Mitigation**: Built-in archival workflow (`okf-board archive`) to periodically partition completed tasks into yearly or quarterly archive subdirectories (`docs/tasks/archive/2026/`).
-
-### 4. Source of Truth: Physical Folder vs. YAML Frontmatter
-- **Concern**: If a user drags a file in the file explorer or runs shell `mv` without updating the YAML frontmatter `status:`, state becomes desynchronized.
-- **Mitigation**: **The physical folder is the strict source of truth.** When reading cards, the column is determined by folder path, and the CLI automatically self-heals or prompts to update frontmatter discrepancies.
-
-### 5. Cross-Platform Filesystem Quirks
-- **Concern**: Case insensitivity (macOS/Windows) vs. case sensitivity (Linux), and illegal characters (`:`, `?`, `*`) on Windows NTFS.
-- **Mitigation**: Enforce strict kebab-case filenames (`[YY]-[3-digit]-[kebab-slug].md`) containing only lowercase alphanumeric characters and hyphens.
-
-### 6. Priority-Driven Sorting vs. Manual Column Ranking
-- **Philosophy**: Traditional Kanban tools use arbitrary drag-and-drop vertical ordering (ranking). This requires maintaining fragile integer position indices (`order: a0`) in text files.
-- **The OKF Decision**: **No manual rank indices needed.** If a task needs to be worked on before another, **raise its priority** (`p0` > `p1` > `p2` > `p3`). Within identical priority tiers, cards sort deterministically by chronological task ID or recency. This keeps files clean, diff-friendly, and free of artificial ordering churn.
+### Parsing Rules & OKF Fallbacks
+1. **Title**:
+   - First `# ` header in markdown, or `title:` in OKF frontmatter, or humanized filename.
+2. **Priority**:
+   - Extracted from `priority:` in frontmatter (`p0`, `p1`, `p2`, `p3`).
+   - If missing or invalid, defaults gracefully to configured lowest priority (`p3`).
+3. **Acceptance Criteria & Progress**:
+   - Parsed by counting `- [ ]` and `- [x]` markdown checklist items anywhere in the file.
+   - Displayed as a progress badge (e.g., `[1/3]`).
+4. **OKF Identity & Tags**:
+   - If OKF `id:` or `tags:` are provided, Dirban leverages them for filtering and search.
+   - If missing, tasks are identified by their filename slug (e.g., `fix-auth-flow.md`).
+5. **No Rigid Relational Schema Enforcement**:
+   - OKF relationship blocks (`depends_on:`, `blocks:`) are parsed if present, but never block task execution or cause schema rejections. Task breakdowns work natively through checkboxes.
+6. **No Automatic OKF Formatter / Serializer**:
+   - Dirban does **not** provide an OKF formatter or rewrite markdown files to impose an OKF schema.
+   - Files are treated as user-owned documents: task moves are strictly file renames (`fs.rename`), preserving existing comments, whitespace, and formatting intact without rewriting the document body.
 
 ---
 
-## 7. Roadmap & Phases
+## 6. Core CLI & TUI Capabilities
 
-- **Phase 1 (Core)**: 
-  - Standalone CLI & TUI tool (`dirban`).
-  - Directory scanner, frontmatter parser/serializer, priority sorter.
-  - Task commands (`board`, `move`, `view`, `set`, `check`, `archive`).
-- **Phase 2 (IDE Integration - Later)**:
-  - Dedicated **VS Code Extension** (`vscode-dirban`).
-  - Activity Bar custom tree view & Webview Kanban board.
-  - Drag-and-drop between columns synced with filesystem changes.
-  - Reusable core engine shared between CLI and extension.
-- **Phase 3 (Git-Powered Reporting & Analytics - Later)**:
-  - **Commit & Diff Archaeology**: Inspect `git log --follow` on task files to reconstruct exact movement timestamps across folders (`00-backlog` $\rightarrow$ `01-ready` $\rightarrow$ `02-in-progress` $\rightarrow$ `03-done`).
-  - **Metrics & KPIs**: Calculate Lead Time, Cycle Time, Throughput, and Work-in-Progress (WIP) age without any external database.
-  - **Release Changelog Generation**: Correlate completed tasks in `03-done/` between git tags to auto-generate release notes and sprint summaries.
+1. **`dirban init`**:
+   - Interactive wizard: prompts for task directory, column preset, and ID strategy.
+   - Creates directory structure on disk and generates `dirban.json`.
+2. **`dirban board`**:
+   - Interactive TUI or static CLI table.
+   - Shows active columns with card cards sorted by priority (`p0` $\rightarrow$ `p3`), then filename/ID.
+   - Backlog and Archive columns are accessible or toggleable without crowding active WIP.
+3. **`dirban move <id|slug> <target-column>`**:
+   - Atomically renames/moves file on disk (`fs.rename`).
+   - Supports fuzzy matching on task slug or numeric ID.
+4. **`dirban check <id|slug> <index>`**:
+   - Toggles the $N$-th checklist item directly from the CLI.
+5. **`dirban view <id|slug>`**:
+   - Displays task card, summary, checklist progress, and opens directly in `$EDITOR` or VS Code.
+6. **`dirban archive [<id|slug>|all]`**:
+   - Moves completed tasks from done column into archive structure.
 
+---
 
+## 7. Roadmap
 
+- **Phase 1 (CLI & Engine Refactor)**:
+  - Add `dirban init` command with interactive prompts and `--yes` flag.
+  - Simplify parser to handle pure Markdown without requiring OKF frontmatter.
+  - Support fuzzy task identification (slug, prefix, or optional numeric ID).
+  - Update configuration to support `backlog`, `flow`, and `archive`.
+- **Phase 2 (VS Code Extension)**:
+  - Custom TreeView & Webview Kanban board inside VS Code.
+  - Drag-and-drop between columns synced directly with filesystem moves.
+  - Native file watching (`vscode.workspace.createFileSystemWatcher`).
+- **Phase 3 (Git Analytics & Ecosystem)**:
+  - Reconstruct cycle time and lead time via `git log --follow`.
+  - Auto-generate changelogs from archived task diffs.
+  - **Cloud Off-Ramp / Export** (`dirban export`): Low-priority export command (Jira CSV, Linear CSV/JSON) for growing teams graduating to cloud project management.
