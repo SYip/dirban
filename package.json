@@ -1,0 +1,22 @@
+{
+  "name": "dirban",
+  "version": "0.1.0",
+  "description": "Zero-Database, Agent-Native Kanban Engine & TUI Backed by the File System and Google Open Knowledge Format (OKF)",
+  "type": "module",
+  "main": "main.ts",
+  "scripts": {
+    "dirban": "bun run main.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "neverthrow": "^8.2.0",
+    "picocolors": "^1.1.1",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.4",
+    "@types/node": "^22.13.0",
+    "typescript": "^5.8.2"
+  }
+}

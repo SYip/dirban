@@ -48,9 +48,9 @@ description: "TypeScript standards: strict typing, no semicolons, pure functions
 * **Prefer Temporal API over legacy `Date`**: For dates, time, calendar years, and temporal offsets, use the modern `Temporal` API (`Temporal.Now.plainDateISO()`, `Temporal.PlainDate`) instead of legacy JavaScript `Date`.
 * Prohibit `new Date()` for date arithmetic, timezone offsets, and temporal comparisons.
 
-## 10. Deno Standards
-* Use explicit extensions (`.ts`, `.tsx`) in relative import paths as required by Deno and modern ESM.
-* Leverage workspace imports mapped in `deno.json`.
+## 10. Bun & Modern ESM Standards
+* Use explicit extensions (`.ts`, `.tsx`) in relative import paths as required by modern ESM.
+* Use Bun native runtime and tooling (`bun run`, `bun test`).
 
 ## 11. Code Comments Policy (Self-Documenting Code)
 * **Prohibit unnecessary comments**: Do not add comments that merely restate what clean function names, variable names, or types already convey.
