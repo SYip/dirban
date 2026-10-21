@@ -93,6 +93,11 @@ We eliminate the in-file `## Execution Journal`. Git commits already record auth
 
 ### 4.5 Dual Workflow Modality: Directory-Driven vs. Document-Driven
 - **Directory-based workflow**: Users who appreciate Kanban boards move files across physical stage directories (`01-ready` $\rightarrow$ `02-doing` $\rightarrow$ `03-done`).
+  - **Directory is the State (Directory Always Wins)**: In Kanban, cards are grouped visually into columns. In a filesystem, columns are physical directories. We do not track or require an in-file `status:` variable. If a legacy OKF file contains `status:`, the directory path always takes precedence.
+  - **$O(1)$ Native Queries**: Rather than scanning and parsing every file in the project, the filesystem immediately answers:
+    - *“How many tasks are in progress and what are they?”* $\rightarrow$ `ls tasks/02-doing/`
+    - *“What should I do next?”* $\rightarrow$ `ls tasks/01-ready/`
+  - **Zero-Tooling Compatibility**: Even without Dirban, opening file explorer windows side-by-side as columns functions as a natural Kanban board.
 - **Document-based workflow**: Users who want minimal file moves can keep tasks in one place and manage execution stages directly using **Markdown sections** (`## Spec`, `## Implementation`, `## Review`) and **checklists** (`- [ ]`).
 - Dirban imposes zero friction on either style—the CLI and UI surface checklist progress regardless of which folder the file lives in.
 

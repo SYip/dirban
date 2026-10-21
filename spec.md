@@ -12,9 +12,9 @@ Modern software developers and autonomous AI coding agents (Claude Code, Cursor,
 - **Strict schema tools** impose brittle formatting requirements, rigid relationship graphs, and validation failures that create friction for fast iterations.
 
 **Dirban** (`dirban`) provides a radically pragmatic balance:
-1. **Physical Columns as Subdirectories**: Every active column is an ordinary subdirectory on disk (e.g., `01-ready/`, `02-doing/`, `03-done/`).
+1. **Physical Columns as Subdirectories (Directory is the State)**: Every active column is an ordinary subdirectory on disk (e.g., `01-ready/`, `02-doing/`, `03-done/`). The directory location *is* the task's state. Files do not need and should not store a `status` variable. Even if legacy OKF frontmatter contains a `status:` field, the physical directory always wins.
 2. **Markdown Tasks with Flexible OKF Support**: Every task is an isolated `.md` file. Full **Google Open Knowledge Format (OKF)** schemas are supported and recognized, but **strict OKF compliance is never required**. Frontmatter is completely optional; standard Markdown headings (`# Title`) and checklists (`- [ ]`) work out of the box.
-3. **Optional Priority & OKF Metadata**: If frontmatter exists (whether minimal YAML or full OKF schema), Dirban gracefully extracts metadata like `priority: p0 | p1 | p2 | p3`, `tags:`, `owner:`, and `id:`. If omitted, tasks default to the lowest priority (`p3`) without throwing parser errors.
+3. **Optional Priority & OKF Metadata**: If frontmatter exists (whether minimal YAML or full OKF schema), Dirban gracefully extracts metadata like `priority: p0 | p1 | p2 | p3`, `tags:`, `owner:`, and `id:`. If omitted, tasks default to the lowest priority (`p3`) without throwing parser errors. In-file `status` is neither required nor tracked—the containing folder dictates status.
 4. **Git is the Audit Log**: No in-file execution journals or database histories. File moves and diffs tracked by Git provide the immutable audit trail.
 5. **Dual Interface**: A fast CLI + interactive Terminal UI (TUI) for developers, paired with an interactive VS Code extension and deterministic file operations for AI agents.
 
@@ -178,18 +178,22 @@ Users are randomly logged out after 15 minutes instead of 7 days.
 ### Parsing Rules & OKF Fallbacks
 1. **Title**:
    - First `# ` header in markdown, or `title:` in OKF frontmatter, or humanized filename.
-2. **Priority**:
+2. **Directory is the State (No In-File `status` Needed)**:
+   - The task's column status is determined solely by the physical subdirectory it resides in (e.g., `01-ready/`, `02-doing/`).
+   - Tasks do **not** require a `status:` frontmatter variable.
+   - If a legacy OKF file contains `status:`, the physical directory **always wins** to eliminate state drift and avoid file rewrites on task moves.
+3. **Priority**:
    - Extracted from `priority:` in frontmatter (`p0`, `p1`, `p2`, `p3`).
    - If missing or invalid, defaults gracefully to configured lowest priority (`p3`).
-3. **Acceptance Criteria & Progress**:
+4. **Acceptance Criteria & Progress**:
    - Parsed by counting `- [ ]` and `- [x]` markdown checklist items anywhere in the file.
    - Displayed as a progress badge (e.g., `[1/3]`).
-4. **OKF Identity & Tags**:
+5. **OKF Identity & Tags**:
    - If OKF `id:` or `tags:` are provided, Dirban leverages them for filtering and search.
    - If missing, tasks are identified by their filename slug (e.g., `fix-auth-flow.md`).
-5. **No Rigid Relational Schema Enforcement**:
+6. **No Rigid Relational Schema Enforcement**:
    - OKF relationship blocks (`depends_on:`, `blocks:`) are parsed if present, but never block task execution or cause schema rejections. Task breakdowns work natively through checkboxes.
-6. **No Automatic OKF Formatter / Serializer**:
+7. **No Automatic OKF Formatter / Serializer**:
    - Dirban does **not** provide an OKF formatter or rewrite markdown files to impose an OKF schema.
    - Files are treated as user-owned documents: task moves are strictly file renames (`fs.rename`), preserving existing comments, whitespace, and formatting intact without rewriting the document body.
 

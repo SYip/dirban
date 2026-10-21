@@ -74,7 +74,26 @@ Developers building software individually or in small teams ($\le 5$ people), es
 
 ---
 
-## 5. Why Not Just the Raw File System?
+## 5. Why Directory-as-State vs. In-File Status Variables (`status: doing`)?
+
+In Kanban boards, tasks are always grouped to show as columns. If task status were tracked via in-file variables (such as YAML frontmatter `status: in-progress`), determining board status would require scanning and parsing every single Markdown file in the project.
+
+Using physical directories as columns is the native filesystem solution:
+
+1. **Native $O(1)$ Queries vs. $O(N)$ File Scanning**:
+   Instead of loading all files every time to reconstruct board state, the filesystem structure directly and instantly answers the core questions without opening or parsing a single file:
+   - *"How many tasks are we working on? What are they?"* $\rightarrow$ `ls tasks/02-doing/` (instant WIP check).
+   - *"What task should I do next?"* $\rightarrow$ `ls tasks/01-ready/`.
+2. **The Side-by-Side File Explorer Mental Model (True Zero Lock-in)**:
+   Even without Dirban installed, you can open multiple file explorers or terminal panes side-by-side as columns (`ready/`, `doing/`, `done/`). Moving a task is an intuitive drag-and-drop or `mv` between folders. The filesystem *is* the board.
+3. **Eliminates State Drift (Directory Always Wins)**:
+   A file cannot physically reside in two directories simultaneously. In contrast, in-file state variables easily desynchronize with the directory location (e.g. frontmatter says `status: ready` while the file sits in `02-doing/`). In Dirban, **the directory always wins**, and in-file status variables are completely unnecessary.
+4. **Clean Git Diffs & Zero In-File Churn**:
+   Moving a card across columns is a pure path rename (`fs.rename` or `git mv`). The file body remains completely untouched. There is no need to open, parse, edit, and serialize YAML frontmatter, ensuring clean Git diffs with zero lines changed and avoiding merge conflicts.
+
+---
+
+## 6. Why Not Just the Raw File System?
 
 A common question is: *“If columns are folders and tasks are markdown files, why do I need a CLI tool or extension at all? Why not just use `mv` and Finder/VS Code Explorer?”*
 
@@ -106,7 +125,7 @@ Over months of work, `backlog/` and `archive/` accumulate hundreds of files. Ope
 
 ---
 
-## 6. The Dirban Sweet Spot
+## 7. The Dirban Sweet Spot
 
 ```text
                High Governance & Heavy DB
@@ -127,3 +146,24 @@ Over months of work, `backlog/` and `archive/` accumulate hundreds of files. Ope
 Dirban strikes the ideal balance:
 - **As simple as the filesystem** (files can always be opened, moved, or deleted using standard Unix commands).
 - **As functional as a modern Kanban board** (priority ranking, checklist synthesis, TUI/IDE visual board, and Git-native history).
+
+---
+
+## 8. Why TypeScript (and Not Go / Rust / C++)?
+
+A natural question for a CLI tool is: *“Rust, Go, or Zig are faster and compile to single native binaries—why build Dirban in TypeScript?”*
+
+The answer comes down to two practical realities:
+
+### 1. 100% Code Reuse with the VS Code Extension
+The primary GUI for Dirban is a first-class **VS Code Extension** (TreeViews, interactive Webview Kanban board, and native file watchers). 
+* VS Code's extension host and Webview environments run strictly on JavaScript/TypeScript.
+* Building the core parser, filesystem watcher, and Kanban domain logic in TypeScript enables **identical, zero-bridge code sharing** between the CLI/TUI and the VS Code extension.
+* Choosing Rust or Go would require maintaining a separate TypeScript codebase for the extension or dealing with brittle WASM/FFI bindings for simple filesystem operations.
+
+### 2. Pragmatic Scale: Projects Don't Have 100k Concurrent Tasks
+* Benchmarks showing languages like Rust or C++ parsing millions of files per second are irrelevant to Dirban’s problem space.
+* Dirban is designed for solo builders and small teams ($\le 5$). A real-world project board rarely has more than a few dozen active tasks and a few hundred archived notes.
+* Modern JavaScript engines (V8 / JavaScriptCore via Bun) parse a few hundred Markdown files in single-digit milliseconds—orders of magnitude faster than human perception or terminal rendering.
+* Sacrificing seamless IDE integration for raw sub-millisecond micro-benchmarks on 100,000 files solves a problem that small teams do not have.
+
