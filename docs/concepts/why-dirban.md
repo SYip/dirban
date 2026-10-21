@@ -144,8 +144,10 @@ Over months of work, `backlog/` and `archive/` accumulate hundreds of files. Ope
 ```
 
 Dirban strikes the ideal balance:
-- **As simple as the filesystem** (files can always be opened, moved, or deleted using standard Unix commands).
-- **As functional as a modern Kanban board** (priority ranking, checklist synthesis, TUI/IDE visual board, and Git-native history).
+- **Near-Zero Learning Curve**: There is practically nothing new to learn. You already know how to make a directory, write a Markdown file, and move a file.
+- **Forget About Dirban**: You can completely forget the tool exists whenever you want. You don't need to run commands or keep an app open; if you prefer, you can manage your entire project using standard Finder, VS Code Explorer, or terminal commands (`mv`, `ls`, `cat`, `git`). Dirban is an invisible lens, not a gatekeeper.
+- **As simple as the filesystem**: Standard OS directories and plain text files.
+- **As functional as a modern Kanban board**: Priority ranking, checklist synthesis, TUI/IDE visual board, and Git-native history when you want the visual superpowers.
 
 ---
 
