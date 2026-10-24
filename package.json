@@ -4,8 +4,12 @@
   "description": "Zero-Database, Agent-Native Kanban Engine & TUI Backed by the File System and Google Open Knowledge Format (OKF)",
   "type": "module",
   "main": "main.ts",
+  "bin": {
+    "dirban": "./main.ts"
+  },
   "scripts": {
     "dirban": "bun run main.ts",
+    "build": "bun build ./main.ts --compile --outfile dirban",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },

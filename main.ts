@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import { parseArgs } from "node:util"
 import * as process from "node:process"
 import { spawn } from "node:child_process"
