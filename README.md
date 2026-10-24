@@ -95,26 +95,22 @@ Need fast title and tag filtering in the interactive TUI.
 
 ## Quick Start
 
-### Prerequisites
-- [Bun](https://bun.sh) (v1.2+)
+### For Users (Zero Dependencies)
 
-### Installation
-
-Clone the repository and install dependencies:
+Once compiled into a standalone binary (prebuilt binaries via GitHub Releases coming soon), **no Bun or Node runtime is required to run `dirban`**:
 
 ```bash
-git clone https://github.com/<owner>/dirban.git
-cd dirban
-bun install
-bun link # Makes `dirban` available globally in your PATH
+# Move the compiled binary to your PATH
+chmod +x dirban
+sudo mv dirban /usr/local/bin/
+
+# Now run anywhere:
+dirban board
 ```
 
-*(Alternatively, compile a standalone zero-dependency binary with `bun run build`).*
-
-### CLI Usage
-
+#### Common Commands
 ```bash
-# Launch the interactive Kanban TUI
+# Launch interactive Kanban TUI
 dirban board
 
 # Move a task to another column (or just use standard `mv`)
@@ -125,6 +121,30 @@ dirban check 26-001 1
 
 # Output static board to stdout (useful for scripts & CI)
 dirban board --static
+```
+
+---
+
+### For Developers (From Source)
+
+#### Prerequisites
+- [Bun](https://bun.sh) (v1.2+)
+
+#### Setup & Build
+
+```bash
+# Clone the repository
+git clone https://github.com/<owner>/dirban.git
+cd dirban
+
+# Install dependencies
+bun install
+
+# Link globally for local development
+bun link
+
+# OR compile into a standalone native binary (`./dirban`)
+bun run build
 ```
 
 ---
