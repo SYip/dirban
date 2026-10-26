@@ -11,6 +11,7 @@ import { moveTask } from "./src/operations/move.ts"
 import { checkTaskItem } from "./src/operations/check.ts"
 import { setTaskMetadata } from "./src/operations/set.ts"
 import { archiveTasks } from "./src/operations/archive.ts"
+import { calculateNextTaskId, createTask } from "./src/operations/create.ts"
 import type { Priority } from "./src/okf/types.ts"
 
 const PRINT_HELP = () => {
@@ -24,12 +25,20 @@ ${pc.bold("USAGE:")}
 
 ${pc.bold("COMMANDS:")}
   board                 Display kanban board (Interactive TUI by default in TTY, or static table)
+  new <title>           Create a new task with auto-assigned YY-001 ID (alias: create)
+  next-id               Print the next available task ID for the current year
   move <id> <column>    Atomically move a task to target column and record journal
   view <id>             Inspect task metadata, relationships, and acceptance criteria
   check <id> <index>    Toggle acceptance criteria checkbox item (1-based index)
   set <id> [options]    Mutate task frontmatter (priority, assignee, owner, tags)
   archive [<id>|all]    Archive completed tasks to archive/YYYY/
   help                  Show this help message
+
+${pc.bold("NEW / CREATE OPTIONS:")}
+  --column=<column>     Target column (defaults to 00-backlog or first column)
+  --priority=<p0..p3>   Task priority (defaults to p2)
+  --tags=<tag1,tag2>    Comma-separated list of tags
+  --assignee=<user>     Assignee name
 
 ${pc.bold("BOARD OPTIONS:")}
   --static              Force static output instead of launching interactive TUI
@@ -46,8 +55,10 @@ ${pc.bold("SET OPTIONS:")}
   --tags=<tag1,tag2>    Set comma-separated tags
 
 ${pc.bold("EXAMPLES:")}
+  dirban next-id
+  dirban new "Implement search filter"
+  dirban new "Fix login bug" --priority=p0 --column=01-ready
   dirban board
-  dirban board --static
   dirban move 26-001 02-in-progress
   dirban check 26-001 2
   dirban set 26-001 --priority=p0 --assignee=andrew
@@ -63,6 +74,7 @@ export const runCli = async (args: readonly string[]): Promise<number> => {
       version: { type: "boolean", short: "v" },
       static: { type: "boolean", short: "s" },
       open: { type: "boolean" },
+      column: { type: "string" },
       tag: { type: "string" },
       owner: { type: "string" },
       search: { type: "string" },
@@ -116,6 +128,60 @@ export const runCli = async (args: readonly string[]): Promise<number> => {
     }
 
     console.log(formatBoardStatic(boardRes.value))
+    return 0
+  }
+
+  if (command === "next-id") {
+    const boardRes = discoverBoard(config)
+    if (boardRes.isErr()) {
+      console.error(pc.red(`Board Error: ${boardRes.error.message}`))
+      return 1
+    }
+
+    const nextId = calculateNextTaskId(boardRes.value)
+    console.log(nextId)
+    return 0
+  }
+
+  if (command === "new" || command === "create") {
+    const title = positionals.slice(1).join(" ").trim()
+    if (title === "") {
+      console.error(
+        pc.red('Error: Missing task title. Usage: dirban new "<title>" [options]'),
+      )
+      return 1
+    }
+
+    const boardRes = discoverBoard(config)
+    if (boardRes.isErr()) {
+      console.error(pc.red(`Board Error: ${boardRes.error.message}`))
+      return 1
+    }
+
+    const tags = flags.tags != null
+      ? flags.tags.split(",").map((t) => t.trim()).filter((t) => t !== "")
+      : undefined
+    const priority = flags.priority as Priority | undefined
+
+    const createRes = createTask(boardRes.value, {
+      title,
+      column: flags.column,
+      priority,
+      assigned_to: flags.assignee,
+      owner: flags.owner,
+      tags,
+    })
+
+    if (createRes.isErr()) {
+      console.error(pc.red(`Create Error: ${createRes.error.message}`))
+      return 1
+    }
+
+    console.log(
+      pc.green(
+        `✔ Created task ${pc.bold(createRes.value.id)} in ${createRes.value.column}: ${pc.cyan(createRes.value.filePath)}`,
+      ),
+    )
     return 0
   }
 

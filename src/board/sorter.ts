@@ -16,7 +16,11 @@ export const sortTasksByPriority = (
     if (pA !== pB) {
       return pA - pB
     }
-    return a.document.frontmatter.id.localeCompare(b.document.frontmatter.id)
+    return a.document.frontmatter.id.localeCompare(
+      b.document.frontmatter.id,
+      undefined,
+      { numeric: true, sensitivity: "base" },
+    )
   })
 }
 
@@ -31,7 +35,11 @@ export const sortTasksByRecency = (
     if (dateA !== dateB) {
       return dateB.localeCompare(dateA)
     }
-    return a.document.frontmatter.id.localeCompare(b.document.frontmatter.id)
+    return a.document.frontmatter.id.localeCompare(
+      b.document.frontmatter.id,
+      undefined,
+      { numeric: true, sensitivity: "base" },
+    )
   })
 }
 
@@ -39,7 +47,11 @@ export const sortTasksById = (
   tasks: readonly BoardTask[],
 ): readonly BoardTask[] => {
   return [...tasks].sort((a, b) => {
-    return a.document.frontmatter.id.localeCompare(b.document.frontmatter.id)
+    return a.document.frontmatter.id.localeCompare(
+      b.document.frontmatter.id,
+      undefined,
+      { numeric: true, sensitivity: "base" },
+    )
   })
 }
 

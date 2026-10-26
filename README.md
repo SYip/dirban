@@ -110,6 +110,13 @@ dirban board
 
 #### Common Commands
 ```bash
+# Get the next sequential task ID
+dirban next-id
+
+# Create a new task with auto-assigned ID
+dirban new "Implement search filter"
+dirban new "Fix critical bug" --priority=p0 --column=01-ready
+
 # Launch interactive Kanban TUI
 dirban board
 

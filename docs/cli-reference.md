@@ -20,6 +20,29 @@ If run without arguments in an interactive terminal, `dirban` launches the inter
 
 ### Commands
 
+#### `next-id`
+Prints the next available sequential task ID formatted as `YY-001` (derived from existing tasks in the workspace for the current year).
+
+```bash
+# Print next available ID
+dirban next-id
+# Output: 26-002
+```
+
+#### `new "<title>"` (alias: `create`)
+Creates a new Markdown task file with an auto-assigned `YY-001` ID, slugified filename, and structured frontmatter.
+
+```bash
+# Create a task in the default backlog column
+dirban new "Implement search filter across board"
+
+# Create with specific priority and target column
+dirban new "Fix critical token expiry bug" --priority=p0 --column=01-ready
+
+# Create with tags and assignee
+dirban new "OAuth2 backend integration" --tags=auth,api --assignee=andrew
+```
+
 #### `board`
 Displays the Kanban board. Launches the interactive TUI if stdin is an interactive TTY, or formats a static table if `--static` is passed.
 

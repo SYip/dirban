@@ -8,6 +8,7 @@ import { moveTask } from "./move.ts"
 import { checkTaskItem } from "./check.ts"
 import { setTaskMetadata } from "./set.ts"
 import { archiveTasks } from "./archive.ts"
+import { calculateNextTaskId, createTask } from "./create.ts"
 
 const SAMPLE_TASK = `---
 okf_version: "1.0"
@@ -167,6 +168,95 @@ describe("Task Operations Domain Tests", () => {
           expect(archiveRes.value.archivedTasks.length).toBe(1)
           const targetDir = archiveRes.value.targetDirectory
           expect(targetDir.includes("archive")).toBe(true)
+        }
+      }
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  it("Vector 5 (Next ID): Calculates next YY-001 ID from existing board tasks", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-ops-"))
+    try {
+      const tasksDir = path.join(tempDir, "docs/tasks")
+      fs.mkdirSync(path.join(tasksDir, "00-backlog"), { recursive: true })
+      fs.mkdirSync(path.join(tasksDir, "01-ready"), { recursive: true })
+
+      // Empty board: defaults to 26-001 (for year 2026)
+      const fixedDate = new Date("2026-10-26T12:00:00Z")
+      let boardRes = discoverBoard(DEFAULT_CONFIG, tempDir)
+      expect(boardRes.isOk()).toBe(true)
+      if (boardRes.isOk()) {
+        expect(calculateNextTaskId(boardRes.value, fixedDate)).toBe("26-001")
+      }
+
+      // Add task with 26-001
+      fs.writeFileSync(
+        path.join(tasksDir, "00-backlog/26-001-task.md"),
+        SAMPLE_TASK,
+        "utf-8",
+      )
+
+      // Add task with 26-009
+      fs.writeFileSync(
+        path.join(tasksDir, "01-ready/26-009-another.md"),
+        SAMPLE_TASK.replace("task.26-001", "task.26-009"),
+        "utf-8",
+      )
+
+      boardRes = discoverBoard(DEFAULT_CONFIG, tempDir)
+      expect(boardRes.isOk()).toBe(true)
+      if (boardRes.isOk()) {
+        // Next should be 26-010
+        expect(calculateNextTaskId(boardRes.value, fixedDate)).toBe("26-010")
+      }
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  it("Vector 6 (Create Task): Creates markdown task with generated ID and frontmatter", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-ops-"))
+    try {
+      const tasksDir = path.join(tempDir, "docs/tasks")
+      fs.mkdirSync(path.join(tasksDir, "00-backlog"), { recursive: true })
+      fs.mkdirSync(path.join(tasksDir, "01-ready"), { recursive: true })
+
+      const fixedDate = new Date("2026-10-26T12:00:00Z")
+      const boardRes = discoverBoard(DEFAULT_CONFIG, tempDir)
+      expect(boardRes.isOk()).toBe(true)
+      if (boardRes.isOk()) {
+        const createRes = createTask(
+          boardRes.value,
+          {
+            title: "Implement OAuth2 login flow",
+            column: "01-ready",
+            priority: "p1",
+            tags: ["auth", "security"],
+            criteria: ["Configure OAuth client", "Add callback route"],
+          },
+          fixedDate,
+        )
+
+        expect(createRes.isOk()).toBe(true)
+        if (createRes.isOk()) {
+          expect(createRes.value.id).toBe("26-001")
+          expect(createRes.value.column).toBe("01-ready")
+          expect(createRes.value.filename).toBe(
+            "26-001-implement-oauth2-login-flow.md",
+          )
+          expect(fs.existsSync(createRes.value.filePath)).toBe(true)
+
+          const writtenContent = fs.readFileSync(
+            createRes.value.filePath,
+            "utf-8",
+          )
+          expect(writtenContent.includes('id: "26-001"')).toBe(true)
+          expect(writtenContent.includes('priority: "p1"')).toBe(true)
+          expect(writtenContent.includes("- auth")).toBe(true)
+          expect(writtenContent.includes("- [ ] Configure OAuth client")).toBe(
+            true,
+          )
         }
       }
     } finally {

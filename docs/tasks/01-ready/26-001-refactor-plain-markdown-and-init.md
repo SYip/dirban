@@ -1,14 +1,14 @@
 ---
 okf_version: "1.0"
-id: "task.dirban.core.26-001"
-title: "Refactor Dirban engine to plain Markdown and add init command"
-type: "task"
-status: "ready"
-priority: "p1"
-owner: "developer"
-assigned_to: "unassigned"
-created_date: "2026-10-12"
-last_updated: "2026-10-12"
+id: task.dirban.core.26-001
+title: Refactor Dirban engine to plain Markdown and add init command
+type: task
+status: 01-ready
+priority: p1
+owner: developer
+assigned_to: unassigned
+created_date: 2026-10-12
+last_updated: 2026-10-12
 tags:
   - refactor
   - parser
@@ -18,8 +18,8 @@ relationships:
   depends_on: []
   blocks: []
   related_to:
-    - "spec.md"
-    - "docs/decisions/2026-10-12-plain-markdown-and-git-audit.md"
+    - spec.md
+    - docs/decisions/2026-10-12-plain-markdown-and-git-audit.md
 ---
 
 # Task: Refactor Dirban Engine to Plain Markdown and Add Init Command
