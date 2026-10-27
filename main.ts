@@ -190,11 +190,14 @@ export const runCli = async (args: readonly string[]): Promise<number> => {
 
   if (command === "priorities") {
     const listFormatted = config.priorities
-      .map((p) => p === config.defaultPriority ? `${pc.bold(pc.green(p))} ${pc.gray("(default)")}` : pc.cyan(p))
+      .map((p) =>
+        p === config.defaultPriority
+          ? `${pc.bold(pc.green(p))} ${pc.gray("(default)")}`
+          : pc.cyan(p)
+      )
       .join(", ")
 
     console.log(`${pc.bold("Available priorities:")} ${listFormatted}`)
-    console.log(`${pc.bold("Default priority:")}    ${pc.green(config.defaultPriority)}`)
     return 0
   }
 

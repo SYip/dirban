@@ -51,7 +51,6 @@ Lists all configured priority levels and highlights the workspace default priori
 dirban priorities
 # Output:
 # Available priorities: p0, p1, p2 (default), p3
-# Default priority:    p2
 ```
 
 #### `new "<title>"` (alias: `create`)

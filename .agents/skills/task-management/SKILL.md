@@ -40,7 +40,6 @@ dirban priorities
 Example output:
 ```text
 Available priorities: p0, p1, p2 (default), p3
-Default priority:    p2
 ```
 
 ---
