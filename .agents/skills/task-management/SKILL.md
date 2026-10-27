@@ -29,10 +29,13 @@ In Dirban, **the physical directory IS the task state**.
 
 ## 2. Priority System
 
-Dirban supports configurable task priorities (by default `p0`, `p1`, `p2`, `p3`, ordered from highest to lowest urgency). When creating a task, it automatically inherits the configured workspace default priority unless an override is specified.
+Dirban orders task priorities from highest to lowest urgency:
+- **`p0` (Critical Blocker / Emergency)**: Highest urgency. Reserved for critical blockers or emergencies where other tasks must stop immediately to resolve this first. Not used for normal roadmap tasks.
+- **`p1` (High / Prerequisite First)**: Important foundational tasks or prerequisites that need to be completed before downstream tasks can proceed.
+- **`p2` (Normal / Default)**: The standard workspace default priority for regular feature tasks and roadmap work.
+- **`p3` (Low / Backlog / Later)**: Nice-to-have improvements, future phase items, or low-urgency follow-ups.
 
-Always use the CLI to inspect available priority levels and check the default priority:
-
+Check available priorities and workspace default anytime via CLI:
 ```bash
 dirban priorities
 ```
