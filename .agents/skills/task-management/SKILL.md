@@ -37,11 +37,6 @@ Always use the CLI to inspect available priority levels and check the default pr
 dirban priorities
 ```
 
-Example output:
-```text
-Available priorities: p0, p1, p2 (default), p3
-```
-
 ---
 
 ## 3. Standard Agent Workflows
