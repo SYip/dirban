@@ -103,7 +103,7 @@ export const createTask = (
 
   const targetColumnName = options.column ??
     board.columns[0]?.name ??
-    "00-backlog"
+    "backlog"
 
   const targetCol = board.columns.find((c) =>
     c.name.toLowerCase() === targetColumnName.toLowerCase() ||

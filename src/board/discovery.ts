@@ -38,29 +38,19 @@ export const discoverBoard = (
       "code" in statErr &&
       (statErr as { code?: string }).code === "ENOENT"
     ) {
-      try {
-        fs.mkdirSync(rootDir, { recursive: true })
-        for (const col of config.columns) {
-          fs.mkdirSync(path.join(rootDir, col), { recursive: true })
-        }
-      } catch (mkdirErr) {
-        return err({
-          kind: "DIRECTORY_NOT_FOUND",
-          message: mkdirErr instanceof Error
-            ? mkdirErr.message
-            : "Failed to create tasks directory",
-          path: rootDir,
-        })
-      }
-    } else {
       return err({
-        kind: "FILE_READ_ERROR",
-        message: statErr instanceof Error
-          ? statErr.message
-          : "Cannot access tasks directory",
+        kind: "DIRECTORY_NOT_FOUND",
+        message: `Tasks directory not found: ${rootDir}. Run "dirban init" to set up your board.`,
         path: rootDir,
       })
     }
+    return err({
+      kind: "FILE_READ_ERROR",
+      message: statErr instanceof Error
+        ? statErr.message
+        : "Cannot access tasks directory",
+      path: rootDir,
+    })
   }
 
   const discoveredDirNames: string[] = []
@@ -144,7 +134,11 @@ export const discoverBoard = (
     }
 
     const filtered = filterTasks(taskList, options)
-    const sorted = sortTasks(filtered, options?.sortMode ?? "priority")
+    const sorted = sortTasks(
+      filtered,
+      options?.sortMode ?? "priority",
+      config.priorities,
+    )
 
     totalTasks += sorted.length
     columns.push(Object.freeze({

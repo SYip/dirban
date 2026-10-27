@@ -1,6 +1,6 @@
 import type { BoardTask, SortMode } from "./types.ts"
 
-const PRIORITY_ORDER: Record<string, number> = {
+const DEFAULT_PRIORITY_ORDER: Record<string, number> = {
   p0: 0,
   p1: 1,
   p2: 2,
@@ -9,10 +9,19 @@ const PRIORITY_ORDER: Record<string, number> = {
 
 export const sortTasksByPriority = (
   tasks: readonly BoardTask[],
+  customPriorities?: readonly string[],
 ): readonly BoardTask[] => {
+  const getRank = (p: string): number => {
+    if (customPriorities != null && customPriorities.length > 0) {
+      const idx = customPriorities.indexOf(p)
+      return idx >= 0 ? idx : 999
+    }
+    return DEFAULT_PRIORITY_ORDER[p] ?? 999
+  }
+
   return [...tasks].sort((a, b) => {
-    const pA = PRIORITY_ORDER[a.document.frontmatter.priority] ?? 99
-    const pB = PRIORITY_ORDER[b.document.frontmatter.priority] ?? 99
+    const pA = getRank(a.document.frontmatter.priority)
+    const pB = getRank(b.document.frontmatter.priority)
     if (pA !== pB) {
       return pA - pB
     }
@@ -58,6 +67,7 @@ export const sortTasksById = (
 export const sortTasks = (
   tasks: readonly BoardTask[],
   mode: SortMode = "priority",
+  customPriorities?: readonly string[],
 ): readonly BoardTask[] => {
   if (mode === "recency") {
     return sortTasksByRecency(tasks)
@@ -65,7 +75,7 @@ export const sortTasks = (
   if (mode === "id") {
     return sortTasksById(tasks)
   }
-  return sortTasksByPriority(tasks)
+  return sortTasksByPriority(tasks, customPriorities)
 }
 
 export const filterTasks = (

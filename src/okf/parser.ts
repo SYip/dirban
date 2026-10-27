@@ -12,8 +12,8 @@ import type {
 const FRONTMATTER_DELIMITER = "---"
 
 const parsePriority = (val: unknown): Priority => {
-  if (val === "p0" || val === "p1" || val === "p2" || val === "p3") {
-    return val
+  if (typeof val === "string" && val.trim() !== "") {
+    return val.trim()
   }
   return "p2"
 }

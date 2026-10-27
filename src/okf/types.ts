@@ -1,4 +1,4 @@
-export type Priority = "p0" | "p1" | "p2" | "p3"
+export type Priority = "p0" | "p1" | "p2" | "p3" | (string & {})
 
 export type TaskOwner = "developer" | "agent" | "unassigned" | string
 

@@ -20,6 +20,21 @@ If run without arguments in an interactive terminal, `dirban` launches the inter
 
 ### Commands
 
+#### `init`
+Initializes the Kanban board directory structure on disk (`backlog/`, `01-todo/`, `02-doing/`, `03-done/`, and `archive/`) and configures settings.
+
+- If `.vscode/` exists in the workspace, it automatically adds `"dirban.*"` settings to `.vscode/settings.json`.
+- Otherwise, it creates `.dirban.json`.
+
+```bash
+# Auto-detects (.vscode/settings.json if .vscode exists, else .dirban.json)
+dirban init
+
+# Explicitly force configuration target
+dirban init --config=vscode
+dirban init --config=dirban
+```
+
 #### `next-id`
 Prints the next available sequential task ID formatted as `YY-001` (derived from existing tasks in the workspace for the current year).
 
@@ -27,6 +42,16 @@ Prints the next available sequential task ID formatted as `YY-001` (derived from
 # Print next available ID
 dirban next-id
 # Output: 26-002
+```
+
+#### `priorities`
+Lists all configured priority levels and highlights the workspace default priority.
+
+```bash
+dirban priorities
+# Output:
+# Available priorities: p0, p1, p2 (default), p3
+# Default priority:    p2
 ```
 
 #### `new "<title>"` (alias: `create`)
@@ -37,7 +62,7 @@ Creates a new Markdown task file with an auto-assigned `YY-001` ID, slugified fi
 dirban new "Implement search filter across board"
 
 # Create with specific priority and target column
-dirban new "Fix critical token expiry bug" --priority=p0 --column=01-ready
+dirban new "Fix critical token expiry bug" --priority=p0 --column=01-todo
 
 # Create with tags and assignee
 dirban new "OAuth2 backend integration" --tags=auth,api --assignee=andrew
@@ -180,7 +205,30 @@ Dirban automatically resolves configuration from `.dirban.json` located in the w
 
 | Property | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `tasksRoot` | `string` | `"docs/tasks"` or `"tasks"` | Root directory containing column subdirectories |
-| `columns` | `string[]` | `["00-backlog", "01-ready", "02-in-progress", "03-done"]` | Ordered list of active column folder names |
-| `defaultColumn`| `string` | `"00-backlog"` | Default landing column for new tasks |
-| `archiveRoot` | `string` | `"docs/tasks/archive"` | Directory where archived tasks are moved |
+| `tasksDir` | `string` | `"docs/tasks"` | Root directory containing column subdirectories |
+| `columns` | `string[]` | `["backlog", "01-todo", "02-doing", "03-done"]` | Ordered list of active column folder names |
+| `priorities` | `string[]` | `["p0", "p1", "p2", "p3"]` | Ordered list of priority levels (index 0 is highest priority) |
+| `defaultPriority` | `string` | `"p2"` | Default priority assigned to newly created tasks (must be in `priorities`) |
+| `archiveDir` | `string` | `"docs/tasks/archive"` | Directory where archived tasks are moved |
+
+### Custom Priority Example (`.dirban.json`)
+
+You can define semantic priority levels instead of standard P-tiers:
+
+```json
+{
+  "tasksDir": "docs/tasks",
+  "columns": ["backlog", "01-todo", "02-doing", "03-done"],
+  "priorities": ["urgent", "high", "normal", "low"],
+  "defaultPriority": "normal"
+}
+```
+
+Or inside `.vscode/settings.json`:
+```json
+{
+  "dirban.tasksDir": "docs/tasks",
+  "dirban.priorities": ["urgent", "high", "normal", "low"],
+  "dirban.defaultPriority": "normal"
+}
+```

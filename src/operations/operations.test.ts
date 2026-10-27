@@ -9,13 +9,14 @@ import { checkTaskItem } from "./check.ts"
 import { setTaskMetadata } from "./set.ts"
 import { archiveTasks } from "./archive.ts"
 import { calculateNextTaskId, createTask } from "./create.ts"
+import { initializeBoard } from "./init.ts"
 
 const SAMPLE_TASK = `---
 okf_version: "1.0"
 id: "task.26-001"
 title: "Sample Task"
 type: "task"
-status: "00-backlog"
+status: "backlog"
 priority: "p2"
 owner: "developer"
 assigned_to: "unassigned"
@@ -258,6 +259,52 @@ describe("Task Operations Domain Tests", () => {
             true,
           )
         }
+      }
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  it("Vector 7 (Init): Initializes directory tree according to config and writes .dirban.json", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-init-"))
+    try {
+      const initRes = initializeBoard(DEFAULT_CONFIG, tempDir)
+      expect(initRes.isOk()).toBe(true)
+      if (initRes.isOk()) {
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks/backlog"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks/01-todo"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks/02-doing"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks/03-done"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks/archive"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, ".dirban.json"))).toBe(true)
+      }
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  it("Vector 8 (Init in VSCode workspace): Automatically updates .vscode/settings.json when .vscode exists", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-init-"))
+    try {
+      const vscodeDir = path.join(tempDir, ".vscode")
+      fs.mkdirSync(vscodeDir, { recursive: true })
+      fs.writeFileSync(
+        path.join(vscodeDir, "settings.json"),
+        JSON.stringify({ "editor.tabSize": 4 }),
+        "utf-8",
+      )
+
+      const initRes = initializeBoard(DEFAULT_CONFIG, tempDir)
+      expect(initRes.isOk()).toBe(true)
+      if (initRes.isOk()) {
+        expect(fs.existsSync(path.join(tempDir, ".dirban.json"))).toBe(false)
+        const updatedSettings = JSON.parse(
+          fs.readFileSync(path.join(vscodeDir, "settings.json"), "utf-8"),
+        )
+        expect(updatedSettings["editor.tabSize"]).toBe(4)
+        expect(updatedSettings["dirban.tasksDir"]).toBe("docs/tasks")
+        expect(updatedSettings["dirban.defaultPriority"]).toBe("p2")
       }
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })

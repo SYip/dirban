@@ -54,17 +54,17 @@ describe("Board Discovery and Sorting Tests", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-discovery-"))
     try {
       const tasksDir = path.join(tempDir, "docs/tasks")
-      fs.mkdirSync(path.join(tasksDir, "00-backlog"), { recursive: true })
-      fs.mkdirSync(path.join(tasksDir, "01-ready"), { recursive: true })
+      fs.mkdirSync(path.join(tasksDir, "backlog"), { recursive: true })
+      fs.mkdirSync(path.join(tasksDir, "01-todo"), { recursive: true })
 
       fs.writeFileSync(
-        path.join(tasksDir, "00-backlog/26-001.md"),
-        TASK_P1_CARD,
+        path.join(tasksDir, "backlog/26-001.md"),
+        TASK_P1_CARD.replace("00-backlog", "backlog"),
         "utf-8",
       )
       fs.writeFileSync(
-        path.join(tasksDir, "00-backlog/26-002.md"),
-        TASK_P0_CARD,
+        path.join(tasksDir, "backlog/26-002.md"),
+        TASK_P0_CARD.replace("00-backlog", "backlog"),
         "utf-8",
       )
 
@@ -73,7 +73,7 @@ describe("Board Discovery and Sorting Tests", () => {
       if (result.isOk()) {
         const board = result.value
         expect(board.totalTasks).toBe(2)
-        const backlogCol = board.columns.find((c) => c.name === "00-backlog")
+        const backlogCol = board.columns.find((c) => c.name === "backlog")
         expect(backlogCol != null).toBe(true)
         if (backlogCol != null) {
           expect(backlogCol.tasks.length).toBe(2)
@@ -91,12 +91,12 @@ describe("Board Discovery and Sorting Tests", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-discovery-"))
     try {
       const tasksDir = path.join(tempDir, "docs/tasks")
-      fs.mkdirSync(path.join(tasksDir, "01-ready"), { recursive: true })
+      fs.mkdirSync(path.join(tasksDir, "01-todo"), { recursive: true })
 
-      // File is physically in 01-ready, but frontmatter claims status: "00-backlog"
+      // File is physically in 01-todo, but frontmatter claims status: "backlog"
       fs.writeFileSync(
-        path.join(tasksDir, "01-ready/26-001.md"),
-        TASK_P1_CARD,
+        path.join(tasksDir, "01-todo/26-001.md"),
+        TASK_P1_CARD.replace("00-backlog", "backlog"),
         "utf-8",
       )
 
@@ -106,8 +106,8 @@ describe("Board Discovery and Sorting Tests", () => {
         const task = findTaskByIdOrName(result.value, "task.26-001")
         expect(task != null).toBe(true)
         if (task != null) {
-          expect(task.column).toBe("01-ready")
-          expect(task.document.frontmatter.status).toBe("01-ready")
+          expect(task.column).toBe("01-todo")
+          expect(task.document.frontmatter.status).toBe("01-todo")
         }
 
         // Test shorthand lookup
@@ -123,7 +123,7 @@ describe("Board Discovery and Sorting Tests", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-discovery-"))
     try {
       const tasksDir = path.join(tempDir, "docs/tasks")
-      fs.mkdirSync(path.join(tasksDir, "00-backlog"), { recursive: true })
+      fs.mkdirSync(path.join(tasksDir, "backlog"), { recursive: true })
       fs.mkdirSync(path.join(tasksDir, "99-custom-stage"), {
         recursive: true,
       })
@@ -132,9 +132,26 @@ describe("Board Discovery and Sorting Tests", () => {
       expect(result.isOk()).toBe(true)
       if (result.isOk()) {
         const colNames = result.value.columns.map((c) => c.name)
-        expect(colNames.includes("00-backlog")).toBe(true)
+        expect(colNames.includes("backlog")).toBe(true)
         expect(colNames.includes("99-custom-stage")).toBe(true)
       }
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  it("Vector 4 (Missing Directory Error): Fails cleanly without auto-creating directories", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-discovery-"))
+    try {
+      // docs/tasks is NOT created
+      const result = discoverBoard(DEFAULT_CONFIG, tempDir)
+      expect(result.isErr()).toBe(true)
+      if (result.isErr()) {
+        expect(result.error.kind).toBe("DIRECTORY_NOT_FOUND")
+        expect(result.error.message.includes('Run "dirban init"')).toBe(true)
+      }
+      // Ensure directory was not secretly created
+      expect(fs.existsSync(path.join(tempDir, "docs/tasks"))).toBe(false)
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }

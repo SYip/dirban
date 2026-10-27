@@ -63,14 +63,14 @@ A Dirban board is organized inside your repository (by default under `docs/tasks
 
 ```text
 docs/tasks/
-├── 00-backlog/          # Ideas, staging, and future enhancements
-├── 01-ready/            # Prioritized work ready to be picked up
-├── 02-in-progress/      # Actively executing tasks (humans or AI agents)
+├── backlog/             # Ideas, staging, and future enhancements
+├── 01-todo/             # Prioritized work ready to be picked up
+├── 02-doing/            # Actively executing tasks (humans or AI agents)
 ├── 03-done/             # Completed tasks awaiting archival
 └── archive/             # Partitioned terminal storage (e.g., archive/2026/)
 ```
 
-### Example Task (`docs/tasks/01-ready/26-001-add-search.md`)
+### Example Task (`docs/tasks/01-todo/26-001-add-search.md`)
 
 ```markdown
 ---
@@ -110,18 +110,21 @@ dirban board
 
 #### Common Commands
 ```bash
+# Initialize board directory structure (backlog, 01-todo, 02-doing, 03-done, archive)
+dirban init
+
 # Get the next sequential task ID
 dirban next-id
 
 # Create a new task with auto-assigned ID
 dirban new "Implement search filter"
-dirban new "Fix critical bug" --priority=p0 --column=01-ready
+dirban new "Fix critical bug" --priority=p0 --column=01-todo
 
 # Launch interactive Kanban TUI
 dirban board
 
 # Move a task to another column (or just use standard `mv`)
-dirban move 26-001 02-in-progress
+dirban move 26-001 02-doing
 
 # Check off an acceptance criteria item
 dirban check 26-001 1
@@ -162,15 +165,21 @@ Dirban works out-of-the-box with zero configuration, but you can customize root 
 
 ```json
 {
-  "tasksRoot": "docs/tasks",
+  "tasksDir": "docs/tasks",
   "columns": [
-    "00-backlog",
-    "01-ready",
-    "02-in-progress",
+    "backlog",
+    "01-todo",
+    "02-doing",
     "03-done"
   ],
-  "defaultColumn": "00-backlog",
-  "archiveRoot": "docs/tasks/archive"
+  "priorities": [
+    "p0",
+    "p1",
+    "p2",
+    "p3"
+  ],
+  "defaultPriority": "p2",
+  "archiveDir": "docs/tasks/archive"
 }
 ```
 
