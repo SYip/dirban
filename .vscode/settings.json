@@ -1,5 +1,19 @@
 {
-    "workbench.editorAssociations": {
-        "**/.agents/rules/**/*.md": "default"
-    }
+  "workbench.editorAssociations": {
+    "**/.agents/rules/**/*.md": "default"
+  },
+  "dirban.tasksDir": "docs/tasks",
+  "dirban.columns": [
+    "backlog",
+    "01-todo",
+    "02-doing",
+    "03-done"
+  ],
+  "dirban.priorities": [
+    "p0",
+    "p1",
+    "p2",
+    "p3"
+  ],
+  "dirban.defaultPriority": "p2"
 }

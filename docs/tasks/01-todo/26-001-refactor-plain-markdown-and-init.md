@@ -3,7 +3,7 @@ okf_version: "1.0"
 id: task.dirban.core.26-001
 title: Refactor Dirban engine to plain Markdown and add init command
 type: task
-status: 01-ready
+status: 01-todo
 priority: p1
 owner: developer
 assigned_to: unassigned
