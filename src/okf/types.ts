@@ -9,18 +9,18 @@ export interface TaskRelationships {
 }
 
 export interface TaskFrontmatter {
-  readonly okf_version: string
-  readonly id: string
-  readonly title: string
-  readonly type: "task"
-  readonly status: string
-  readonly priority: Priority
-  readonly owner: TaskOwner
-  readonly assigned_to: string
-  readonly created_date: string
-  readonly last_updated: string
-  readonly tags: readonly string[]
-  readonly relationships: TaskRelationships
+  readonly okf_version?: string
+  readonly id?: string
+  readonly title?: string
+  readonly type?: "task" | string
+  readonly status?: string
+  readonly priority?: Priority
+  readonly owner?: TaskOwner
+  readonly assigned_to?: string
+  readonly created_date?: string
+  readonly last_updated?: string
+  readonly tags?: readonly string[]
+  readonly relationships?: TaskRelationships
 }
 
 export interface ChecklistItem {
@@ -31,6 +31,14 @@ export interface ChecklistItem {
 }
 
 export interface TaskDocument {
+  readonly id: string
+  readonly title: string
+  readonly priority: Priority
+  readonly tags: readonly string[]
+  readonly owner?: string
+  readonly assigned_to?: string
+  readonly created_date?: string
+  readonly last_updated?: string
   readonly frontmatter: TaskFrontmatter
   readonly titleHeader: string
   readonly objectiveScope: string

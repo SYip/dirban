@@ -27,11 +27,14 @@ export const getExistingTaskNumbersForYear = (
 
   for (const col of board.columns) {
     for (const task of col.tasks) {
-      // Check frontmatter ID
-      const idMatch = task.document.frontmatter.id.match(pattern)
-      if (idMatch?.[1] != null) {
-        const num = parseInt(idMatch[1], 10)
-        if (!isNaN(num)) numbers.push(num)
+      // Check document / frontmatter ID
+      const taskId = task.document.id ?? task.document.frontmatter.id
+      if (taskId != null) {
+        const idMatch = taskId.match(pattern)
+        if (idMatch?.[1] != null) {
+          const num = parseInt(idMatch[1], 10)
+          if (!isNaN(num)) numbers.push(num)
+        }
       }
 
       // Also check filename

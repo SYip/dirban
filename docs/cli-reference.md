@@ -92,21 +92,30 @@ dirban board --sort=recency
 dirban board --sort=id
 ```
 
-#### `view <id>`
+#### `view <id|query>`
 Inspects metadata, tags, priority, dependencies, and acceptance criteria checklist for a task.
 
+Supports fuzzy substring lookup by keyword across task IDs, titles, and filenames. If multiple tasks match the query, it lists the matching candidates to prompt for disambiguation.
+
 ```bash
+# View by exact ID or filename
 dirban view 26-001
+
+# View using fuzzy keyword slug
+dirban view refactor
 
 # Inspect and open the Markdown file in your default $EDITOR / VS Code
 dirban view 26-001 --open
 ```
 
 #### `move <id> <target-column>`
-Atomically moves a task file to the target column directory and records the transition journal.
+Atomically moves a task file to the target column directory.
+
+> [!IMPORTANT]
+> **Exact Identification for Mutating Operations**: State-mutating commands (`move`, `check`, `set`, `archive`) require an exact task ID, exact filename, or file path. Fuzzy substring resolution is intentionally disabled for mutations to prevent accidentally moving or modifying the wrong task.
 
 ```bash
-dirban move 26-001 02-in-progress
+dirban move 26-001 02-doing
 dirban move 26-001 03-done
 ```
 

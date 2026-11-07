@@ -4,7 +4,7 @@ import * as process from "node:process"
 import { spawn } from "node:child_process"
 import pc from "picocolors"
 import { loadConfig } from "./src/config/config.ts"
-import { discoverBoard, findTaskByIdOrName } from "./src/board/discovery.ts"
+import { discoverBoard, findTaskByIdOrName, findTaskWithFuzzy } from "./src/board/discovery.ts"
 import { formatBoardStatic, formatTaskDetail } from "./src/cli/formatters.ts"
 import { startInteractiveTui } from "./src/cli/tui.ts"
 import { moveTask } from "./src/operations/move.ts"
@@ -87,6 +87,7 @@ export const runCli = async (args: readonly string[]): Promise<number> => {
       title: { type: "string" },
       tags: { type: "string" },
       config: { type: "string" },
+      yes: { type: "boolean", short: "y" },
     },
     allowPositionals: true,
   })
@@ -259,11 +260,24 @@ export const runCli = async (args: readonly string[]): Promise<number> => {
       return 1
     }
 
-    const task = findTaskByIdOrName(boardRes.value, taskId)
-    if (task == null) {
+    const lookupResult = findTaskWithFuzzy(boardRes.value, taskId)
+    if (lookupResult.kind === "NOT_FOUND") {
       console.error(pc.red(`Task not found: ${taskId}`))
       return 1
     }
+
+    if (lookupResult.kind === "AMBIGUOUS") {
+      console.error(
+        pc.yellow(
+          `Ambiguous task query "${taskId}". Multiple tasks matched:\n` +
+          lookupResult.matches.map((m) => `  - ${pc.bold(m.document.id)}: ${m.document.title} (${pc.dim(m.column)})`).join("\n") +
+          `\nPlease specify a more precise task ID or filename.`,
+        ),
+      )
+      return 1
+    }
+
+    const task = lookupResult.task
 
     console.log(formatTaskDetail(task))
 

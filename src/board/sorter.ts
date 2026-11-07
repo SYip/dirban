@@ -20,13 +20,15 @@ export const sortTasksByPriority = (
   }
 
   return [...tasks].sort((a, b) => {
-    const pA = getRank(a.document.frontmatter.priority)
-    const pB = getRank(b.document.frontmatter.priority)
+    const pA = getRank(a.document.priority ?? a.document.frontmatter.priority ?? "p3")
+    const pB = getRank(b.document.priority ?? b.document.frontmatter.priority ?? "p3")
     if (pA !== pB) {
       return pA - pB
     }
-    return a.document.frontmatter.id.localeCompare(
-      b.document.frontmatter.id,
+    const idA = a.document.id ?? a.document.frontmatter.id ?? a.filename
+    const idB = b.document.id ?? b.document.frontmatter.id ?? b.filename
+    return idA.localeCompare(
+      idB,
       undefined,
       { numeric: true, sensitivity: "base" },
     )
@@ -37,15 +39,21 @@ export const sortTasksByRecency = (
   tasks: readonly BoardTask[],
 ): readonly BoardTask[] => {
   return [...tasks].sort((a, b) => {
-    const dateA = a.document.frontmatter.last_updated ||
+    const dateA = a.document.last_updated ||
+      a.document.created_date ||
+      a.document.frontmatter.last_updated ||
       a.document.frontmatter.created_date || ""
-    const dateB = b.document.frontmatter.last_updated ||
+    const dateB = b.document.last_updated ||
+      b.document.created_date ||
+      b.document.frontmatter.last_updated ||
       b.document.frontmatter.created_date || ""
     if (dateA !== dateB) {
       return dateB.localeCompare(dateA)
     }
-    return a.document.frontmatter.id.localeCompare(
-      b.document.frontmatter.id,
+    const idA = a.document.id ?? a.document.frontmatter.id ?? a.filename
+    const idB = b.document.id ?? b.document.frontmatter.id ?? b.filename
+    return idA.localeCompare(
+      idB,
       undefined,
       { numeric: true, sensitivity: "base" },
     )
@@ -56,8 +64,10 @@ export const sortTasksById = (
   tasks: readonly BoardTask[],
 ): readonly BoardTask[] => {
   return [...tasks].sort((a, b) => {
-    return a.document.frontmatter.id.localeCompare(
-      b.document.frontmatter.id,
+    const idA = a.document.id ?? a.document.frontmatter.id ?? a.filename
+    const idB = b.document.id ?? b.document.frontmatter.id ?? b.filename
+    return idA.localeCompare(
+      idB,
       undefined,
       { numeric: true, sensitivity: "base" },
     )
@@ -90,30 +100,37 @@ export const filterTasks = (
     return tasks
   }
 
-  return tasks.filter((t) => {
-    if (filter.tag != null && filter.tag !== "") {
-      const matchTag = t.document.frontmatter.tags.some((tag) =>
-        tag.toLowerCase() === filter.tag?.toLowerCase()
-      )
-      if (!matchTag) return false
-    }
+  return tasks.filter((task) => {
+    const doc = task.document
+    const tags = doc.tags ?? doc.frontmatter.tags ?? []
 
-    if (filter.owner != null && filter.owner !== "") {
-      const matchOwner = t.document.frontmatter.owner.toLowerCase() ===
-          filter.owner.toLowerCase() ||
-        t.document.frontmatter.assigned_to.toLowerCase() ===
-          filter.owner.toLowerCase()
-      if (!matchOwner) return false
-    }
+    const matchesTag =
+      filter.tag == null ||
+      filter.tag === "" ||
+      tags.some((tag) => tag.toLowerCase() === filter.tag?.toLowerCase())
 
-    if (filter.search != null && filter.search !== "") {
-      const q = filter.search.toLowerCase()
-      const inTitle = t.document.frontmatter.title.toLowerCase().includes(q)
-      const inId = t.document.frontmatter.id.toLowerCase().includes(q)
-      const inBody = t.document.rawBody.toLowerCase().includes(q)
-      if (!inTitle && !inId && !inBody) return false
-    }
+    const ownerVal = (doc.owner ?? doc.frontmatter.owner ?? "").toLowerCase()
+    const assignedVal = (doc.assigned_to ?? doc.frontmatter.assigned_to ?? "").toLowerCase()
+    const targetOwner = (filter.owner ?? "").toLowerCase()
+    const matchesOwner =
+      filter.owner == null ||
+      filter.owner === "" ||
+      ownerVal === targetOwner ||
+      assignedVal === targetOwner
 
-    return true
+    const searchQuery = (filter.search ?? "").toLowerCase()
+    const title = (doc.title ?? doc.frontmatter.title ?? "").toLowerCase()
+    const id = (doc.id ?? doc.frontmatter.id ?? "").toLowerCase()
+    const filename = task.filename.toLowerCase()
+    const inBody = doc.rawBody.toLowerCase().includes(searchQuery)
+    const matchesSearch =
+      filter.search == null ||
+      filter.search === "" ||
+      title.includes(searchQuery) ||
+      id.includes(searchQuery) ||
+      filename.includes(searchQuery) ||
+      inBody
+
+    return matchesTag && matchesOwner && matchesSearch
   })
 }

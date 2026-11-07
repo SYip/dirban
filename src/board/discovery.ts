@@ -3,7 +3,6 @@ import * as path from "node:path"
 import * as fs from "node:fs"
 import type { DirbanConfig } from "../config/types.ts"
 import { parseTaskDocument } from "../okf/parser.ts"
-import { serializeTaskDocument } from "../okf/serializer.ts"
 import { filterTasks, sortTasks } from "./sorter.ts"
 import type {
   Board,
@@ -98,12 +97,12 @@ export const discoverBoard = (
         if (entry.isFile() && entry.name.endsWith(".md")) {
           const filePath = path.join(colPath, entry.name)
           const content = fs.readFileSync(filePath, "utf-8")
-          const parseResult = parseTaskDocument(content)
+          const parseResult = parseTaskDocument(content, entry.name)
 
           if (parseResult.isOk()) {
             let doc = parseResult.value
 
-            // Physical directory is strict source of truth: self-heal status if mismatched
+            // Physical directory is strict source of truth: directory dictates column status
             if (doc.frontmatter.status !== colName) {
               const healedFm = Object.freeze({
                 ...doc.frontmatter,
@@ -113,11 +112,6 @@ export const discoverBoard = (
                 ...doc,
                 frontmatter: healedFm,
               })
-              try {
-                fs.writeFileSync(filePath, serializeTaskDocument(doc), "utf-8")
-              } catch {
-                // Silently skip write failure if read-only
-              }
             }
 
             taskList.push(Object.freeze({
@@ -156,7 +150,22 @@ export const discoverBoard = (
   }))
 }
 
-export const findTaskByIdOrName = (
+export type LookupMatchResult =
+  | { readonly kind: "FOUND"; readonly task: BoardTask }
+  | { readonly kind: "NOT_FOUND" }
+  | { readonly kind: "AMBIGUOUS"; readonly matches: readonly BoardTask[] }
+
+/**
+ * Resolves a task by exact identifier:
+ * - Exact task ID (e.g., "task.dirban.core.26-001" or "26-001")
+ * - Exact filename (e.g., "26-001-fix-auth.md")
+ * - Exact file stem without extension (e.g., "26-001-fix-auth")
+ * - Exact relative or absolute file path
+ *
+ * Strictly used for mutating operations (move, check, set, archive) to avoid
+ * unintended modifications.
+ */
+export const findTaskExact = (
   board: Board,
   idOrPath: string,
 ): BoardTask | null => {
@@ -164,12 +173,17 @@ export const findTaskByIdOrName = (
 
   for (const col of board.columns) {
     for (const task of col.tasks) {
+      const taskId = (task.document.id ?? task.document.frontmatter.id ?? "").toLowerCase()
+      const filename = task.filename.toLowerCase()
+      const fileStem = filename.replace(/\.md$/, "")
+      const filePath = task.filePath.toLowerCase()
+
       if (
-        task.document.frontmatter.id.toLowerCase() === normalizedQuery ||
-        task.filename.toLowerCase() === normalizedQuery ||
-        task.filename.toLowerCase().replace(/\.md$/, "") === normalizedQuery ||
-        task.document.frontmatter.id.toLowerCase().endsWith(normalizedQuery) ||
-        task.filePath.toLowerCase().endsWith(normalizedQuery)
+        taskId === normalizedQuery ||
+        filename === normalizedQuery ||
+        fileStem === normalizedQuery ||
+        (taskId !== "" && taskId.endsWith(normalizedQuery)) ||
+        filePath.endsWith(normalizedQuery)
       ) {
         return task
       }
@@ -178,3 +192,53 @@ export const findTaskByIdOrName = (
 
   return null
 }
+
+/**
+ * Resolves a task for read-only operations (e.g., `view`).
+ * First checks for an exact match. If none found, performs a fuzzy search
+ * across filenames and titles, detecting and reporting ambiguity if multiple match.
+ */
+export const findTaskWithFuzzy = (
+  board: Board,
+  query: string,
+): LookupMatchResult => {
+  const exact = findTaskExact(board, query)
+  if (exact != null) {
+    return { kind: "FOUND", task: exact }
+  }
+
+  const normalizedQuery = query.trim().toLowerCase()
+  if (normalizedQuery === "") {
+    return { kind: "NOT_FOUND" }
+  }
+
+  const matches: BoardTask[] = []
+  for (const col of board.columns) {
+    for (const task of col.tasks) {
+      const filename = task.filename.toLowerCase()
+      const title = (task.document.title ?? "").toLowerCase()
+
+      if (filename.includes(normalizedQuery) || title.includes(normalizedQuery)) {
+        matches.push(task)
+      }
+    }
+  }
+
+  if (matches.length === 1 && matches[0] != null) {
+    return { kind: "FOUND", task: matches[0] }
+  }
+
+  if (matches.length > 1) {
+    return { kind: "AMBIGUOUS", matches: Object.freeze(matches) }
+  }
+
+  return { kind: "NOT_FOUND" }
+}
+
+/**
+ * Backward-compatible exact task lookup. Alias to findTaskExact.
+ */
+export const findTaskByIdOrName = (
+  board: Board,
+  idOrPath: string,
+): BoardTask | null => findTaskExact(board, idOrPath)

@@ -1,6 +1,6 @@
 ---
 trigger: model_decision
-description: "TypeScript standards: strict typing, no semicolons, pure functions & FP, immutability, SRP & single-concern functions, neverthrow error handling, Temporal API, guard clauses, and named constants."
+description: "TypeScript standards: strict typing, no semicolons, pure functions & FP, immutability, SRP & single-concern functions, neverthrow error handling, Temporal API, guard clauses, and named constants & regexes."
 ---
 
 # TypeScript Standards & Conventions
@@ -23,10 +23,13 @@ description: "TypeScript standards: strict typing, no semicolons, pure functions
 ## 4. Domain Models & Schemas
 * Explicitly define interfaces and data schemas within their business domain module (e.g., `user-profile/types.ts`) or colocated with the domain logic module, never in a generic global technical bucket like `/types/`.
 
-## 5. Functional Programming & Immutability
-* **Functional Programming (FP)**: Prefer pure functions, immutability, and declarative patterns over imperative state mutation and class hierarchies.
-* Domain logic routines and helper utilities must be pure functions with zero side effects.
-* Mark parameters and collection types as `readonly` (e.g., `Readonly<T>`, `readonly T[]`) to guarantee immutability.
+## 5. Declarative & Functional Programming (FP) & Immutability
+* **Declarative / Functional Paradigm**: Prefer declarative and functional programming patterns over imperative loops, mutable state, and class hierarchies.
+  * Use higher-order functions (`map`, `filter`, `reduce`, `flatMap`, `find`, `some`, `every`, `Object.fromEntries`) instead of imperative `for`/`while` loops and manual array pushes whenever viable.
+  * Use pure functions with zero side effects for domain logic, transformations, and formatting.
+* **Immutability by Default**:
+  * Mark parameters and collection types as `readonly` (e.g., `Readonly<T>`, `readonly T[]`, `as const`).
+  * Avoid in-place mutations (e.g. `push`, `splice`, direct property assignment); return fresh frozen or spread objects (`{ ...obj, updated }`, `[...arr, item]`).
 
 ## 6. Single Responsibility & Function Scope
 * **Single Responsibility Principle (SRP)**: Each function must do one thing, do it completely, and do it well. Avoid monolithic "god functions" that mix parsing, business logic, I/O, validation, and presentation.
@@ -51,9 +54,13 @@ description: "TypeScript standards: strict typing, no semicolons, pure functions
 * **Early Return / Break / Continue**: Return, continue, or break early to eliminate deeply nested `if` / loop blocks (guard clauses).
 * **Minimize `else`**: Avoid `else` / `else if` when a previous branch terminates or returns; use `else` only when strictly necessary.
 
-## 9. No Magic Numbers or Magic Strings
+## 9. Named Constants, Regular Expressions & Variable Naming
+* **No Single-Letter Variable Names**: Single-letter variable names are strictly prohibited, except `i` in loops. Always use descriptive, self-documenting names.
 * **Named Constants**: Never hardcode arbitrary numbers or strings inline.
 * Define self-documenting top-level `const` primitives or `as const` objects/mappings within the module or a dedicated domain constants file.
+* **Named Regular Expressions**: Never use anonymous, inline regex literals directly within functions or conditionals.
+  * Every regular expression must be assigned to a self-documenting named variable or constant (e.g., `const CHECKBOX_LINE_REGEX = /^(\s*-\s*\[([ xX])\]\s*)(.+?)\r?$/`, `const LINE_SPLIT_REGEX = /\r?\n/`).
+  * Naming conveys the regex's intent, simplifies testing, and prevents re-compilation in hot loops.
 
 ## 10. Date & Time (Temporal API)
 * **Prefer Temporal API over legacy `Date`**: For dates, time, calendar years, and temporal offsets, use the modern `Temporal` API (`Temporal.Now.plainDateISO()`, `Temporal.PlainDate`) instead of legacy JavaScript `Date`.

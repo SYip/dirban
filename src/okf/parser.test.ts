@@ -1,6 +1,5 @@
 import { describe, expect, it } from "bun:test"
 import { parseTaskDocument } from "./parser.ts"
-import { serializeTaskDocument } from "./serializer.ts"
 
 const SAMPLE_OKF_MARKDOWN = `---
 okf_version: "1.0"
@@ -42,21 +41,17 @@ bun test
 - **2026-10-11**: Task initialized.
 `
 
-describe("OKF Parser and Serializer Tests", () => {
-  it("Vector 1 (Baseline): Parses full standard OKF card", () => {
+describe("Markdown & OKF Parser Tests", () => {
+  it("Vector 1 (Baseline OKF): Parses full standard OKF card", () => {
     const result = parseTaskDocument(SAMPLE_OKF_MARKDOWN)
     expect(result.isOk()).toBe(true)
     if (result.isOk()) {
       const doc = result.value
-      expect(doc.frontmatter.id).toBe("task.project.core.26-001")
-      expect(doc.frontmatter.title).toBe("Initialize Dirban CLI")
-      expect(doc.frontmatter.status).toBe("todo")
-      expect(doc.frontmatter.priority).toBe("p1")
-      expect(doc.frontmatter.assigned_to).toBe("andrew")
-      expect(doc.frontmatter.tags).toEqual(["cli", "core"])
-      expect(doc.frontmatter.relationships.depends_on).toEqual([
-        "task.project.core.26-000",
-      ])
+      expect(doc.id).toBe("task.project.core.26-001")
+      expect(doc.title).toBe("Initialize Dirban CLI")
+      expect(doc.priority).toBe("p1")
+      expect(doc.assigned_to).toBe("andrew")
+      expect(doc.tags).toEqual(["cli", "core"])
 
       expect(doc.acceptanceCriteria.length).toBe(3)
       expect(doc.acceptanceCriteria[0]?.checked).toBe(true)
@@ -69,26 +64,61 @@ describe("OKF Parser and Serializer Tests", () => {
     }
   })
 
-  it("Vector 2 (Minimal / Missing Fields): Handles default priority and missing fields", () => {
-    const minimal = `---
-id: "task.26-002"
-title: "Minimal Task"
----
+  it("Vector 2 (Plain Markdown without frontmatter): Parses pure markdown tasks", () => {
+    const plain = `# Fix authentication token timeout
 
-# Minimal Task
+Here is context on the issue.
+
+- [ ] Check redis TTL
+- [x] Reproduce in integration test
 `
-    const result = parseTaskDocument(minimal)
+    const result = parseTaskDocument(plain, "auth-timeout.md")
     expect(result.isOk()).toBe(true)
     if (result.isOk()) {
       const doc = result.value
-      expect(doc.frontmatter.id).toBe("task.26-002")
-      expect(doc.frontmatter.priority).toBe("p2")
-      expect(doc.frontmatter.status).toBe("backlog")
-      expect(doc.acceptanceCriteria.length).toBe(0)
+      expect(doc.id).toBe("auth-timeout")
+      expect(doc.title).toBe("Fix authentication token timeout")
+      expect(doc.priority).toBe("p3") // defaults to p3
+      expect(doc.acceptanceCriteria.length).toBe(2)
+      expect(doc.acceptanceCriteria[0]?.checked).toBe(false)
+      expect(doc.acceptanceCriteria[0]?.text).toBe("Check redis TTL")
+      expect(doc.acceptanceCriteria[1]?.checked).toBe(true)
+      expect(doc.acceptanceCriteria[1]?.text).toBe("Reproduce in integration test")
     }
   })
 
-  it("Vector 3 (Error Boundary): Rejects invalid frontmatter", () => {
+  it("Vector 3 (Minimal frontmatter): Extracts priority p0-p3, defaults to p3 if omitted", () => {
+    const withPriority = `---
+priority: p0
+tags: [auth, bug]
+---
+
+# Urgent crash fix
+- [ ] Deploy hotfix
+`
+    const res1 = parseTaskDocument(withPriority, "crash-fix.md")
+    expect(res1.isOk()).toBe(true)
+    if (res1.isOk()) {
+      expect(res1.value.priority).toBe("p0")
+      expect(res1.value.title).toBe("Urgent crash fix")
+      expect(res1.value.tags).toEqual(["auth", "bug"])
+    }
+
+    const withoutPriority = `---
+tags: [docs]
+---
+
+# Update readme
+`
+    const res2 = parseTaskDocument(withoutPriority, "update-readme.md")
+    expect(res2.isOk()).toBe(true)
+    if (res2.isOk()) {
+      expect(res2.value.priority).toBe("p3")
+      expect(res2.value.title).toBe("Update readme")
+    }
+  })
+
+  it("Vector 4 (Error Boundary): Rejects invalid unclosed or malformed frontmatter", () => {
     const invalidYaml = `---
 id: [unclosed array
 ---
@@ -100,35 +130,13 @@ Body
       expect(result.error.kind).toBe("INVALID_YAML")
     }
 
-    const missingId = `---
-title: "No ID"
----
+    const unclosedFrontmatter = `---
+title: unclosed
 `
-    const missingIdResult = parseTaskDocument(missingId)
-    expect(missingIdResult.isErr()).toBe(true)
-    if (missingIdResult.isErr()) {
-      expect(missingIdResult.error.kind).toBe("INVALID_SCHEMA")
-    }
-  })
-
-  it("Vector 4 (Serialization Roundtrip): Preserves frontmatter and structure", () => {
-    const parseResult = parseTaskDocument(SAMPLE_OKF_MARKDOWN)
-    expect(parseResult.isOk()).toBe(true)
-    if (parseResult.isOk()) {
-      const serialized = serializeTaskDocument(parseResult.value)
-      const reParsed = parseTaskDocument(serialized)
-      expect(reParsed.isOk()).toBe(true)
-      if (reParsed.isOk()) {
-        expect(reParsed.value.frontmatter.id).toBe(
-          parseResult.value.frontmatter.id,
-        )
-        expect(reParsed.value.frontmatter.priority).toBe(
-          parseResult.value.frontmatter.priority,
-        )
-        expect(reParsed.value.acceptanceCriteria.length).toBe(
-          parseResult.value.acceptanceCriteria.length,
-        )
-      }
+    const unclosedRes = parseTaskDocument(unclosedFrontmatter)
+    expect(unclosedRes.isErr()).toBe(true)
+    if (unclosedRes.isErr()) {
+      expect(unclosedRes.error.kind).toBe("MISSING_FRONTMATTER")
     }
   })
 })

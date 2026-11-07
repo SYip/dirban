@@ -193,18 +193,18 @@ export const startInteractiveTui = async (
 
           const actualIdx = scrollOffset + idx
           const isCurrentTask = isCurrentCol && actualIdx === state.taskIndex
-          const badge = getPriorityBadge(task.document.frontmatter.priority)
-          const id = task.document.frontmatter.id.replace(
-            /^task\.[^.]+\.[^.]+\./,
-            "",
-          )
+          const priority = task.document.priority ?? task.document.frontmatter.priority ?? "p3"
+          const badge = getPriorityBadge(priority)
+          const rawId = task.document.id ?? task.document.frontmatter.id ?? task.filename
+          const id = rawId.replace(/^task\.[^.]+\.[^.]+\./, "")
           const ac = task.document.acceptanceCriteria
           const acDone = ac.filter((x) => x.checked).length
           const acStr = ac.length > 0 ? ` ${acDone}/${ac.length}` : ""
 
           const titlePrefix = isCurrentTask ? pc.cyan("▶ ") : "  "
           const topCardLine = `${titlePrefix}${badge} ${id}${acStr}`
-          const titleLine = `   ${task.document.frontmatter.title}`
+          const title = task.document.title ?? task.document.frontmatter.title ?? id
+          const titleLine = `   ${title}`
 
           if (isCurrentTask) {
             colBodyLines.push(
@@ -269,17 +269,24 @@ export const startInteractiveTui = async (
 
     console.log(pc.cyan("\n" + "═".repeat(termCols)))
     if (selectedTask != null) {
+      const doc = selectedTask.document
       const fm = selectedTask.document.frontmatter
-      const badge = getPriorityBadge(fm.priority)
+      const priority = doc.priority ?? fm.priority ?? "p3"
+      const badge = getPriorityBadge(priority)
+      const title = doc.title ?? fm.title ?? selectedTask.filename
+      const id = doc.id ?? fm.id ?? selectedTask.filename
       console.log(
-        `${badge} ${pc.bold(pc.white(fm.title))} [${
-          pc.green(fm.id)
+        `${badge} ${pc.bold(pc.white(title))} [${
+          pc.green(id)
         }]`,
       )
-      const tags = fm.tags.length > 0 ? `Tags: ${fm.tags.join(", ")} | ` : ""
+      const tagsList = doc.tags ?? fm.tags ?? []
+      const tags = tagsList.length > 0 ? `Tags: ${tagsList.join(", ")} | ` : ""
+      const assignee = doc.assigned_to ?? fm.assigned_to ?? "unassigned"
+      const updated = doc.last_updated ?? fm.last_updated ?? "unknown"
       console.log(
         pc.gray(
-          `Column: ${selectedTask.column} | Assignee: ${fm.assigned_to} | ${tags}Updated: ${fm.last_updated}`,
+          `Column: ${selectedTask.column} | Assignee: ${assignee} | ${tags}Updated: ${updated}`,
         ),
       )
 
@@ -373,7 +380,8 @@ export const startInteractiveTui = async (
           const nextColIndex = (state.columnIndex + 1) % board.columns.length
           const nextCol = board.columns[nextColIndex]
           if (nextCol != null) {
-            moveTask(board, currentTask.document.frontmatter.id, nextCol.name)
+            const taskId = currentTask.document.id ?? currentTask.document.frontmatter.id ?? currentTask.filename
+            moveTask(board, taskId, nextCol.name)
             reloadBoard()
             state.columnIndex = nextColIndex
             state.taskIndex = nextCol.tasks.length - 1
@@ -389,7 +397,8 @@ export const startInteractiveTui = async (
             a,
           ) => !a.checked)
           const targetIndex = firstUnchecked != null ? firstUnchecked.index : 1
-          checkTaskItem(board, currentTask.document.frontmatter.id, targetIndex)
+          const taskId = currentTask.document.id ?? currentTask.document.frontmatter.id ?? currentTask.filename
+          checkTaskItem(board, taskId, targetIndex)
           reloadBoard()
         }
       }

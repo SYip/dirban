@@ -2,9 +2,12 @@ import { err, ok, type Result } from "neverthrow"
 import type { Board, BoardTask } from "../board/types.ts"
 import { findTaskByIdOrName } from "../board/discovery.ts"
 import * as fs from "node:fs"
-import { serializeTaskDocument } from "../okf/serializer.ts"
+import { LINE_SPLIT_REGEX } from "../okf/parser.ts"
 import { getIsoDate } from "./move.ts"
 import type { OperationError } from "./types.ts"
+
+const detectEol = (content: string): "\r\n" | "\n" =>
+  content.includes("\r\n") ? "\r\n" : "\n"
 
 export const checkTaskItem = (
   board: Board,
@@ -45,11 +48,20 @@ export const checkTaskItem = (
     return it
   })
 
-  // Update rawBody lines
-  let bodyLines = task.document.rawBody.split("\n")
-  let currentAcIndex = 1
+  // Read current file content directly to preserve exact markdown formatting
+  let fileContent: string
+  try {
+    fileContent = fs.readFileSync(task.filePath, "utf-8")
+  } catch (readErr) {
+    return err({
+      kind: "FS_ERROR",
+      message: readErr instanceof Error ? readErr.message : "Failed to read task file",
+    })
+  }
 
-  bodyLines = bodyLines.map((line) => {
+  const eol = detectEol(fileContent)
+  let currentAcIndex = 1
+  const updatedLines = fileContent.split(LINE_SPLIT_REGEX).map((line) => {
     const match = line.match(/^(\s*-\s*\[)([ xX])(\]\s*.+)$/)
     if (match != null && match[1] != null && match[3] != null) {
       if (currentAcIndex === targetIndex) {
@@ -68,12 +80,11 @@ export const checkTaskItem = (
       last_updated: today,
     }),
     acceptanceCriteria: Object.freeze(updatedItems),
-    rawBody: bodyLines.join("\n"),
+    rawBody: updatedLines.join(eol),
   })
 
   try {
-    const serialized = serializeTaskDocument(updatedDoc)
-    fs.writeFileSync(task.filePath, serialized, "utf-8")
+    fs.writeFileSync(task.filePath, updatedLines.join(eol), "utf-8")
 
     return ok(Object.freeze({
       ...task,

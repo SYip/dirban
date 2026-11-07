@@ -101,9 +101,12 @@ We eliminate the in-file `## Execution Journal`. Git commits already record auth
 - **Document-based workflow**: Users who want minimal file moves can keep tasks in one place and manage execution stages directly using **Markdown sections** (`## Spec`, `## Implementation`, `## Review`) and **checklists** (`- [ ]`).
 - Dirban imposes zero friction on either style—the CLI and UI surface checklist progress regardless of which folder the file lives in.
 
-### 4.6 Flexible Task Identity
-- Default to slug-based identification (`fix-auth-flow.md`), allowing the CLI and future VS Code extension to use fuzzy matching.
+### 4.6 Flexible Task Identity & Asymmetric Fuzzy Resolution
+- Default to slug-based identification (`fix-auth-flow.md`), allowing the CLI and future VS Code extension to locate tasks quickly.
 - Support optional sequential numeric IDs (`042-fix-auth-flow.md`) or custom generator hooks for projects requiring numbers.
+- **Asymmetric Lookup Safety (Read vs. Mutate)**:
+  - **Read-only commands (`view`, search, UI navigation)**: Support fuzzy keyword and substring resolution across titles and filenames. If a query matches multiple tasks, the CLI halts and prints the ambiguous candidates to guide user disambiguation.
+  - **State-mutating commands (`move`, `check`, `set`, `archive`)**: Strictly enforce exact identifier resolution (exact ID, exact filename, or relative file path). Fuzzy substring resolution is intentionally disabled during mutations to eliminate the risk of accidentally renaming or modifying the wrong task card.
 
 ### 4.7 No OKF Formatter or Document Rewriter
 - Dirban deliberately omits an OKF serializer/formatter.

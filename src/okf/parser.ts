@@ -10,12 +10,30 @@ import type {
 } from "./types.ts"
 
 const FRONTMATTER_DELIMITER = "---"
+export const LINE_SPLIT_REGEX = /\r?\n/
+
+const ACCEPTANCE_CRITERIA_SECTION_REGEX =
+  /##\s+(?:\d+\.\s+)?Acceptance Criteria[^\r\n]*\r?\n([\s\S]*?)(?=\r?\n##\s+|$)/i
+
+const CHECKBOX_LINE_REGEX = /^(\s*-\s*\[([ xX])\]\s*)(.+?)\r?$/
+
+const EXECUTION_JOURNAL_SECTION_REGEX =
+  /##\s+(?:\d+\.\s+)?Execution Journal[^\r\n]*\r?\n([\s\S]*?)(?=\r?\n##\s+|$)/i
+
+const OBJECTIVE_SCOPE_SECTION_REGEX =
+  /##\s+(?:\d+\.\s+)?Objective & Scope[^\r\n]*\r?\n([\s\S]*?)(?=\r?\n##\s+|$)/i
+
+const VERIFICATION_PLAN_SECTION_REGEX =
+  /##\s+(?:\d+\.\s+)?Verification Plan[^\r\n]*\r?\n([\s\S]*?)(?=\r?\n##\s+|$)/i
+
+const TITLE_HEADING_REGEX = /^#\s+(?:Task:\s*)?([^\r\n]+)/m
+const MD_EXTENSION_REGEX = /\.md$/i
 
 const parsePriority = (val: unknown): Priority => {
   if (typeof val === "string" && val.trim() !== "") {
     return val.trim()
   }
-  return "p2"
+  return "p3"
 }
 
 const parseStringArray = (val: unknown): readonly string[] => {
@@ -43,20 +61,17 @@ const parseRelationships = (val: unknown): TaskRelationships => {
   })
 }
 
-const parseAcceptanceCriteria = (body: string): readonly ChecklistItem[] => {
-  const acMatch = body.match(
-    /##\s+2\.\s+Acceptance Criteria[^\n]*\n([\s\S]*?)(?=\n##\s+|$)/i,
-  )
-  if (acMatch == null || acMatch[1] == null) {
-    return Object.freeze([])
-  }
+const parseAllChecklistItems = (body: string): readonly ChecklistItem[] => {
+  // First check if there's a specific Acceptance Criteria section
+  const acMatch = body.match(ACCEPTANCE_CRITERIA_SECTION_REGEX)
+  const targetText = acMatch?.[1] != null ? acMatch[1] : body
 
-  const sectionLines = acMatch[1].split("\n")
+  const sectionLines = targetText.split(LINE_SPLIT_REGEX)
   const items: ChecklistItem[] = []
   let itemIndex = 1
 
   for (const line of sectionLines) {
-    const match = line.match(/^(\s*-\s*\[([ xX])\]\s*)(.+)$/)
+    const match = line.match(CHECKBOX_LINE_REGEX)
     if (match != null && match[2] != null && match[3] != null) {
       const isChecked = match[2].toLowerCase() === "x"
       const text = match[3].trim()
@@ -74,14 +89,12 @@ const parseAcceptanceCriteria = (body: string): readonly ChecklistItem[] => {
 }
 
 const parseJournal = (body: string): readonly string[] => {
-  const journalMatch = body.match(
-    /##\s+4\.\s+Execution Journal[^\n]*\n([\s\S]*?)(?=\n##\s+|$)/i,
-  )
+  const journalMatch = body.match(EXECUTION_JOURNAL_SECTION_REGEX)
   if (journalMatch == null || journalMatch[1] == null) {
     return Object.freeze([])
   }
 
-  const lines = journalMatch[1].split("\n")
+  const lines = journalMatch[1].split(LINE_SPLIT_REGEX)
     .map((l) => l.trim())
     .filter((l) => l.startsWith("-") || l.startsWith("*"))
 
@@ -96,8 +109,17 @@ const extractSection = (body: string, sectionHeadingRegex: RegExp): string => {
   return match[1].trim()
 }
 
+const deriveIdFromFilename = (filename?: string): string => {
+  if (filename == null || filename.trim() === "") {
+    return "task"
+  }
+  const clean = filename.replace(MD_EXTENSION_REGEX, "").trim()
+  return clean !== "" ? clean : "task"
+}
+
 export const parseTaskDocument = (
   rawContent: string,
+  filename?: string,
 ): Result<TaskDocument, ParseError> => {
   if (rawContent.trim() === "") {
     return err({
@@ -106,57 +128,54 @@ export const parseTaskDocument = (
     })
   }
 
-  const lines = rawContent.split("\n")
-  if (lines.length === 0 || lines[0]?.trim() !== FRONTMATTER_DELIMITER) {
-    return err({
-      kind: "MISSING_FRONTMATTER",
-      message: "Document does not start with YAML frontmatter delimiter (---)",
-    })
+  const lines = rawContent.split(LINE_SPLIT_REGEX)
+  const hasFrontmatter = lines.length > 0 && lines[0]?.trim() === FRONTMATTER_DELIMITER
+
+  let parsedYaml: Record<string, unknown> | null = null
+  let rawBody = rawContent
+
+  if (hasFrontmatter) {
+    const secondDelimiterIndex = lines.slice(1).findIndex((line) =>
+      line.trim() === FRONTMATTER_DELIMITER
+    )
+    if (secondDelimiterIndex === -1) {
+      return err({
+        kind: "MISSING_FRONTMATTER",
+        message: "Unclosed YAML frontmatter: missing closing delimiter (---)",
+      })
+    }
+
+    const frontmatterRaw = lines.slice(1, secondDelimiterIndex + 1).join("\n")
+    rawBody = lines.slice(secondDelimiterIndex + 2).join("\n")
+
+    try {
+      const parsed = YAML.parse(frontmatterRaw)
+      if (parsed != null && typeof parsed === "object") {
+        parsedYaml = parsed as Record<string, unknown>
+      }
+    } catch (yamlErr) {
+      return err({
+        kind: "INVALID_YAML",
+        message: yamlErr instanceof Error
+          ? yamlErr.message
+          : "YAML parsing failure",
+      })
+    }
   }
 
-  const secondDelimiterIndex = lines.slice(1).findIndex((line) =>
-    line.trim() === FRONTMATTER_DELIMITER
-  )
-  if (secondDelimiterIndex === -1) {
-    return err({
-      kind: "MISSING_FRONTMATTER",
-      message: "Unclosed YAML frontmatter: missing closing delimiter (---)",
-    })
-  }
+  const record = parsedYaml ?? {}
 
-  const frontmatterRaw = lines.slice(1, secondDelimiterIndex + 1).join("\n")
-  const rawBody = lines.slice(secondDelimiterIndex + 2).join("\n")
+  // ID resolution: frontmatter ID > filename fallback > generic "task"
+  const rawId = typeof record.id === "string" ? record.id.trim() : ""
+  const id = rawId !== "" ? rawId : deriveIdFromFilename(filename)
 
-  let parsedYaml: unknown
-  try {
-    parsedYaml = YAML.parse(frontmatterRaw)
-  } catch (yamlErr) {
-    return err({
-      kind: "INVALID_YAML",
-      message: yamlErr instanceof Error
-        ? yamlErr.message
-        : "YAML parsing failure",
-    })
-  }
+  // Title extraction: frontmatter title > first `# ` heading > filename fallback
+  const titleHeader = extractSection(rawBody, TITLE_HEADING_REGEX)
+  const rawTitle = typeof record.title === "string" ? record.title.trim() : ""
+  const title = rawTitle !== ""
+    ? rawTitle
+    : (titleHeader !== "" ? titleHeader : id)
 
-  if (parsedYaml == null || typeof parsedYaml !== "object") {
-    return err({
-      kind: "INVALID_SCHEMA",
-      message: "YAML frontmatter is not a key-value object",
-    })
-  }
-
-  const record = parsedYaml as Record<string, unknown>
-  const id = typeof record.id === "string" ? record.id.trim() : ""
-  if (id === "") {
-    return err({
-      kind: "INVALID_SCHEMA",
-      field: "id",
-      message: "Frontmatter missing required 'id' field",
-    })
-  }
-
-  const title = typeof record.title === "string" ? record.title.trim() : ""
   const okf_version = typeof record.okf_version === "string"
     ? record.okf_version
     : "1.0"
@@ -164,16 +183,16 @@ export const parseTaskDocument = (
     ? record.status.trim()
     : "backlog"
   const priority = parsePriority(record.priority)
-  const owner = typeof record.owner === "string" ? record.owner : "developer"
+  const owner = typeof record.owner === "string" ? record.owner : undefined
   const assigned_to = typeof record.assigned_to === "string"
     ? record.assigned_to
-    : "unassigned"
+    : undefined
   const created_date = typeof record.created_date === "string"
     ? record.created_date
-    : ""
+    : undefined
   const last_updated = typeof record.last_updated === "string"
     ? record.last_updated
-    : ""
+    : undefined
   const tags = parseStringArray(record.tags)
   const relationships = parseRelationships(record.relationships)
 
@@ -192,19 +211,20 @@ export const parseTaskDocument = (
     relationships,
   })
 
-  const titleHeader = extractSection(rawBody, /^#\s+(?:Task:\s*)?([^\n]+)/m)
-  const objectiveScope = extractSection(
-    rawBody,
-    /##\s+1\.\s+Objective & Scope[^\n]*\n([\s\S]*?)(?=\n##\s+|$)/i,
-  )
-  const acceptanceCriteria = parseAcceptanceCriteria(rawBody)
-  const verificationPlan = extractSection(
-    rawBody,
-    /##\s+3\.\s+Verification Plan[^\n]*\n([\s\S]*?)(?=\n##\s+|$)/i,
-  )
+  const objectiveScope = extractSection(rawBody, OBJECTIVE_SCOPE_SECTION_REGEX)
+  const acceptanceCriteria = parseAllChecklistItems(rawBody)
+  const verificationPlan = extractSection(rawBody, VERIFICATION_PLAN_SECTION_REGEX)
   const executionJournal = parseJournal(rawBody)
 
   return ok(Object.freeze({
+    id,
+    title,
+    priority,
+    tags,
+    owner,
+    assigned_to,
+    created_date,
+    last_updated,
     frontmatter,
     titleHeader: titleHeader !== "" ? titleHeader : title,
     objectiveScope,

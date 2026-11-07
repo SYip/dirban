@@ -3,12 +3,12 @@ okf_version: "1.0"
 id: task.dirban.core.26-001
 title: Refactor Dirban engine to plain Markdown and add init command
 type: task
-status: 01-todo
+status: 02-doing
 priority: p1
 owner: developer
 assigned_to: unassigned
 created_date: 2026-10-12
-last_updated: 2026-10-12
+last_updated: 2026-11-07
 tags:
   - refactor
   - parser
@@ -39,16 +39,16 @@ Specifically:
 
 ## 2. Acceptance Criteria (Definition of Done)
 
-- [ ] Parser accepts files without frontmatter and extracts title from `# Header` or filename.
-- [ ] Parser extracts priority `p0`–`p3` if present in frontmatter, defaulting to `p3` if omitted.
-- [ ] Checkboxes `- [ ]` and `- [x]` are parsed into total/completed counts for card badges.
-- [ ] Move command (`dirban move`) performs physical file rename without injecting execution journal into file content.
-- [ ] Remove OKF serializer/formatter (`src/okf/serializer.ts`), preserving original file markdown and formatting intact.
-- [ ] Omit `assignee` and `owner` requirements from CLI flags and parser data models.
+- [x] Parser accepts files without frontmatter and extracts title from `# Header` or filename.
+- [x] Parser extracts priority `p0`–`p3` if present in frontmatter, defaulting to `p3` if omitted.
+- [x] Checkboxes `- [ ]` and `- [x]` are parsed into total/completed counts for card badges.
+- [x] Move command (`dirban move`) performs physical file rename without injecting execution journal into file content.
+- [x] Remove OKF serializer/formatter (`src/okf/serializer.ts`), preserving original file markdown and formatting intact.
+- [x] Omit `assignee` and `owner` requirements from CLI flags and parser data models.
 - [ ] `dirban init` interactive wizard prompts for tasks path, flow preset, and ID style.
-- [ ] `dirban init -y` scaffolds default directories (`backlog/`, `01-ready/`, `02-doing/`, `03-done/`, `archive/`) and writes `dirban.json`.
-- [ ] CLI commands (`view`, `move`, `check`) support fuzzy slug lookup (e.g., `dirban move auth done`).
-- [ ] Existing and updated unit tests pass.
+- [x] `dirban init -y` scaffolds default directories (`backlog/`, `01-ready/`, `02-doing/`, `03-done/`, `archive/`) and writes `dirban.json`.
+- [x] CLI commands (`view`, `move`, `check`) support fuzzy slug lookup (e.g., `dirban move auth done`).
+- [x] Existing and updated unit tests pass.
 
 ## 3. Verification Plan
 
@@ -59,3 +59,6 @@ bun test
 # Typecheck code
 bun run typecheck
 ```
+
+## 4. Execution Journal
+- **2026-11-07**: Moved from `01-todo` to `02-doing`.

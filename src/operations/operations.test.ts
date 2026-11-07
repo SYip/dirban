@@ -48,7 +48,7 @@ bun test
 `
 
 describe("Task Operations Domain Tests", () => {
-  it("Vector 1 (Move): Moves card across columns and updates journal & status", () => {
+  it("Vector 1 (Move): Moves card across columns physically without mutating file content", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-ops-"))
     try {
       const tasksDir = path.join(tempDir, "docs/tasks")
@@ -69,11 +69,11 @@ describe("Task Operations Domain Tests", () => {
           expect(moveRes.value.column).toBe("01-ready")
           expect(moveRes.value.document.frontmatter.status).toBe("01-ready")
           // Check old file is deleted and new file exists
-          expect(moveRes.value.document.executionJournal.length >= 2).toBe(true)
+          expect(fs.existsSync(path.join(tasksDir, "00-backlog/26-001.md"))).toBe(false)
+          expect(fs.existsSync(moveRes.value.filePath)).toBe(true)
+          // Preserves original file content without journal injection
           const newContent = fs.readFileSync(moveRes.value.filePath, "utf-8")
-          expect(
-            newContent.includes("Moved from `00-backlog` to `01-ready`"),
-          ).toBe(true)
+          expect(newContent).toBe(SAMPLE_TASK)
         }
       }
     } finally {
