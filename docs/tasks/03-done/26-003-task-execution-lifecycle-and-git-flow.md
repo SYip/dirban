@@ -33,49 +33,49 @@ Developers and AI agents can start work via either standard in-place branch chec
 ## Acceptance Criteria
 
 ### 1. Branch-Aware `dirban current` (alias `dirban focus`)
-- [ ] Explicit Selection: `dirban current <id>` immediately displays the specified task.
-- [ ] Git Branch / Worktree Detection: When in a Git repository, inspects `git rev-parse --abbrev-ref HEAD` or worktree directory:
+- [x] Explicit Selection: `dirban current <id>` immediately displays the specified task.
+- [x] Git Branch / Worktree Detection: When in a Git repository, inspects `git rev-parse --abbrev-ref HEAD` or worktree directory:
   - Extracts task ID from branch pattern (e.g., `task/26-003-foo` $\rightarrow$ `26-003`) or worktree path.
   - If a matching task exists on the board, immediately resolves it as current.
   - If Git is not installed or workspace is not a Git repo, cleanly skips without error.
-- [ ] Doing Column (`02-doing`) Resolution:
+- [x] Doing Column (`02-doing`) Resolution:
   - If 0 tasks in `02-doing`, cleanly reports: `No task currently in progress.`
   - If 1 task in `02-doing`, displays it.
   - If multiple tasks in `02-doing`, picks the highest-priority task (with deterministic recency/ID tie-breaker) and displays a brief notice.
-- [ ] Displays task title, ID, priority badge, and formatted acceptance criteria checklist.
-- [ ] Supports `--raw` flag to stream the raw task Markdown to stdout for AI agent piping (omitting notices).
+- [x] Displays task title, ID, priority badge, and formatted acceptance criteria checklist.
+- [x] Supports `--raw` flag to stream the raw task Markdown to stdout for AI agent piping (omitting notices).
 
 ### 2. `dirban start <id>` (alias `dirban worktree add <id>`)
-- [ ] Moves the task card to `02-doing` on the filesystem first (guaranteeing state transition even if Git is absent).
-- [ ] Derives deterministic branch name from task ID and slug (e.g. `task/<id>-<slug>`).
-- [ ] Supports two execution strategies:
+- [x] Moves the task card to `02-doing` on the filesystem first (guaranteeing state transition even if Git is absent).
+- [x] Derives deterministic branch name from task ID and slug (e.g. `task/<id>-<slug>`).
+- [x] Supports two execution strategies:
   - `--checkout`: Performs in-place `git checkout -b <branch>` in current repository.
   - `--worktree`: Provisions an isolated sibling git worktree in `../.<repo>.worktrees/<id>-<slug>`.
   - Configurable default strategy via `dirban.branchStrategy` (`"checkout"` [default] or `"worktree"`).
   - Graceful degradation: If not a Git repository, informs the user (`"Git repository not detected; moved card to doing on filesystem only."`) without failing.
-- [ ] Detects if a branch or worktree already exists for this task ID and prevents duplicate/conflicting creation.
+- [x] Detects if a branch or worktree already exists for this task ID and prevents duplicate/conflicting creation.
 
 ### 3. `dirban done [id]` (alias `dirban finish`)
-- [ ] Resolves task to complete:
+- [x] Resolves task to complete:
   - If `<id>` argument is provided, resolves that task.
   - If omitted, resolves the current active task (via branch name or single task in `02-doing`).
-- [ ] Moves the task file to `03-done` on the filesystem.
-- [ ] Criteria check awareness:
+- [x] Moves the task file to `03-done` on the filesystem.
+- [x] Criteria check awareness:
   - Does NOT automatically check off unchecked criteria (criteria completion is strictly the responsibility of the user or AI agent).
   - If any criteria remain unchecked, prints an informative notice (e.g. `Notice: 2 criteria remain unchecked`).
-- [ ] Git branch & worktree auto-merge:
+- [x] Git branch & worktree auto-merge:
   - If on a task branch (`task/<id>-<slug>`): merges the branch into the base branch (`main`) and checks out `main`.
   - If inside a task worktree: merges the task branch into `main` and cleans up the worktree via `git worktree remove`.
   - Graceful degradation: If not in a Git repository or on `main`, skips git merge and simply moves the task file to `03-done`.
 
 ### 4. Configuration & Testing
-- [ ] Configuration options in `.dirban.json` / `.vscode/settings.json`:
+- [x] Configuration options in `.dirban.json` / `.vscode/settings.json`:
   - `dirban.branchStrategy`: `"checkout"` | `"worktree"` (default: `"checkout"`).
   - `dirban.worktreesDir`: path template where worktrees are created (default: `../.{repo}.worktrees/`).
   - `dirban.branchPrefix`: branch prefix (default: `task/`).
-- [ ] Unit tests in `operations.test.ts` covering:
+- [x] Unit tests in `operations.test.ts` covering:
   - Filesystem-only non-git fallbacks for `current`, `start`, and `done`.
   - Branch-aware current task detection.
   - Deterministic branch/worktree path derivation.
   - Task move to `03-done` and git merge/worktree cleanup.
-- [ ] Document in `docs/cli-reference.md` and `.agents/skills/task-management/SKILL.md`.
+- [x] Document in `docs/cli-reference.md` and `.agents/skills/task-management/SKILL.md`.

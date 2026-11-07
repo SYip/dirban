@@ -63,9 +63,14 @@ dirban board --static
 # 2. View a specific task's details & criteria
 dirban view 26-001
 
-# 3. Claim the task and move to doing
-dirban move 26-001 02-doing
-dirban set 26-001 --owner=agent
+# 3. Start task execution (moves to 02-doing and provisions branch/worktree)
+dirban start 26-001
+
+# 4. Check active focus / current task anytime
+dirban current
+
+# Stream active task Markdown to stdout for agent prompting
+dirban current --raw
 ```
 
 *(Note: You can also move files using standard Unix `mv docs/tasks/01-todo/26-001-*.md docs/tasks/02-doing/`)*.
@@ -122,8 +127,8 @@ dirban check 26-001 1
 When all acceptance criteria are checked and verification passes:
 
 ```bash
-# 1. Move task to done
-dirban move 26-001 03-done
+# 1. Complete task (moves to 03-done and auto-merges branch/worktree if in git)
+dirban done
 
 # 2. (Optional) Archive completed tasks into archive/YYYY/
 dirban archive 26-001
@@ -137,6 +142,9 @@ dirban archive 26-001
 | :--- | :--- |
 | **Initialize Board** | `dirban init` |
 | **Inspect Board** | `dirban board --static` |
+| **Current / Focus Task** | `dirban current [--raw]` or `dirban focus` |
+| **Start Work on Task** | `dirban start <id> [--checkout\|--worktree]` |
+| **Finish Task** | `dirban done [id]` or `dirban finish` |
 | **Check Priorities** | `dirban priorities` |
 | **Get Next ID** | `dirban next-id` |
 | **Create Task** | `dirban new "<title>" [options]` |

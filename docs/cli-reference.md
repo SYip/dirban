@@ -53,6 +53,69 @@ dirban priorities
 # Available priorities: p0, p1, p2 (default), p3
 ```
 
+#### `current [id]` (alias: `focus`)
+Displays the active task currently being executed.
+
+- **Explicit Selection**: When passed `<id>`, immediately displays that task.
+- **Git Branch / Worktree Detection**: When in a Git repository, detects the task ID from the branch name (`task/<id>-<slug>`) or isolated worktree directory name.
+- **Filesystem Fallback (`02-doing`)**: If on `main` or non-task branch (or outside Git):
+  - If 0 tasks in `02-doing`: cleanly prints `No task currently in progress.`
+  - If 1 task in `02-doing`: displays that task.
+  - If multiple tasks in `02-doing`: selects the highest-priority task (with deterministic recency/ID tie-breaker) and prints an informative notice.
+- **AI Agent Streaming (`--raw`)**: Pass `--raw` to output the exact Markdown file content directly to `stdout` for AI agent consumption and context piping.
+
+```bash
+# Show active task based on current Git branch or doing column
+dirban current
+
+# Stream raw Markdown to stdout for agent prompting
+dirban current --raw
+
+# Focus on a specific task
+dirban focus 26-003
+```
+
+#### `start <id>` (alias: `worktree add`)
+Begins execution of a task, guaranteeing directory-as-state transition on the filesystem first, and optionally provisioning a Git branch or isolated worktree.
+
+- **Filesystem Move First**: Moves task card into `02-doing`.
+- **Branch Derivation**: Deterministically derives the branch name: `task/<id>-<slug>`.
+- **Execution Strategies**:
+  - `--checkout`: Checks out or creates an in-place branch in the current repository.
+  - `--worktree`: Provisions an isolated sibling git worktree in `../.<repo>.worktrees/<id>-<slug>`.
+  - Configurable default strategy via `dirban.branchStrategy` (`"checkout"` [default] or `"worktree"`).
+- **Graceful Non-Git Fallback**: If Git is not installed or the directory is not a Git repo, cleanly notifies the user and proceeds with the filesystem move without error.
+
+```bash
+# Start task using default configured strategy
+dirban start 26-003
+
+# Force in-place branch checkout
+dirban start 26-003 --checkout
+
+# Force isolated sibling worktree
+dirban start 26-003 --worktree
+```
+
+#### `done [id]` (alias: `finish`)
+Completes execution of a task card and transitions it to `03-done`.
+
+- **Resolution**: Completes the specified `<id>` or auto-resolves the active task via `current`.
+- **Filesystem Move**: Atomically moves the card file to `03-done`.
+- **Criteria Awareness**: Does NOT auto-check unchecked items (acceptance verification remains the explicit responsibility of the engineer or agent). Prints an informative warning if criteria remain unchecked.
+- **Git Auto-Merge**:
+  - If on a task branch: auto-merges the task branch into the base branch (`main`) and switches back to `main`.
+  - If inside a task worktree: auto-merges the task branch into `main` and cleans up the worktree directory via `git worktree remove`.
+  - If outside Git or on `main`: cleanly moves the card to `03-done` and skips git merge.
+
+```bash
+# Finish currently active task
+dirban done
+
+# Finish specific task by ID
+dirban done 26-003
+```
+
 #### `new "<title>"` (alias: `create`)
 Creates a new Markdown task file with an auto-assigned `YY-001` ID, slugified filename, and structured frontmatter.
 

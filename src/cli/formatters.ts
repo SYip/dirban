@@ -187,3 +187,32 @@ export const formatTaskDetail = (task: BoardTask): string => {
   )
   return lines.join("\n")
 }
+
+export const formatCurrentTaskView = (task: BoardTask): string => {
+  const doc = task.document
+  const fm = doc.frontmatter
+  const priority = doc.priority ?? fm.priority ?? "p3"
+  const title = doc.title ?? fm.title ?? task.filename
+  const id = doc.id ?? fm.id ?? task.filename
+  const lines: string[] = []
+
+  lines.push(
+    `${getPriorityBadge(priority)} ${pc.bold(pc.white(title))} (${pc.green(id)})`,
+  )
+  lines.push(pc.gray(`Column: ${task.column} | Path: ${task.filePath}`))
+
+  const acList = doc.acceptanceCriteria
+  lines.push(`\n${pc.bold("Acceptance Criteria:")}`)
+  if (acList.length === 0) {
+    lines.push(pc.dim("  (none defined)"))
+  } else {
+    const completed = acList.filter((a) => a.checked).length
+    lines.push(`  Progress: ${renderProgressBar(completed, acList.length, 16)}`)
+    for (const item of acList) {
+      const box = item.checked ? pc.green("[x]") : pc.red("[ ]")
+      lines.push(`  ${box} #${item.index}: ${item.text}`)
+    }
+  }
+
+  return lines.join("\n")
+}

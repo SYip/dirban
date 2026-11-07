@@ -5,7 +5,7 @@ import { spawn } from "node:child_process"
 import pc from "picocolors"
 import { loadConfig } from "./src/config/config.ts"
 import { discoverBoard, findTaskByIdOrName, findTaskWithFuzzy } from "./src/board/discovery.ts"
-import { formatBoardStatic, formatTaskDetail } from "./src/cli/formatters.ts"
+import { formatBoardStatic, formatCurrentTaskView, formatTaskDetail } from "./src/cli/formatters.ts"
 import { startInteractiveTui } from "./src/cli/tui.ts"
 import { moveTask } from "./src/operations/move.ts"
 import { checkTaskItem } from "./src/operations/check.ts"
@@ -13,7 +13,12 @@ import { setTaskMetadata } from "./src/operations/set.ts"
 import { archiveTasks } from "./src/operations/archive.ts"
 import { calculateNextTaskId, createTask } from "./src/operations/create.ts"
 import { initializeBoard } from "./src/operations/init.ts"
+import { resolveCurrentTask } from "./src/operations/current.ts"
+import { startTask } from "./src/operations/start.ts"
+import { doneTask } from "./src/operations/done.ts"
 import type { Priority } from "./src/okf/types.ts"
+import type { BranchStrategy } from "./src/config/types.ts"
+import * as fs from "node:fs"
 
 const PRINT_HELP = () => {
   console.log(`
@@ -27,6 +32,9 @@ ${pc.bold("USAGE:")}
 ${pc.bold("COMMANDS:")}
   init                  Initialize board directory structure (backlog, 01-todo, 02-doing, 03-done, archive)
   board                 Display kanban board (Interactive TUI by default in TTY, or static table)
+  current [id]          Show active task (alias: focus). Detects git branch/worktree or 02-doing
+  start <id>            Start work on task (alias: worktree add). Moves to 02-doing & provisions branch/worktree
+  done [id]             Finish task (alias: finish). Moves to 03-done & merges branch/worktree if in git
   new <title>           Create a new task with auto-assigned YY-001 ID (alias: create)
   next-id               Print the next available task ID for the current year
   priorities            List available task priority levels and highlight the default
@@ -36,6 +44,13 @@ ${pc.bold("COMMANDS:")}
   set <id> [options]    Mutate task frontmatter (priority, assignee, owner, tags)
   archive [<id>|all]    Archive completed tasks to archive/YYYY/
   help                  Show this help message
+
+${pc.bold("CURRENT OPTIONS:")}
+  --raw                 Print raw Markdown content to stdout for AI agent piping
+
+${pc.bold("START OPTIONS:")}
+  --checkout            Create/checkout in-place task branch (default if configured)
+  --worktree            Create isolated sibling git worktree
 
 ${pc.bold("NEW / CREATE OPTIONS:")}
   --column=<column>     Target column (defaults to backlog or first column)
@@ -88,6 +103,9 @@ export const runCli = async (args: readonly string[]): Promise<number> => {
       tags: { type: "string" },
       config: { type: "string" },
       yes: { type: "boolean", short: "y" },
+      raw: { type: "boolean" },
+      checkout: { type: "boolean" },
+      worktree: { type: "boolean" },
     },
     allowPositionals: true,
   })
@@ -149,6 +167,140 @@ export const runCli = async (args: readonly string[]): Promise<number> => {
     }
 
     console.log(`\nRun "${pc.cyan("dirban board")}" to view your board.`)
+    return 0
+  }
+
+  if (command === "current" || command === "focus") {
+    const explicitId = positionals[1]
+    const boardRes = discoverBoard(config)
+    if (boardRes.isErr()) {
+      console.error(pc.red(`Board Error: ${boardRes.error.message}`))
+      return 1
+    }
+
+    const currentRes = resolveCurrentTask(boardRes.value, config, explicitId)
+    if (currentRes.isErr()) {
+      console.log(currentRes.error.message)
+      return 0
+    }
+
+    const { task, multipleInDoing, doingCount } = currentRes.value
+
+    if (flags.raw) {
+      try {
+        const rawContent = fs.readFileSync(task.filePath, "utf-8")
+        process.stdout.write(rawContent)
+        return 0
+      } catch (readErr) {
+        console.error(
+          pc.red(
+            `Failed to read task file: ${readErr instanceof Error ? readErr.message : "Unknown error"}`,
+          ),
+        )
+        return 1
+      }
+    }
+
+    if (multipleInDoing) {
+      console.log(
+        pc.yellow(
+          `Notice: Multiple tasks in doing (${doingCount}). Selected highest-priority task.`,
+        ),
+      )
+    }
+
+    console.log(formatCurrentTaskView(task))
+    return 0
+  }
+
+  if (command === "start" || (command === "worktree" && positionals[1] === "add")) {
+    const taskId = command === "worktree" ? positionals[2] : positionals[1]
+    if (taskId == null || taskId.trim() === "") {
+      console.error(pc.red("Error: Missing task ID. Usage: dirban start <id> [--checkout|--worktree]"))
+      return 1
+    }
+
+    const boardRes = discoverBoard(config)
+    if (boardRes.isErr()) {
+      console.error(pc.red(`Board Error: ${boardRes.error.message}`))
+      return 1
+    }
+
+    const strategy: BranchStrategy | undefined = flags.worktree
+      ? "worktree"
+      : flags.checkout
+      ? "checkout"
+      : undefined
+
+    const startRes = startTask(boardRes.value, config, taskId.trim(), { strategy })
+    if (startRes.isErr()) {
+      console.error(pc.red(`Start Error: ${startRes.error.message}`))
+      return 1
+    }
+
+    const { task, branchName, strategy: usedStrategy, worktreePath, gitSkipped, gitMessage } = startRes.value
+    console.log(
+      pc.green(
+        `✔ Moved task ${task.document.id ?? task.filename} to ${task.column}`,
+      ),
+    )
+
+    if (gitSkipped && gitMessage != null) {
+      console.log(pc.yellow(`Notice: ${gitMessage}`))
+    } else if (usedStrategy === "worktree" && worktreePath != null) {
+      console.log(
+        pc.green(
+          `✔ Created worktree for branch ${pc.cyan(branchName)} at ${pc.cyan(worktreePath)}`,
+        ),
+      )
+    } else {
+      console.log(
+        pc.green(`✔ Active on branch ${pc.cyan(branchName)} (${usedStrategy})`),
+      )
+    }
+    return 0
+  }
+
+  if (command === "done" || command === "finish") {
+    const taskId = positionals[1]
+    const boardRes = discoverBoard(config)
+    if (boardRes.isErr()) {
+      console.error(pc.red(`Board Error: ${boardRes.error.message}`))
+      return 1
+    }
+
+    const doneRes = doneTask(boardRes.value, config, taskId)
+    if (doneRes.isErr()) {
+      console.error(pc.red(`Done Error: ${doneRes.error.message}`))
+      return 1
+    }
+
+    const { task, uncheckedCount, mergedBranch, baseBranch, worktreeRemoved, gitSkipped, message } = doneRes.value
+    console.log(
+      pc.green(
+        `✔ Completed task ${task.document.id ?? task.filename} (moved to ${task.column})`,
+      ),
+    )
+
+    if (uncheckedCount > 0) {
+      console.log(
+        pc.yellow(
+          `Notice: ${uncheckedCount} acceptance criteria remain unchecked.`,
+        ),
+      )
+    }
+
+    if (!gitSkipped && mergedBranch != null && baseBranch != null) {
+      console.log(
+        pc.green(`✔ Auto-merged branch ${pc.cyan(mergedBranch)} into ${pc.cyan(baseBranch)}`),
+      )
+      if (worktreeRemoved) {
+        console.log(pc.green(`✔ Removed completed worktree directory`))
+      }
+    } else if (message != null) {
+      console.log(pc.dim(`Git notice: ${message}`))
+    }
+
     return 0
   }
 

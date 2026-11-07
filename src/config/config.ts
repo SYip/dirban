@@ -10,6 +10,10 @@ export const DEFAULT_TASKS_DIR = "docs/tasks" as const
 export const DEFAULT_ARCHIVE_DIR = "docs/tasks/archive" as const
 export const DEFAULT_PRIORITY = "p2" as const
 
+export const DEFAULT_BRANCH_STRATEGY = "checkout" as const
+export const DEFAULT_WORKTREES_DIR = "../.{repo}.worktrees" as const
+export const DEFAULT_BRANCH_PREFIX = "task/" as const
+
 export const DEFAULT_COLUMNS: readonly string[] = Object.freeze([
   "backlog",
   "01-todo",
@@ -30,6 +34,9 @@ export const DEFAULT_CONFIG: DirbanConfig = Object.freeze({
   archiveDir: DEFAULT_ARCHIVE_DIR,
   priorities: DEFAULT_PRIORITIES,
   defaultPriority: DEFAULT_PRIORITY,
+  branchStrategy: DEFAULT_BRANCH_STRATEGY,
+  worktreesDir: DEFAULT_WORKTREES_DIR,
+  branchPrefix: DEFAULT_BRANCH_PREFIX,
 })
 
 /**
@@ -87,12 +94,33 @@ const parseRawConfigObject = (
         ? priorities[Math.min(2, priorities.length - 1)]
         : undefined)
 
+  const branchStrategyRaw = getVal("branchStrategy")
+  const branchStrategy =
+    branchStrategyRaw === "checkout" || branchStrategyRaw === "worktree"
+      ? branchStrategyRaw
+      : undefined
+
+  const worktreesDirRaw = getVal("worktreesDir")
+  const worktreesDir =
+    typeof worktreesDirRaw === "string" && worktreesDirRaw.trim() !== ""
+      ? worktreesDirRaw.trim()
+      : undefined
+
+  const branchPrefixRaw = getVal("branchPrefix")
+  const branchPrefix =
+    typeof branchPrefixRaw === "string" && branchPrefixRaw.trim() !== ""
+      ? branchPrefixRaw.trim()
+      : undefined
+
   return {
     tasksDir,
     archiveDir,
     columns,
     priorities,
     defaultPriority,
+    branchStrategy,
+    worktreesDir,
+    branchPrefix,
   }
 }
 
@@ -150,5 +178,8 @@ export const loadConfig = (
     archiveDir: parsed.archiveDir ?? DEFAULT_CONFIG.archiveDir,
     priorities: parsed.priorities ?? DEFAULT_CONFIG.priorities,
     defaultPriority: parsed.defaultPriority ?? DEFAULT_CONFIG.defaultPriority,
+    branchStrategy: parsed.branchStrategy ?? DEFAULT_CONFIG.branchStrategy,
+    worktreesDir: parsed.worktreesDir ?? DEFAULT_CONFIG.worktreesDir,
+    branchPrefix: parsed.branchPrefix ?? DEFAULT_CONFIG.branchPrefix,
   }))
 }

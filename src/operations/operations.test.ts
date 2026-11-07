@@ -10,6 +10,14 @@ import { setTaskMetadata } from "./set.ts"
 import { archiveTasks } from "./archive.ts"
 import { calculateNextTaskId, createTask } from "./create.ts"
 import { initializeBoard } from "./init.ts"
+import { resolveCurrentTask } from "./current.ts"
+import { startTask } from "./start.ts"
+import { doneTask } from "./done.ts"
+import {
+  GitVcsProvider,
+  NoopVcsProvider,
+  getVcsProvider,
+} from "../vcs/index.ts"
 
 const SAMPLE_TASK = `---
 okf_version: "1.0"
@@ -305,6 +313,133 @@ describe("Task Operations Domain Tests", () => {
         expect(updatedSettings["editor.tabSize"]).toBe(4)
         expect(updatedSettings["dirban.tasksDir"]).toBe("docs/tasks")
         expect(updatedSettings["dirban.defaultPriority"]).toBe("p2")
+      }
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  it("Vector 9 (Git helper functions & VCS Providers): Derives deterministic branch names, worktree paths, and extracts IDs", () => {
+    const gitProvider = new GitVcsProvider()
+    expect(gitProvider.deriveBranchName("task/", "26-003", "git-workflow")).toBe("task/26-003-git-workflow")
+    expect(gitProvider.deriveBranchName("feature", "26-003", "my Feature!")).toBe("feature/26-003-my-feature")
+    expect(gitProvider.deriveBranchName("task/", "26-003", "")).toBe("task/26-003")
+
+    const derivedPath = gitProvider.deriveWorktreePath(
+      "/Users/alice/projects/dirban",
+      "../.{repo}.worktrees",
+      "26-003",
+      "my-task",
+    )
+    expect(derivedPath).toBe("/Users/alice/projects/.dirban.worktrees/26-003-my-task")
+
+    expect(gitProvider.extractTaskId("task/26-003-my-feature")).toBe("26-003")
+    expect(gitProvider.extractTaskId("26-003-my-feature")).toBe("26-003")
+    expect(gitProvider.extractTaskId("26-003")).toBe("26-003")
+    expect(gitProvider.extractTaskId("main")).toBe(null)
+    expect(gitProvider.extractTaskId(undefined, "/path/to/.dirban.worktrees/26-003-git-flow")).toBe("26-003")
+
+    const noopProvider = new NoopVcsProvider()
+    expect(noopProvider.getContext().isAvailable).toBe(false)
+    expect(noopProvider.extractTaskId("task/26-003-foo")).toBe(null)
+  })
+
+  it("Vector 10 (Current task resolution): Explicit ID, Doing column, and priority fallback", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-current-"))
+    try {
+      initializeBoard(DEFAULT_CONFIG, tempDir)
+      const boardRes = discoverBoard(DEFAULT_CONFIG, tempDir)
+      expect(boardRes.isOk()).toBe(true)
+      if (boardRes.isErr()) return
+
+      // Non-git directory: 0 tasks in doing -> NO_ACTIVE_TASK
+      const res0 = resolveCurrentTask(boardRes.value, DEFAULT_CONFIG, undefined, tempDir)
+      expect(res0.isErr()).toBe(true)
+      if (res0.isErr()) {
+        expect(res0.error.message).toBe("No task currently in progress.")
+      }
+
+      // Create a task in 01-todo and an explicit lookup
+      const create1 = createTask(boardRes.value, {
+        title: "Task One",
+        priority: "p2",
+        column: "01-todo",
+      })
+      expect(create1.isOk()).toBe(true)
+      if (create1.isErr()) return
+
+      const boardAfter1 = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const explicitRes = resolveCurrentTask(boardAfter1, DEFAULT_CONFIG, create1.value.id, tempDir)
+      expect(explicitRes.isOk()).toBe(true)
+      if (explicitRes.isOk()) {
+        expect(explicitRes.value.source).toBe("explicit")
+        expect(explicitRes.value.task.document.id).toBe(create1.value.id)
+      }
+
+      // Move Task 1 to 02-doing -> single doing task
+      moveTask(boardAfter1, create1.value.id, "02-doing")
+      const boardAfterMove = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const res1 = resolveCurrentTask(boardAfterMove, DEFAULT_CONFIG, undefined, tempDir)
+      expect(res1.isOk()).toBe(true)
+      if (res1.isOk()) {
+        expect(res1.value.source).toBe("doing-column")
+        expect(res1.value.multipleInDoing).toBe(false)
+        expect(res1.value.task.document.id).toBe(create1.value.id)
+      }
+
+      // Add higher priority task to 02-doing -> picks highest priority (p0 over p2)
+      createTask(boardAfterMove, {
+        title: "High Priority Task",
+        priority: "p0",
+        column: "02-doing",
+      })
+      const boardAfter2 = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const resMulti = resolveCurrentTask(boardAfter2, DEFAULT_CONFIG, undefined, tempDir)
+      expect(resMulti.isOk()).toBe(true)
+      if (resMulti.isOk()) {
+        expect(resMulti.value.source).toBe("doing-column")
+        expect(resMulti.value.multipleInDoing).toBe(true)
+        expect(resMulti.value.doingCount).toBe(2)
+        expect(resMulti.value.task.document.priority).toBe("p0")
+      }
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  it("Vector 11 (Start and Done lifecycle - non-git filesystem fallback): Transitions tasks cleanly", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-lifecycle-"))
+    try {
+      initializeBoard(DEFAULT_CONFIG, tempDir)
+      const boardRes = discoverBoard(DEFAULT_CONFIG, tempDir)
+      expect(boardRes.isOk()).toBe(true)
+      if (boardRes.isErr()) return
+
+      const created = createTask(boardRes.value, {
+        title: "Lifecycle Feature",
+        priority: "p1",
+        column: "01-todo",
+      })._unsafeUnwrap()
+
+      const boardWithTask = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+
+      // 1. dirban start <id> in non-git directory
+      const startRes = startTask(boardWithTask, DEFAULT_CONFIG, created.id, { cwd: tempDir })
+      expect(startRes.isOk()).toBe(true)
+      if (startRes.isOk()) {
+        expect(startRes.value.task.column).toBe("02-doing")
+        expect(startRes.value.gitSkipped).toBe(true)
+        expect(startRes.value.branchName).toBe(`task/${created.id}-lifecycle-feature`)
+      }
+
+      // 2. dirban done in non-git directory without explicit ID (picks single doing task)
+      const boardInDoing = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const doneRes = doneTask(boardInDoing, DEFAULT_CONFIG, undefined, { cwd: tempDir })
+      expect(doneRes.isOk()).toBe(true)
+      if (doneRes.isOk()) {
+        expect(doneRes.value.task.column).toBe("03-done")
+        expect(doneRes.value.gitSkipped).toBe(true)
+        expect(doneRes.value.uncheckedCount).toBe(1)
       }
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
