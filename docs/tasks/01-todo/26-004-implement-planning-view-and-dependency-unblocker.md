@@ -1,8 +1,9 @@
 ---
+okf_version: "1.0"
 id: 26-004
 title: Implement planning view and dependency unblocker
 type: task
-status: backlog
+status: 01-todo
 priority: p1
 owner: developer
 assigned_to: unassigned
@@ -12,6 +13,10 @@ tags:
   - cli
   - planning
   - dependencies
+relationships:
+  depends_on: []
+  blocks: []
+  related_to: []
 ---
 
 # Implement planning view and dependency unblocker
