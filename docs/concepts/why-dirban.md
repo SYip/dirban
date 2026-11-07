@@ -19,6 +19,7 @@ relationships:
     - "spec.md"
     - "docs/decisions/2026-10-12-plain-markdown-and-git-audit.md"
     - "docs/decisions/2026-11-07-omission-of-milestones.md"
+    - "docs/decisions/2026-11-07-progressive-enhancement-optional-dependencies.md"
 ---
 
 # Why Dirban: Comparative Positioning & Philosophy
@@ -169,4 +170,23 @@ The primary GUI for Dirban is a first-class **VS Code Extension** (TreeViews, in
 * Dirban is designed for solo builders and small teams ($\le 5$). A real-world project board rarely has more than a few dozen active tasks and a few hundred archived notes.
 * Modern JavaScript engines (V8 / JavaScriptCore via Bun) parse a few hundred Markdown files in single-digit milliseconds—orders of magnitude faster than human perception or terminal rendering.
 * Sacrificing seamless IDE integration for raw sub-millisecond micro-benchmarks on 100,000 files solves a problem that small teams do not have.
+
+---
+
+## 9. Progressive Enhancement: Filesystem as Foundation, Git & VS Code as Accelerators
+
+Dirban operates on a strict **tiered progressive enhancement** architecture:
+
+1. **Tier 1 — The Filesystem is the Complete Foundation**:
+   - Everything in Dirban works 100% on standard directories and `.md` files alone.
+   - If Git is not installed, if you are working in an unversioned folder, or if VS Code is not open, the entire engine, CLI, and board operate without degradation.
+2. **Tier 2 — Git as an Accelerator (Optional)**:
+   - When Git is present, it provides an immutable event log (`git log --follow`) and enables branch-aware task focus (`dirban current`) and task isolation (`dirban worktree`).
+   - If Git is absent or fails, Dirban gracefully falls back to the directory structure (`02-doing/`) without throwing errors.
+3. **Tier 3 — VS Code as an Accelerator (Optional)**:
+   - When developing inside VS Code, Dirban automatically reads configuration from `.vscode/settings.json` and surfaces tasks in the activity bar.
+   - If `.vscode` is not present, it uses `.dirban.json` or defaults seamlessly.
+
+*(For detailed architectural rationale, see the Architecture Decision Record on [Progressive Enhancement & Optional Dependencies](../decisions/2026-11-07-progressive-enhancement-optional-dependencies.md).)*
+
 
