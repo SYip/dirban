@@ -15,12 +15,13 @@ In Dirban, **the physical directory IS the task state**.
 
 ## 1. Core Invariants & Rules for Agents
 
-1. **Directories are Columns**:
-   - `docs/tasks/backlog/` — Default destination for new tasks. Ideas, staging queue, or unscheduled backlog.
-   - `docs/tasks/01-todo/` — Prioritized and refined tasks ready for execution.
-   - `docs/tasks/02-doing/` — The task you are currently implementing.
-   - `docs/tasks/03-done/` — Completed work with passing tests & criteria met.
-   - `docs/tasks/archive/` — Historical partitioned storage (`archive/YYYY/`).
+1. **Directories are States & Tiers**:
+   - `docs/tasks/backlog/` — Reserved intake and capture pool (GTD capture / idea staging). The default destination for new, unscheduled, or blocked tasks waiting for planning.
+   - Active Kanban Workflow Columns (`docs/tasks/<column>/`, configured via `dirban.columns`):
+     - `docs/tasks/01-todo/` — Prioritized and refined tasks ready for execution (`config.columns[0]`).
+     - `docs/tasks/02-doing/` — The task you are currently implementing.
+     - `docs/tasks/03-done/` — Completed work with passing tests & criteria met.
+   - `docs/tasks/archive/` — Reserved terminal tier for historical partitioned storage (`archive/YYYY/`).
 2. **One Task per File**: Every task is an isolated Markdown file. Always inspect only the task you are actively working on to keep token context minimal.
 3. **Never modify `status:` directly in frontmatter**: The directory location dictates task status. Use `dirban move` or `mv` to transition cards.
 4. **Acceptance Criteria are Checkboxes**: Track progress with standard Markdown `- [ ]` and `- [x]` items.
@@ -136,12 +137,58 @@ dirban archive 26-001
 
 ---
 
+### F. Handling Blockers, Planning & Unblocking
+
+When an active task encounters blockers (e.g. waiting on dependency, upstream PR, or external input):
+1. **Demote & Record Blockers**:
+   ```bash
+   dirban block <id> "<blocker reason or prerequisite task ID>"
+   ```
+   * Automatically adds entries to `relationships.depends_on` and demotes the task back to `backlog/` to free the active slot.
+2. **Record Rationale in `## Execution Journal`**:
+   Add an entry with timestamp and context to the task Markdown file:
+   ```markdown
+   ## Execution Journal
+   - 2026-11-07T21:00:00Z: [BLOCKED] Blocked by 26-001 (database migration needed).
+   ```
+
+When reviewing and scheduling work:
+1. **Inspect Backlog Plan**:
+   ```bash
+   # Formatted overview of Ready vs Blocked tasks
+   dirban plan
+
+   # Scriptable flags for agents
+   dirban plan --ready
+   dirban plan --blocked
+   ```
+2. **Unblocking & Promoting**:
+   * Prerequisite tasks in `relationships.depends_on` resolve automatically once they reach `done` or `archive/`.
+   * Clear external blocker strings via:
+     ```bash
+     dirban unblock <id> "<blocker string>"
+     ```
+   * Promote the unblocked task into the active workflow (`config.columns[0]`):
+     ```bash
+     dirban plan --promote=<id>
+     ```
+   * Record unblocking in the task's `## Execution Journal`:
+     ```markdown
+     ## Execution Journal
+     - 2026-11-08T09:00:00Z: [UNBLOCKED] 26-001 merged; resumed work.
+     ```
+
+---
+
 ## 4. CLI Command Cheat Sheet
 
 | Intent | Command |
 | :--- | :--- |
 | **Initialize Board** | `dirban init` |
 | **Inspect Board** | `dirban board --static` |
+| **Backlog Planning** | `dirban plan [--ready\|--blocked\|--promote=<id>\|-i]` |
+| **Block Task** | `dirban block <id> <reasons...>` |
+| **Unblock Task** | `dirban unblock <id> [reason]` |
 | **Current / Focus Task** | `dirban current [--raw]` or `dirban focus` |
 | **Start Work on Task** | `dirban start <id> [--checkout\|--worktree]` |
 | **Finish Task** | `dirban done [id]` or `dirban finish` |

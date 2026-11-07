@@ -1,0 +1,189 @@
+import pc from "picocolors"
+import * as process from "node:process"
+import type { DirbanConfig } from "../config/types.ts"
+import { discoverBoard } from "../board/discovery.ts"
+import { partitionBacklog, promoteTask } from "../operations/plan.ts"
+import { unblockTask } from "../operations/block.ts"
+import { getPriorityBadge } from "./formatters.ts"
+
+export const startInteractivePlanTui = async (
+  config: DirbanConfig,
+  workspaceRoot: string = process.cwd(),
+): Promise<void> => {
+  if (!process.stdin.isTTY) {
+    console.error("Standard input is not a terminal TTY.")
+    return
+  }
+
+  let boardRes = discoverBoard(config, workspaceRoot)
+  if (boardRes.isErr()) {
+    console.error("Failed to load board:", boardRes.error)
+    return
+  }
+
+  let board = boardRes.value
+  let plan = partitionBacklog(board)
+  let selectedIndex = 0
+  let mode: "list" | "unblock_prompt" = "list"
+  let promptTaskId = ""
+  let statusMessage = ""
+
+  // Flatten items for list selection
+  const getItems = () => [
+    ...plan.ready.map((item) => ({ ...item, type: "ready" as const })),
+    ...plan.blocked.map((item) => ({ ...item, type: "blocked" as const })),
+  ]
+
+  process.stdin.setRawMode(true)
+  process.stdin.resume()
+  process.stdin.setEncoding("utf8")
+
+  const clearScreen = () => {
+    process.stdout.write("\x1b[2J\x1b[H")
+  }
+
+  const render = () => {
+    clearScreen()
+    const items = getItems()
+
+    console.log(
+      pc.bold(
+        pc.cyan(`\n=== DIRBAN INTERACTIVE PLANNER (${plan.totalBacklog} backlog tasks) ===`),
+      ),
+    )
+    console.log(
+      pc.gray("↑/↓: Navigate | p: Promote (if ready) | u: Unblock (if blocked) | q: Quit\n"),
+    )
+
+    if (statusMessage !== "") {
+      console.log(`  ${statusMessage}\n`)
+    }
+
+    if (items.length === 0) {
+      console.log(pc.dim("  (Backlog is empty)"))
+      return
+    }
+
+    items.forEach((item, index) => {
+      const isSelected = index === selectedIndex
+      const pointer = isSelected ? pc.cyan("▶ ") : "  "
+      const priority = item.task.document.priority ?? "p3"
+      const badge = getPriorityBadge(priority)
+      const id = pc.bold(item.task.document.id)
+      const title = item.task.document.title
+      const statusIcon = item.type === "ready" ? pc.green("✔") : pc.red("✖")
+
+      console.log(`${pointer}${statusIcon} ${badge} ${id} - ${title}`)
+      if (item.type === "blocked") {
+        for (const blocker of item.evaluation.unresolved) {
+          console.log(pc.red(`       Blocked by: ${blocker}`))
+        }
+      } else if (item.evaluation.resolved.length > 0) {
+        console.log(
+          pc.gray(`       Resolved: [${item.evaluation.resolved.join(", ")}]`),
+        )
+      }
+    })
+
+    console.log(pc.gray("\n" + "─".repeat(50)))
+  }
+
+  render()
+
+  return new Promise((resolve) => {
+    const cleanup = () => {
+      process.stdin.setRawMode(false)
+      process.stdin.pause()
+      process.stdin.removeListener("data", onKey)
+      clearScreen()
+      resolve()
+    }
+
+    const onKey = (key: string) => {
+      const items = getItems()
+
+      // Ctrl+C or 'q' to quit
+      if (key === "\u0003" || key === "q" || key === "Q") {
+        cleanup()
+        return
+      }
+
+      // Up arrow or 'k'
+      if (key === "\u001b[A" || key === "k") {
+        if (selectedIndex > 0) {
+          selectedIndex -= 1
+        }
+        render()
+        return
+      }
+
+      // Down arrow or 'j'
+      if (key === "\u001b[B" || key === "j") {
+        if (selectedIndex < items.length - 1) {
+          selectedIndex += 1
+        }
+        render()
+        return
+      }
+
+      // 'p' or 'P' to promote
+      if (key === "p" || key === "P") {
+        const selected = items[selectedIndex]
+        if (selected == null) return
+
+        if (selected.type === "blocked") {
+          statusMessage = pc.red(`Cannot promote ${selected.task.document.id}: it is currently blocked.`)
+          render()
+          return
+        }
+
+        const promoteRes = promoteTask(board, config, selected.task.document.id)
+        if (promoteRes.isErr()) {
+          statusMessage = pc.red(`Promote failed: ${promoteRes.error.message}`)
+        } else {
+          statusMessage = pc.green(`✔ Promoted ${selected.task.document.id} to ${promoteRes.value.targetColumn}!`)
+          // Reload board and plan
+          const updatedBoard = discoverBoard(config, workspaceRoot)
+          if (updatedBoard.isOk()) {
+            board = updatedBoard.value
+            plan = partitionBacklog(board)
+            if (selectedIndex >= getItems().length) {
+              selectedIndex = Math.max(0, getItems().length - 1)
+            }
+          }
+        }
+        render()
+        return
+      }
+
+      // 'u' or 'U' to unblock
+      if (key === "u" || key === "U") {
+        const selected = items[selectedIndex]
+        if (selected == null || selected.type !== "blocked") {
+          statusMessage = pc.yellow("Selected task is not blocked.")
+          render()
+          return
+        }
+
+        // Attempt automatic unblock of first unresolved blocker
+        const firstBlocker = selected.evaluation.unresolved[0]
+        const unblockRes = unblockTask(board, selected.task.document.id, firstBlocker)
+        if (unblockRes.isErr()) {
+          statusMessage = pc.red(`Unblock failed: ${unblockRes.error.message}`)
+        } else {
+          statusMessage = pc.green(`✔ Cleared blocker "${firstBlocker}" from ${selected.task.document.id}`)
+          const updatedBoard = discoverBoard(config, workspaceRoot)
+          if (updatedBoard.isOk()) {
+            board = updatedBoard.value
+            plan = partitionBacklog(board)
+          }
+        }
+        render()
+        return
+      }
+    }
+
+    process.stdin.on("data", onKey)
+  })
+}
+

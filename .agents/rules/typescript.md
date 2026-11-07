@@ -27,9 +27,11 @@ description: "TypeScript standards: strict typing, no semicolons, pure functions
 * **Declarative / Functional Paradigm**: Prefer declarative and functional programming patterns over imperative loops, mutable state, and class hierarchies.
   * Use higher-order functions (`map`, `filter`, `reduce`, `flatMap`, `find`, `some`, `every`, `Object.fromEntries`) instead of imperative `for`/`while` loops and manual array pushes whenever viable.
   * Use pure functions with zero side effects for domain logic, transformations, and formatting.
-* **Immutability by Default**:
-  * Mark parameters and collection types as `readonly` (e.g., `Readonly<T>`, `readonly T[]`, `as const`).
-  * Avoid in-place mutations (e.g. `push`, `splice`, direct property assignment); return fresh frozen or spread objects (`{ ...obj, updated }`, `[...arr, item]`).
+* **Immutability by Default (Compile-Time `readonly`)**:
+  * Prefer compile-time `readonly` over noisy runtime `Object.freeze` wrapping.
+  * Mark parameters, interfaces, and collection types as `readonly` (e.g., `readonly T[]`, `Readonly<T>`, `as const`).
+  * Avoid in-place mutations (e.g. `push`, `splice`, direct property assignment); return fresh spread objects or arrays (`{ ...obj, updated }`, `[...arr, item]`).
+  * Reserve `Object.freeze` strictly for top-level static constants (e.g. `DEFAULT_CONFIG`, `DEFAULT_COLUMNS`) where runtime immutability of shared globals is beneficial.
 
 ## 6. Single Responsibility & Function Scope
 * **Single Responsibility Principle (SRP)**: Each function must do one thing, do it completely, and do it well. Avoid monolithic "god functions" that mix parsing, business logic, I/O, validation, and presentation.

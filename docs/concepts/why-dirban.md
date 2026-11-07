@@ -123,7 +123,7 @@ In a file explorer, you cannot see the status of work inside a file without open
 
 ### 5. Backlog & Archive Bloat
 Over months of work, `backlog/` and `archive/` accumulate hundreds of files. Opening those folders in a standard file explorer creates huge scrolling lag and visual clutter.
-> **Dirban's Difference**: Treats `backlog` and `archive` as collapsible, search-indexed storage tiers separate from the active WIP flow (`ready` $\rightarrow$ `doing` $\rightarrow$ `done`).
+> **Dirban's Difference**: Treats `backlog` and `archive` as intrinsic, reserved storage tiers separate from the active Kanban WIP flow (`ready` $\rightarrow$ `doing` $\rightarrow$ `done`). `backlog/` acts as the universal GTD capture and idea staging pool, while `archive/` handles historical retention. Neither crowds the active workflow columns.
 
 ---
 

@@ -4,7 +4,6 @@
   },
   "dirban.tasksDir": "docs/tasks",
   "dirban.columns": [
-    "backlog",
     "01-todo",
     "02-doing",
     "03-done"

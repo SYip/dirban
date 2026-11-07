@@ -7,6 +7,7 @@ export const CONFIG_FILE_NAME = ".dirban.json" as const
 export const VSCODE_SETTINGS_DIR = ".vscode" as const
 export const VSCODE_SETTINGS_FILE = "settings.json" as const
 export const DEFAULT_TASKS_DIR = "docs/tasks" as const
+export const DEFAULT_BACKLOG_DIR = "docs/tasks/backlog" as const
 export const DEFAULT_ARCHIVE_DIR = "docs/tasks/archive" as const
 export const DEFAULT_PRIORITY = "p2" as const
 
@@ -15,7 +16,6 @@ export const DEFAULT_WORKTREES_DIR = "../.{repo}.worktrees" as const
 export const DEFAULT_BRANCH_PREFIX = "task/" as const
 
 export const DEFAULT_COLUMNS: readonly string[] = Object.freeze([
-  "backlog",
   "01-todo",
   "02-doing",
   "03-done",
