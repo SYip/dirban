@@ -18,6 +18,7 @@ relationships:
   related_to:
     - "spec.md"
     - "docs/decisions/2026-10-12-plain-markdown-and-git-audit.md"
+    - "docs/decisions/2026-11-07-omission-of-milestones.md"
 ---
 
 # Why Dirban: Comparative Positioning & Philosophy
