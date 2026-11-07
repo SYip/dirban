@@ -16,6 +16,7 @@ import { initializeBoard } from "./src/operations/init.ts"
 import { resolveCurrentTask } from "./src/operations/current.ts"
 import { startTask } from "./src/operations/start.ts"
 import { doneTask } from "./src/operations/done.ts"
+import { getVcsProvider } from "./src/vcs/index.ts"
 import type { Priority } from "./src/okf/types.ts"
 import type { BranchStrategy } from "./src/config/types.ts"
 import * as fs from "node:fs"
@@ -29,12 +30,10 @@ ${
 ${pc.bold("USAGE:")}
   dirban [command] [options]
 
-${pc.bold("COMMANDS:")}
+${pc.bold("COMMANDS (Filesystem / Core):")}
   init                  Initialize board directory structure (backlog, 01-todo, 02-doing, 03-done, archive)
   board                 Display kanban board (Interactive TUI by default in TTY, or static table)
   current [id]          Show active task (alias: focus). Detects git branch/worktree or 02-doing
-  start <id>            Start work on task (alias: worktree add). Moves to 02-doing & provisions branch/worktree
-  done [id]             Finish task (alias: finish). Moves to 03-done & merges branch/worktree if in git
   new <title>           Create a new task with auto-assigned YY-001 ID (alias: create)
   next-id               Print the next available task ID for the current year
   priorities            List available task priority levels and highlight the default
@@ -44,6 +43,11 @@ ${pc.bold("COMMANDS:")}
   set <id> [options]    Mutate task frontmatter (priority, assignee, owner, tags)
   archive [<id>|all]    Archive completed tasks to archive/YYYY/
   help                  Show this help message
+
+${pc.bold("COMMANDS (Git & Worktree Integration):")}
+  start <id>            Start work on task (alias: worktree add). Moves to 02-doing & provisions branch/worktree
+  done [id]             Finish task (alias: finish). Moves to 03-done & merges branch/worktree if in git
+  path [id|main]        Print absolute filesystem path of a task worktree or main repository
 
 ${pc.bold("CURRENT OPTIONS:")}
   --raw                 Print raw Markdown content to stdout for AI agent piping
@@ -301,6 +305,21 @@ export const runCli = async (args: readonly string[]): Promise<number> => {
       console.log(pc.dim(`Git notice: ${message}`))
     }
 
+    return 0
+  }
+
+  if (command === "path") {
+    const target = positionals[1]
+    const vcsProvider = getVcsProvider()
+    const pathResult = vcsProvider.resolveWorktreePath(target)
+
+    if (pathResult.isErr()) {
+      console.error(pc.red(`Error: ${pathResult.error.message}`))
+      return 1
+    }
+
+    // Print raw path to stdout (clean for command substitution like `cd $(dirban path)`)
+    console.log(pathResult.value)
     return 0
   }
 

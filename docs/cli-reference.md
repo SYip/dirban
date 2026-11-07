@@ -116,6 +116,19 @@ dirban done
 dirban done 26-003
 ```
 
+#### `path [id|main]`
+Prints the absolute filesystem path for a task worktree or the main repository.
+
+Ideal for shell command substitution (`cd $(dirban path ...)`), terminal navigation, and AI agents.
+
+```bash
+# Jump to the main repository root
+cd $(dirban path)
+
+# Jump to task 26-003's isolated worktree
+cd $(dirban path 26-003)
+```
+
 #### `new "<title>"` (alias: `create`)
 Creates a new Markdown task file with an auto-assigned `YY-001` ID, slugified filename, and structured frontmatter.
 

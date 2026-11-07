@@ -11,6 +11,39 @@ import type {
 export const TASK_ID_EXTRACT_REGEX = /(?:^|\/)(?:task\/)?([0-9]{2}-[0-9]+)(?:-[^/]*)?$/
 export const SLUG_CLEANUP_REGEX = /[^a-z0-9]+/g
 export const SLUG_TRIM_HYPHENS_REGEX = /^-+|-+$/g
+export const WORKTREE_ENTRY_SPLIT_REGEX = /\n\n+/
+export const LINE_SPLIT_REGEX = /\r?\n/
+
+export interface GitWorktreeEntry {
+  readonly path: string
+  readonly branchRef?: string
+}
+
+/**
+ * Parses raw stdout from `git worktree list --porcelain` into typed entries.
+ */
+export const parseGitWorktreeListPorcelain = (
+  rawStdout: string,
+): readonly GitWorktreeEntry[] => {
+  const blocks = rawStdout.split(WORKTREE_ENTRY_SPLIT_REGEX)
+  const entries: GitWorktreeEntry[] = []
+
+  for (const block of blocks) {
+    const lines = block.split(LINE_SPLIT_REGEX).filter((l) => l.trim() !== "")
+    const worktreeLine = lines.find((l) => l.startsWith("worktree "))
+    if (worktreeLine == null) continue
+
+    const branchLine = lines.find((l) => l.startsWith("branch "))
+    const entryPath = worktreeLine.slice("worktree ".length).trim()
+    const branchRef = branchLine != null
+      ? branchLine.slice("branch ".length).trim()
+      : undefined
+
+    entries.push(Object.freeze({ path: entryPath, branchRef }))
+  }
+
+  return Object.freeze(entries)
+}
 
 export class GitVcsProvider implements VersionControlProvider {
   readonly name = "git" as const
@@ -22,11 +55,12 @@ export class GitVcsProvider implements VersionControlProvider {
         ["rev-parse", "--is-inside-work-tree"],
         { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
       )
-      if (
-        isInsideWorktreeResult.error != null ||
-        isInsideWorktreeResult.status !== 0 ||
-        isInsideWorktreeResult.stdout.trim() !== "true"
-      ) {
+      const isGitRepo =
+        isInsideWorktreeResult.error == null &&
+        isInsideWorktreeResult.status === 0 &&
+        isInsideWorktreeResult.stdout.trim() === "true"
+
+      if (!isGitRepo) {
         return { isAvailable: false }
       }
 
@@ -114,6 +148,66 @@ export class GitVcsProvider implements VersionControlProvider {
       : path.resolve(repoRoot, expandedDir)
 
     return path.join(targetBaseDir, dirName)
+  }
+
+  resolveWorktreePath(
+    taskIdOrTarget?: string,
+    cwd: string = process.cwd(),
+  ): Result<string, VcsError> {
+    const ctx = this.getContext(cwd)
+    if (!ctx.isAvailable || ctx.repoRoot == null) {
+      return err({
+        kind: "VCS_NOT_AVAILABLE",
+        message: "Git repository not detected",
+      })
+    }
+
+    const trimmedTarget = taskIdOrTarget?.trim().toLowerCase()
+    const isTargetingMain =
+      trimmedTarget == null ||
+      trimmedTarget === "" ||
+      trimmedTarget === "main" ||
+      trimmedTarget === "root"
+
+    // 1. If asking for "main" or target omitted, return the primary root repository path
+    if (isTargetingMain) {
+      const commonDirResult = spawnSync(
+        "git",
+        ["rev-parse", "--path-format=absolute", "--git-common-dir"],
+        { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
+      )
+      if (commonDirResult.status === 0 && commonDirResult.stdout.trim() !== "") {
+        const commonDir = commonDirResult.stdout.trim()
+        const mainRoot = path.resolve(commonDir, "..")
+        return ok(mainRoot)
+      }
+      return ok(ctx.repoRoot)
+    }
+
+    // 2. Query git worktree list --porcelain to find matching active worktree
+    const worktreeListResult = spawnSync(
+      "git",
+      ["worktree", "list", "--porcelain"],
+      { cwd: ctx.repoRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
+    )
+
+    if (worktreeListResult.status === 0) {
+      const entries = parseGitWorktreeListPorcelain(worktreeListResult.stdout)
+      const matchingEntry = entries.find((entry) => {
+        const pathMatches = entry.path.toLowerCase().includes(trimmedTarget)
+        const branchMatches = entry.branchRef != null && entry.branchRef.toLowerCase().includes(trimmedTarget)
+        return pathMatches || branchMatches
+      })
+
+      if (matchingEntry != null) {
+        return ok(matchingEntry.path)
+      }
+    }
+
+    return err({
+      kind: "WORKTREE_ERROR",
+      message: `No active Git worktree found matching "${taskIdOrTarget}"`,
+    })
   }
 
   switchOrCreateBranch(

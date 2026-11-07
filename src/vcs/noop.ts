@@ -52,6 +52,16 @@ export class NoopVcsProvider implements VersionControlProvider {
     return path.join(targetBaseDir, dirName)
   }
 
+  resolveWorktreePath(
+    _taskIdOrTarget?: string,
+    _cwd?: string,
+  ): Result<string, VcsError> {
+    return err({
+      kind: "VCS_NOT_AVAILABLE",
+      message: "Version control not available in this workspace",
+    })
+  }
+
   switchOrCreateBranch(
     _branchName: string,
     _cwd?: string,

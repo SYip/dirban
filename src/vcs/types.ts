@@ -20,6 +20,7 @@ export interface VersionControlProvider {
   extractTaskId(branchName?: string, cwd?: string): string | null
   deriveBranchName(prefix: string, taskId: string, slug: string): string
   deriveWorktreePath(repoRoot: string, template: string, taskId: string, slug: string): string
+  resolveWorktreePath(taskIdOrTarget?: string, cwd?: string): Result<string, VcsError>
   switchOrCreateBranch(branchName: string, cwd?: string): Result<{ readonly alreadyOnBranch: boolean }, VcsError>
   createWorktree(targetPath: string, branchName: string, cwd?: string): Result<void, VcsError>
   autoMergeAndCleanup(options: {
