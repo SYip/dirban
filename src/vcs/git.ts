@@ -307,6 +307,7 @@ export class GitVcsProvider implements VersionControlProvider {
     readonly baseBranch: string
     readonly isWorktree: boolean
     readonly cwd?: string
+    readonly commitMessage?: string
   }): Result<{ readonly worktreeRemoved: boolean }, VcsError> {
     const cwd = options.cwd ?? process.cwd()
     const ctx = this.getContext(cwd)
@@ -318,6 +319,22 @@ export class GitVcsProvider implements VersionControlProvider {
     }
 
     const repoRoot = ctx.repoRoot
+    const commitMsg = options.commitMessage ?? `docs: complete task and move to done`
+
+    // Auto-commit any changes in cwd (the task card move to 03-done) before switching/merging
+    const addResult = spawnSync("git", ["add", "-A"], {
+      cwd,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    })
+
+    if (addResult.status === 0) {
+      spawnSync(
+        "git",
+        ["commit", "-m", commitMsg],
+        { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
+      )
+    }
 
     if (options.isWorktree) {
       const mergeResult = spawnSync(

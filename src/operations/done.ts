@@ -128,11 +128,15 @@ export const doneTask = (
     })
   }
 
+  const resolvedTaskId = updatedTask.document.id ?? updatedTask.filename
+  const commitMessage = `docs: complete task ${resolvedTaskId} and move to done`
+
   const mergeResult = vcs.autoMergeAndCleanup({
     taskBranch,
     baseBranch,
     isWorktree: vcsCtx.isWorktree ?? false,
     cwd,
+    commitMessage,
   })
 
   if (mergeResult.isErr()) {

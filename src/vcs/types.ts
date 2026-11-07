@@ -28,6 +28,7 @@ export interface VersionControlProvider {
     readonly baseBranch: string
     readonly isWorktree: boolean
     readonly cwd?: string
+    readonly commitMessage?: string
   }): Result<{ readonly worktreeRemoved: boolean }, VcsError>
 }
 

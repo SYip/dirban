@@ -88,6 +88,7 @@ export class NoopVcsProvider implements VersionControlProvider {
     readonly baseBranch: string
     readonly isWorktree: boolean
     readonly cwd?: string
+    readonly commitMessage?: string
   }): Result<{ readonly worktreeRemoved: boolean }, VcsError> {
     return err({
       kind: "VCS_NOT_AVAILABLE",
