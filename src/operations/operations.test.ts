@@ -289,6 +289,11 @@ describe("Task Operations Domain Tests", () => {
         expect(fs.existsSync(path.join(tempDir, "docs/tasks/02-doing"))).toBe(true)
         expect(fs.existsSync(path.join(tempDir, "docs/tasks/03-done"))).toBe(true)
         expect(fs.existsSync(path.join(tempDir, "docs/tasks/archive"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks/backlog/.gitkeep"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks/01-todo/.gitkeep"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks/02-doing/.gitkeep"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks/03-done/.gitkeep"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks/archive/.gitkeep"))).toBe(true)
         expect(fs.existsSync(path.join(tempDir, ".dirban.json"))).toBe(true)
       }
     } finally {

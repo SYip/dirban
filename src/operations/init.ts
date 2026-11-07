@@ -57,6 +57,13 @@ export const initializeBoard = (
   const created: string[] = []
   const alreadyExisted: string[] = []
 
+  const GITKEEP_FILE_NAME = ".gitkeep"
+  const directoriesForGitkeep = [
+    backlogDir,
+    ...config.columns.map((c) => path.join(rootDir, c)),
+    archiveDir,
+  ]
+
   for (const dirPath of directoriesToEnsure) {
     try {
       if (fs.existsSync(dirPath)) {
@@ -64,6 +71,13 @@ export const initializeBoard = (
       } else {
         fs.mkdirSync(dirPath, { recursive: true })
         created.push(dirPath)
+      }
+
+      if (directoriesForGitkeep.includes(dirPath)) {
+        const gitkeepPath = path.join(dirPath, GITKEEP_FILE_NAME)
+        if (!fs.existsSync(gitkeepPath)) {
+          fs.writeFileSync(gitkeepPath, "", "utf-8")
+        }
       }
     } catch (e) {
       return err({
