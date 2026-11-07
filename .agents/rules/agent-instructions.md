@@ -34,7 +34,7 @@ Instead of stuffing detailed operational knowledge directly into `AGENTS.md`:
 ---
 
 ## 3. Monorepo & Directory Scoping
-* **Root `AGENTS.md`**: Global monorepo purpose, shared workspace tools (Deno Workspaces), and top-level boundaries.
+* **Root `AGENTS.md`**: Global monorepo purpose, shared workspace tools (Workspaces), and top-level boundaries.
 * **Sub-application `AGENTS.md` (e.g., `apps/<tool>/AGENTS.md`)**: Only created if a sub-application has unique tool-specific exceptions or workflows. Never duplicate root rules into sub-application files.
 
 ---

@@ -113,7 +113,7 @@ const SEED_TASKS: readonly SeedTask[] = [
     tags: ["vscode", "extension", "phase-2"],
     depends_on: [],
     blocks: [],
-    scope: "Architect shared Deno/TypeScript core engine bindings for VS Code extension activity bar.",
+    scope: "Architect shared TypeScript core engine bindings for VS Code extension activity bar.",
     criteria: [
       { text: "Create packages/vscode-dirban skeleton", checked: false },
       { text: "Define TreeDataProvider mapping physical folders to tree nodes", checked: false },
@@ -221,7 +221,7 @@ const SEED_TASKS: readonly SeedTask[] = [
     blocks: [],
     scope: "Render columns horizontally across the terminal with dynamic console size detection.",
     criteria: [
-      { text: "Query Deno.consoleSize() for terminal dimensions", checked: true },
+      { text: "Query terminal dimensions dynamically", checked: true },
       { text: "Calculate dynamic column widths with padding", checked: true },
       { text: "Format cards into column text buffers and zip horizontally", checked: true },
       { text: "Bottom preview panel showing untruncated card metadata", checked: true },
@@ -282,19 +282,19 @@ const SEED_TASKS: readonly SeedTask[] = [
   // 03-done
   {
     id: "task.dirban.core.26-016",
-    title: "Initialize Dirban project structure and Deno setup",
+    title: "Initialize Dirban project structure and Bun setup",
     column: "03-done",
     priority: "p0",
     owner: "developer",
     assigned_to: "andrew",
-    tags: ["setup", "deno"],
+    tags: ["setup", "bun"],
     depends_on: [],
     blocks: [],
-    scope: "Initialize repository with deno.json, TypeScript rules, and test framework.",
+    scope: "Initialize repository with package.json, TypeScript rules, and test framework.",
     criteria: [
-      { text: "Configure strict TypeScript and Deno linting rules", checked: true },
-      { text: "Set up Deno standard libraries and neverthrow", checked: true },
-      { text: "Verify deno test execution pipeline", checked: true },
+      { text: "Configure strict TypeScript rules", checked: true },
+      { text: "Set up dependencies and neverthrow", checked: true },
+      { text: "Verify bun test execution pipeline", checked: true },
     ],
   },
   {
@@ -327,7 +327,7 @@ const SEED_TASKS: readonly SeedTask[] = [
     blocks: [],
     scope: "Atomically move physical task files across column directories with audit trails.",
     criteria: [
-      { text: "Move file with Deno.writeTextFileSync and Deno.removeSync", checked: true },
+      { text: "Move file with atomic file operations (writeFileSync / copyFileSync / unlinkSync)", checked: true },
       { text: "Sync frontmatter status to target column name", checked: true },
       { text: "Append entry to ## 4. Execution Journal with current date", checked: true },
     ],

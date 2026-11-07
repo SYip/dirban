@@ -84,7 +84,7 @@ relationships:
    `docs/tasks/01-ready/`, `docs/tasks/02-in-progress/`, `docs/tasks/03-done/`).
 2. **Objective & Scope**: Concise statement of problem and expected outcome.
 3. **Acceptance Criteria**: Strict checklist defining completion and performance guarantees.
-4. **Verification Plan**: Exact commands (`deno test`, `deno lint`) to validate work.
+4. **Verification Plan**: Exact commands (`bun test`, `bun run typecheck`) to validate work.
 5. **Execution Journal**: Running log of agent decisions and commit/diff references.
 
 ---
