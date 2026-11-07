@@ -69,8 +69,9 @@ Evaluate the diff against these 6 core dimensions:
   - Complex boolean conditions (with multiple operators or non-trivial logic) are extracted into descriptive `const is... = ...` variables or predicate functions.
   - No anonymous inline regex literals (e.g. `const EXTRACT_REGEX = /.../`).
 - [ ] **Functional & Immutable**:
+  - Prefers compile-time `readonly` types over noisy runtime `Object.freeze` wrapping.
   - Uses `map`, `filter`, `reduce`, `Object.fromEntries` instead of mutating arrays/objects.
-  - Return values wrapped in `Object.freeze(...)` where appropriate.
+  - Interfaces, parameters, and array return types use `readonly T[]` / `Readonly<T>`.
   - No `push`, `splice`, or in-place property mutations.
 - [ ] **Single Responsibility & Function Scope**:
   - Functions do one thing with one level of abstraction.

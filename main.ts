@@ -16,6 +16,7 @@ import { initializeBoard } from "./src/operations/init.ts"
 import { resolveCurrentTask } from "./src/operations/current.ts"
 import { startTask } from "./src/operations/start.ts"
 import { doneTask } from "./src/operations/done.ts"
+import { blockTask, unblockTask } from "./src/operations/block.ts"
 import { getVcsProvider } from "./src/vcs/index.ts"
 import type { Priority } from "./src/okf/types.ts"
 import type { BranchStrategy } from "./src/config/types.ts"
@@ -42,6 +43,8 @@ ${pc.bold("COMMANDS (Filesystem / Core):")}
   check <id> <index>    Toggle acceptance criteria checkbox item (1-based index)
   set <id> [options]    Mutate task frontmatter (priority, assignee, owner, tags)
   archive [<id>|all]    Archive completed tasks to archive/YYYY/
+  block <id> <reasons>  Record blocker reasons / task dependencies and demote to backlog
+  unblock <id> [reason] Remove a resolved blocker from a task
   help                  Show this help message
 
 ${pc.bold("COMMANDS (Git & Worktree Integration):")}
@@ -591,6 +594,80 @@ export const runCli = async (args: readonly string[]): Promise<number> => {
         `✔ Successfully archived ${archiveRes.value.archivedTasks.length} task(s) to ${archiveRes.value.targetDirectory}`,
       ),
     )
+    return 0
+  }
+
+  if (command === "block") {
+    const taskId = positionals[1]
+    const reasons = positionals.slice(2)
+
+    if (taskId == null || taskId.trim() === "" || reasons.length === 0) {
+      console.error(pc.red("Error: Task ID and at least one blocker reason required."))
+      console.error(pc.gray("Usage: dirban block <id-or-path> <reason...>"))
+      return 1
+    }
+
+    const boardRes = discoverBoard(config)
+    if (boardRes.isErr()) {
+      console.error(pc.red(`Board Error: ${boardRes.error.message}`))
+      return 1
+    }
+
+    const blockRes = blockTask(boardRes.value, taskId, reasons)
+    if (blockRes.isErr()) {
+      console.error(pc.red(`Block Error: ${blockRes.error.message}`))
+      return 1
+    }
+
+    const result = blockRes.value
+    const id = result.task.document.id
+    console.log(
+      pc.yellow(
+        `⛔ Task ${id} blocked: added [${result.addedBlockers.join(", ")}]`,
+      ),
+    )
+    if (result.demotedToBacklog) {
+      console.log(pc.gray(`   Demoted task to backlog column to free active WIP slot.`))
+    }
+    return 0
+  }
+
+  if (command === "unblock") {
+    const taskId = positionals[1]
+    const reasonToClear = positionals[2]
+
+    if (taskId == null || taskId.trim() === "") {
+      console.error(pc.red("Error: Task ID required."))
+      console.error(pc.gray("Usage: dirban unblock <id-or-path> [reason]"))
+      return 1
+    }
+
+    const boardRes = discoverBoard(config)
+    if (boardRes.isErr()) {
+      console.error(pc.red(`Board Error: ${boardRes.error.message}`))
+      return 1
+    }
+
+    const unblockRes = unblockTask(boardRes.value, taskId, reasonToClear)
+    if (unblockRes.isErr()) {
+      console.error(pc.red(`Unblock Error: ${unblockRes.error.message}`))
+      return 1
+    }
+
+    const result = unblockRes.value
+    const id = result.task.document.id
+    console.log(
+      pc.green(
+        `✔ Task ${id} unblocked: removed [${result.removedBlockers.join(", ")}]`,
+      ),
+    )
+    if (result.remainingBlockers.length > 0) {
+      console.log(
+        pc.gray(`   Remaining blockers: [${result.remainingBlockers.join(", ")}]`),
+      )
+    } else {
+      console.log(pc.cyan(`   All blockers cleared. Task is ready for planning / promotion.`))
+    }
     return 0
   }
 
