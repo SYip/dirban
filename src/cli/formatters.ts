@@ -216,3 +216,74 @@ export const formatCurrentTaskView = (task: BoardTask): string => {
 
   return lines.join("\n")
 }
+
+export const formatPlanView = (
+  plan: {
+    readonly ready: readonly {
+      readonly task: BoardTask
+      readonly evaluation: { readonly resolved: readonly string[] }
+    }[]
+    readonly blocked: readonly {
+      readonly task: BoardTask
+      readonly evaluation: { readonly unresolved: readonly string[] }
+    }[]
+    readonly totalBacklog: number
+  },
+): string => {
+  const lines: string[] = []
+
+  lines.push(
+    pc.bold(
+      pc.cyan(`\n=== DIRBAN PLANNING & TRIAGE (${plan.totalBacklog} backlog tasks) ===\n`),
+    ),
+  )
+
+  // Ready section
+  lines.push(pc.bold(pc.green(`✔ Ready to Promote (${plan.ready.length}):`)))
+  lines.push(pc.gray("─".repeat(50)))
+  if (plan.ready.length === 0) {
+    lines.push(pc.dim("  (no unblocked tasks in backlog)"))
+  } else {
+    for (const item of plan.ready) {
+      const priority = item.task.document.priority ?? "p3"
+      const badge = getPriorityBadge(priority)
+      const idStr = pc.bold(item.task.document.id)
+      const title = item.task.document.title
+      lines.push(`  ${badge} ${idStr} - ${title}`)
+      if (item.evaluation.resolved.length > 0) {
+        lines.push(
+          pc.gray(`     Dependencies resolved: [${item.evaluation.resolved.join(", ")}]`),
+        )
+      }
+    }
+  }
+
+  lines.push("")
+
+  // Blocked section
+  lines.push(pc.bold(pc.yellow(`⛔ Blocked / In Limbo (${plan.blocked.length}):`)))
+  lines.push(pc.gray("─".repeat(50)))
+  if (plan.blocked.length === 0) {
+    lines.push(pc.dim("  (no blocked tasks in backlog)"))
+  } else {
+    for (const item of plan.blocked) {
+      const priority = item.task.document.priority ?? "p3"
+      const badge = getPriorityBadge(priority)
+      const idStr = pc.bold(item.task.document.id)
+      const title = item.task.document.title
+      lines.push(`  ${badge} ${idStr} - ${title}`)
+      for (const blocker of item.evaluation.unresolved) {
+        lines.push(pc.red(`     ✖ Blocked by: ${blocker}`))
+      }
+    }
+  }
+
+  lines.push("")
+  lines.push(pc.gray("Promote an unblocked task with:"))
+  lines.push(pc.cyan("  dirban plan --promote=<id>"))
+  lines.push(pc.gray("Unblock reasons with:"))
+  lines.push(pc.cyan("  dirban unblock <id> [reason]"))
+  lines.push("")
+
+  return lines.join("\n")
+}

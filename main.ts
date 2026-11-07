@@ -5,8 +5,9 @@ import { spawn } from "node:child_process"
 import pc from "picocolors"
 import { loadConfig } from "./src/config/config.ts"
 import { discoverBoard, findTaskByIdOrName, findTaskWithFuzzy } from "./src/board/discovery.ts"
-import { formatBoardStatic, formatCurrentTaskView, formatTaskDetail } from "./src/cli/formatters.ts"
+import { formatBoardStatic, formatCurrentTaskView, formatPlanView, formatTaskDetail } from "./src/cli/formatters.ts"
 import { startInteractiveTui } from "./src/cli/tui.ts"
+import { startInteractivePlanTui } from "./src/cli/plan-tui.ts"
 import { moveTask } from "./src/operations/move.ts"
 import { checkTaskItem } from "./src/operations/check.ts"
 import { setTaskMetadata } from "./src/operations/set.ts"
@@ -17,6 +18,7 @@ import { resolveCurrentTask } from "./src/operations/current.ts"
 import { startTask } from "./src/operations/start.ts"
 import { doneTask } from "./src/operations/done.ts"
 import { blockTask, unblockTask } from "./src/operations/block.ts"
+import { partitionBacklog, promoteTask } from "./src/operations/plan.ts"
 import { getVcsProvider } from "./src/vcs/index.ts"
 import type { Priority } from "./src/okf/types.ts"
 import type { BranchStrategy } from "./src/config/types.ts"
@@ -43,6 +45,7 @@ ${pc.bold("COMMANDS (Filesystem / Core):")}
   check <id> <index>    Toggle acceptance criteria checkbox item (1-based index)
   set <id> [options]    Mutate task frontmatter (priority, assignee, owner, tags)
   archive [<id>|all]    Archive completed tasks to archive/YYYY/
+  plan [options]        View backlog triage and planning (options: --ready, --blocked, --promote=<id>, -i)
   block <id> <reasons>  Record blocker reasons / task dependencies and demote to backlog
   unblock <id> [reason] Remove a resolved blocker from a task
   help                  Show this help message
@@ -71,6 +74,13 @@ ${pc.bold("BOARD OPTIONS:")}
   --owner=<owner>       Filter tasks by owner or assignee
   --search=<query>      Search keyword in title, ID, or body
   --sort=<mode>         Sort mode: priority (default), recency, id
+
+${pc.bold("PLAN OPTIONS:")}
+  --ready               List only unblocked backlog tasks ready to be scheduled
+  --blocked             List only currently blocked backlog tasks and blocking sources
+  --promote=<id>        Promote an unblocked backlog task into the active workflow
+  --to=<column>         Target column for promotion (defaults to first active column)
+  --interactive, -i     Launch interactive terminal planner to triage and unblock tasks
 
 ${pc.bold("SET OPTIONS:")}
   --priority=<p0..p3>   Update task priority
@@ -113,6 +123,11 @@ export const runCli = async (args: readonly string[]): Promise<number> => {
       raw: { type: "boolean" },
       checkout: { type: "boolean" },
       worktree: { type: "boolean" },
+      ready: { type: "boolean" },
+      blocked: { type: "boolean" },
+      promote: { type: "string" },
+      to: { type: "string" },
+      interactive: { type: "boolean", short: "i" },
     },
     allowPositionals: true,
   })
@@ -594,6 +609,60 @@ export const runCli = async (args: readonly string[]): Promise<number> => {
         `✔ Successfully archived ${archiveRes.value.archivedTasks.length} task(s) to ${archiveRes.value.targetDirectory}`,
       ),
     )
+    return 0
+  }
+
+  if (command === "plan") {
+    const boardRes = discoverBoard(config)
+    if (boardRes.isErr()) {
+      console.error(pc.red(`Board Error: ${boardRes.error.message}`))
+      return 1
+    }
+
+    const board = boardRes.value
+
+    // 1. Scriptable promotion flag: dirban plan --promote=<id> [--to=<col>]
+    if (flags.promote != null && flags.promote.trim() !== "") {
+      const promoteRes = promoteTask(board, config, flags.promote.trim(), flags.to)
+      if (promoteRes.isErr()) {
+        console.error(pc.red(`Promote Error: ${promoteRes.error.message}`))
+        return 1
+      }
+      console.log(
+        pc.green(
+          `✔ Successfully promoted task ${promoteRes.value.task.document.id} to ${promoteRes.value.targetColumn}`,
+        ),
+      )
+      return 0
+    }
+
+    const plan = partitionBacklog(board)
+
+    // 2. Scriptable flag: dirban plan --ready (lists only unblocked tasks)
+    if (flags.ready) {
+      for (const item of plan.ready) {
+        console.log(`${item.task.document.id}\t${item.task.document.title}`)
+      }
+      return 0
+    }
+
+    // 3. Scriptable flag: dirban plan --blocked (lists only blocked tasks and blockers)
+    if (flags.blocked) {
+      for (const item of plan.blocked) {
+        const blockers = item.evaluation.unresolved.join(";")
+        console.log(`${item.task.document.id}\t${item.task.document.title}\t${blockers}`)
+      }
+      return 0
+    }
+
+    // 4. Interactive mode: dirban plan --interactive / -i
+    if (flags.interactive) {
+      await startInteractivePlanTui(config)
+      return 0
+    }
+
+    // 5. Default: Output formatted terminal list
+    console.log(formatPlanView(plan))
     return 0
   }
 

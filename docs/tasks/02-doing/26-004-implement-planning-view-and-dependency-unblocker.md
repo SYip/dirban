@@ -53,14 +53,14 @@ Provides a planning and triage view (`dirban plan`), blocker workflow (`dirban b
 - [x] Add unit test vectors covering `dirban block`, `dirban unblock`, input normalization, auto-demotion, and dependency resolution.
 
 ### Phase 2: Planning & Triage UX (`dirban plan`, Scriptable Flags, Documentation)
-- [ ] Add `dirban plan` view:
+- [x] Add `dirban plan` view:
   - Default: outputs a formatted terminal list partitioning `backlog/` into "Ready to Promote" and "Blocked / In Limbo" with exact blocking sources.
   - Interactive mode (`dirban plan --interactive` / `-i`): allows selecting blocked tasks to unblock individual items one by one, and promoting unblocked tasks to `config.columns[0]`.
-- [ ] Add non-interactive scriptable flags for AI agents:
+- [x] Add non-interactive scriptable flags for AI agents:
   - `dirban plan --ready`: Lists only unblocked backlog tasks ready to be scheduled.
   - `dirban plan --blocked`: Lists currently blocked backlog tasks and blocking sources.
   - `dirban plan --promote=<id>`: Promotes task from `backlog/` to `config.columns[0]` if unblocked (fails cleanly if still blocked).
-- [ ] Add unit test vectors covering `dirban plan` partitioning, `--promote`, and CLI flags.
-- [ ] Document in `docs/cli-reference.md` and `.agents/skills/task-management/SKILL.md`:
+- [x] Add unit test vectors covering `dirban plan` partitioning, `--promote`, and CLI flags.
+- [x] Document in `docs/cli-reference.md` and `.agents/skills/task-management/SKILL.md`:
   - Detail `dirban block`, `dirban unblock`, `dirban plan`, and dependency resolution.
   - Define agent protocol for recording `[BLOCKED]` and `[UNBLOCKED]` events with timestamp and rationale in the task's `## Execution Journal`.

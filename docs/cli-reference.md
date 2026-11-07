@@ -237,6 +237,59 @@ dirban archive 26-001
 dirban archive all
 ```
 
+#### `plan [options]`
+Displays backlog planning and triage view. Partitions unstarted tasks into **Ready to Promote** vs. **Blocked / In Limbo** based on dependency resolution against done columns and `archive/`.
+
+```bash
+# Formatted static terminal view
+dirban plan
+
+# Agent scriptable flag: list only unblocked tasks ready for scheduling
+dirban plan --ready
+
+# Agent scriptable flag: list only blocked tasks and blocking sources
+dirban plan --blocked
+
+# Promote an unblocked task into the active workflow (defaults to config.columns[0])
+dirban plan --promote=26-004
+
+# Promote to a specific target column
+dirban plan --promote=26-004 --to=01-todo
+
+# Launch interactive terminal planner
+dirban plan --interactive
+dirban plan -i
+```
+
+#### `block <id> <reasons...>`
+Records dependencies or blocker reasons on a task (appended to `relationships.depends_on`) and automatically demotes the task from active workflow columns back to `backlog/` to free the active WIP slot.
+
+```bash
+# Block by another task ID (auto-resolves when that task reaches done/archive)
+dirban block 26-002 26-001
+
+# Block by task file path (automatically resolves to canonical ID)
+dirban block 26-002 docs/tasks/01-todo/26-001-setup.md
+
+# Block by freeform text reasons or URLs
+dirban block 26-002 "Waiting for API credentials" "PR #42 review"
+
+# Block with comma-separated arguments
+dirban block 26-002 "Waiting for security signoff, Upstream backend deployment"
+```
+
+#### `unblock <id> [reason]`
+Removes specific blockers or dependency references from a task.
+
+```bash
+# Unblock a specific blocker reason or task ID
+dirban unblock 26-002 "Waiting for API credentials"
+dirban unblock 26-002 26-001
+
+# If only a single blocker exists, automatically clears it without argument
+dirban unblock 26-002
+```
+
 #### `help` / `--help` / `-h`
 Displays usage syntax and flags.
 

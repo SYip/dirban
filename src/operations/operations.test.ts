@@ -14,6 +14,7 @@ import { resolveCurrentTask } from "./current.ts"
 import { startTask } from "./start.ts"
 import { doneTask } from "./done.ts"
 import { blockTask, unblockTask } from "./block.ts"
+import { partitionBacklog, promoteTask } from "./plan.ts"
 import { evaluateTaskBlockers, isDependencyResolved } from "../board/dependencies.ts"
 import {
   GitVcsProvider,
@@ -603,6 +604,62 @@ describe("Task Operations Domain Tests", () => {
       if (clearLastRes.isOk()) {
         expect(clearLastRes.value.remainingBlockers.length).toBe(0)
       }
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  it("Vector 14 (Plan & Promote): Partitions backlog into ready/blocked and promotes to config.columns[0]", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-plan-"))
+    try {
+      initializeBoard(DEFAULT_CONFIG, tempDir)
+      const board = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+
+      // Create ready task 1 in backlog
+      const readyTask = createTask(board, {
+        title: "Ready Task",
+        column: "backlog",
+      })._unsafeUnwrap()
+
+      const boardWith1 = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+
+      // Create blocked task 2 in backlog
+      const blockedTask = createTask(boardWith1, {
+        title: "Blocked Task",
+        column: "backlog",
+      })._unsafeUnwrap()
+
+      const boardWith2 = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      blockTask(boardWith2, blockedTask.id, ["Waiting on human review"])._unsafeUnwrap()
+
+      const boardPartitioned = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const plan = partitionBacklog(boardPartitioned)
+
+      expect(plan.totalBacklog).toBe(2)
+      expect(plan.ready.length).toBe(1)
+      expect(plan.ready[0]?.task.document.id).toBe(readyTask.id)
+      expect(plan.blocked.length).toBe(1)
+      expect(plan.blocked[0]?.task.document.id).toBe(blockedTask.id)
+
+      // Promote blocked task fails cleanly with error
+      const promoteBlockedRes = promoteTask(boardPartitioned, DEFAULT_CONFIG, blockedTask.id)
+      expect(promoteBlockedRes.isErr()).toBe(true)
+
+      // Promote unblocked task succeeds and moves it to config.columns[0] ("01-todo")
+      const promoteReadyRes = promoteTask(boardPartitioned, DEFAULT_CONFIG, readyTask.id)
+      expect(promoteReadyRes.isOk()).toBe(true)
+      if (promoteReadyRes.isOk()) {
+        expect(promoteReadyRes.value.targetColumn).toBe("01-todo")
+        expect(promoteReadyRes.value.task.column).toBe("01-todo")
+      }
+
+      // Verify on disk
+      const finalBoard = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const promotedInTodo = finalBoard.columns
+        .find((c) => c.name === "01-todo")
+        ?.tasks.find((t) => t.document.id === readyTask.id)
+
+      expect(promotedInTodo != null).toBe(true)
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }
