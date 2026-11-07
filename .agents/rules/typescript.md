@@ -51,13 +51,21 @@ description: "TypeScript standards: strict typing, no semicolons, pure functions
 * **Strict Boolean Conditions**: Conditions in `if`, ternary, and logical expressions must be strictly boolean typed.
   * Disallow implicit truthy/falsy coercion for non-boolean types (e.g., strings, numbers, objects, arrays, or optional values). Require explicit comparisons (e.g. `val != null`, `str !== ""`, `arr.length > 0`).
   * If a variable or expression is already a `boolean` (e.g., `isActive`, `isValid`, `hasPermission`), use it directly (`if (isActive)`, `isValid ? ... : ...`); do NOT do redundant `=== true` checks.
-* **Early Return / Break / Continue**: Return, continue, or break early to eliminate deeply nested `if` / loop blocks (guard clauses).
+* **Early Return / Break / Continue (Flat Control Flow)**:
+  * Do your best to prevent nested levels of `if` blocks. Always prefer guard clauses with early `return`, `continue`, or `break` to keep control flow flat.
+  * Invert conditions and exit early rather than wrapping entire blocks in nested `if` statements.
+* **Review Scope & Focus**:
+  * Focus strictly on modified code and touched functions.
+  * Do not refactor or criticize untouched existing code unless the function itself was modified as part of the task.
 * **Minimize `else`**: Avoid `else` / `else if` when a previous branch terminates or returns; use `else` only when strictly necessary.
+* **Logic Extraction**: Extract any complex nested logic, calculations, or validations into small, cohesive, pure helper functions.
 
 ## 9. Named Constants, Regular Expressions & Variable Naming
 * **No Single-Letter Variable Names**: Single-letter variable names are strictly prohibited, except `i` in loops. Always use descriptive, self-documenting names.
-* **Named Constants**: Never hardcode arbitrary numbers or strings inline.
-* Define self-documenting top-level `const` primitives or `as const` objects/mappings within the module or a dedicated domain constants file.
+* **Named Constants & Magic Values**:
+  * Never hardcode arbitrary numbers, strings, or complex boolean predicates inline.
+  * For magic strings (column names, commands, status values) and magic numbers (timeouts, widths, limits), define self-documenting top-level `const` primitives or `as const` objects/mappings.
+* **Named Complex Booleans**: If a boolean condition has more than one operator or is non-trivial, extract it to a descriptive `const is... = ...` variable or a predicate function.
 * **Named Regular Expressions**: Never use anonymous, inline regex literals directly within functions or conditionals.
   * Every regular expression must be assigned to a self-documenting named variable or constant (e.g., `const CHECKBOX_LINE_REGEX = /^(\s*-\s*\[([ xX])\]\s*)(.+?)\r?$/`, `const LINE_SPLIT_REGEX = /\r?\n/`).
   * Naming conveys the regex's intent, simplifies testing, and prevents re-compilation in hot loops.
