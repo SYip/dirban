@@ -41,12 +41,15 @@ export const initializeBoard = (
     ? config.tasksDir
     : path.join(workspaceRoot, config.tasksDir)
 
+  const backlogDir = path.join(rootDir, "backlog")
+
   const archiveDir = path.isAbsolute(config.archiveDir)
     ? config.archiveDir
     : path.join(workspaceRoot, config.archiveDir)
 
   const directoriesToEnsure = [
     rootDir,
+    backlogDir,
     ...config.columns.map((c) => path.join(rootDir, c)),
     archiveDir,
   ]

@@ -290,19 +290,19 @@ Dirban automatically resolves configuration from `.dirban.json` located in the w
 | Property | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `tasksDir` | `string` | `"docs/tasks"` | Root directory containing column subdirectories |
-| `columns` | `string[]` | `["backlog", "01-todo", "02-doing", "03-done"]` | Ordered list of active column folder names |
+| `columns` | `string[]` | `["01-todo", "02-doing", "03-done"]` | Ordered list of active workflow column folder names (`backlog/` and `archive/` are intrinsic reserved tiers) |
 | `priorities` | `string[]` | `["p0", "p1", "p2", "p3"]` | Ordered list of priority levels (index 0 is highest priority) |
 | `defaultPriority` | `string` | `"p2"` | Default priority assigned to newly created tasks (must be in `priorities`) |
 | `archiveDir` | `string` | `"docs/tasks/archive"` | Directory where archived tasks are moved |
 
-### Custom Priority Example (`.dirban.json`)
+### Custom Workflow & Priority Example (`.dirban.json`)
 
-You can define semantic priority levels instead of standard P-tiers:
+You can define custom workflow columns and semantic priority levels:
 
 ```json
 {
   "tasksDir": "docs/tasks",
-  "columns": ["backlog", "01-todo", "02-doing", "03-done"],
+  "columns": ["01-todo", "02-doing", "03-done"],
   "priorities": ["urgent", "high", "normal", "low"],
   "defaultPriority": "normal"
 }

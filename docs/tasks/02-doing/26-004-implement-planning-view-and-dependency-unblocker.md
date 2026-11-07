@@ -21,10 +21,15 @@ relationships:
 
 # Implement planning view and dependency unblocker
 
-Provides a planning and triage view (`dirban plan`) and blocker workflow (`dirban block`). Supports dependency and blocker tracking via canonical `relationships.depends_on`. When in-flight tasks encounter blockers, they are cleanly demoted to `backlog` to free up the active WIP slot, and surfaced in the planning view for unblocking.
+Provides a planning and triage view (`dirban plan`), blocker workflow (`dirban block`), and unblocker workflow (`dirban unblock`). Supports dependency and blocker tracking via canonical `relationships.depends_on`. When in-flight tasks encounter blockers, they are cleanly demoted to `backlog` (the intrinsic starting staging directory) to free up the active WIP slot, and surfaced in the planning view for unblocking.
 
 ## Acceptance Criteria
 - [ ] Standardize single source of truth for task dependencies on OKF `relationships.depends_on` (can contain task IDs like `"26-001"` or external blocker strings like `"Waiting on approval"`).
+- [ ] Workflow & directory architecture:
+  - `backlog/` and `archive/` are intrinsic filesystem staging & completion boundaries created and maintained by Dirban.
+  - Active workflow columns are loaded from `config.columns` (e.g. `["01-todo", "02-doing", "03-done"]`).
+  - Terminal/Done criteria: a task is considered completed/resolved if it is in any column whose name contains `done` or in `archive/`.
+  - First workflow stage: `config.columns[0]` is the destination column when promoting ready work from `backlog/`.
 - [ ] Add `dirban block <id-or-path> <reason...>` command:
   - Accepts one or multiple blocker reasons (as multiple arguments or comma-separated list).
   - Smart input normalization:
@@ -32,18 +37,25 @@ Provides a planning and triage view (`dirban plan`) and blocker workflow (`dirba
     - If argument is a task markdown file path or slug (e.g. `docs/tasks/01-todo/26-001-setup.md`), resolves via board discovery and stores canonical task ID `26-001` (prevents broken references when files move).
     - If argument is freeform text/event (e.g. `"Waiting for review"`, URL), stores raw string.
   - Appends new blockers to `relationships.depends_on` (deduplicating existing entries).
-  - Automatically demotes the task from `02-doing` (or `01-todo`) back to `backlog` to free the active slot.
-  - Updates task metadata and status without injecting manual execution journal entries (Git is the audit log).
-- [ ] Automatic dependency resolution: if a dependency references another task ID and that task is in `03-done` or `archive/`, evaluate it as unblocked/resolved.
-- [ ] Add `dirban plan` interactive view:
-  - Partitions backlog into "Ready to Promote" and "Blocked / In Limbo".
-  - Displays exact blocking tasks or external blocker strings.
-  - Interactive unblock helper: if an external blocker has cleared, prompts to resolve it and promotes the task to `01-todo`.
+  - Automatically demotes the task from active workflow columns back to `backlog/` to free the active slot.
+  - Updates task metadata and status without injecting manual execution journal entries (Git is the audit log; agents record rich journal entries).
+- [ ] Add `dirban unblock <id-or-path> [reason...]` command:
+  - Removes matching blockers from `relationships.depends_on` one by one (or all specified).
+  - Smart resolution:
+    - If reason is given (task ID or string), removes that specific blocker.
+    - If no reason is given and only one blocker exists, removes it.
+    - If multiple blockers exist and no reason given, lists them and prompts/errors to specify which to unblock.
+- [ ] Automatic dependency resolution:
+  - For any dependency referencing a task ID, evaluates it as resolved if that target task is in a column containing `done` or in `archive/`.
+  - A task in `backlog/` is fully unblocked if all its task dependencies are resolved and it has no unresolved external blocker strings.
+- [ ] Add `dirban plan` view:
+  - Default: outputs a formatted terminal list partitioning `backlog/` into "Ready to Promote" and "Blocked / In Limbo" with exact blocking sources.
+  - Interactive mode (`dirban plan --interactive`): allows selecting blocked tasks to unblock individual items one by one, and promoting unblocked tasks to `config.columns[0]`.
 - [ ] Add non-interactive scriptable flags for AI agents:
   - `dirban plan --ready`: Lists only unblocked backlog tasks ready to be scheduled.
   - `dirban plan --blocked`: Lists currently blocked backlog tasks and blocking sources.
-  - `dirban plan --promote=<id>`: Promotes task from backlog to `01-todo` if unblocked.
-- [ ] Add unit test vectors covering `dirban block`, dependency resolution, auto-unblocking upon task completion, and CLI commands.
+  - `dirban plan --promote=<id>`: Promotes task from `backlog/` to `config.columns[0]` if unblocked (fails if still blocked).
+- [ ] Add unit test vectors covering `dirban block`, `dirban unblock`, dependency resolution, promoting, and CLI commands.
 - [ ] Document in `docs/cli-reference.md` and `.agents/skills/task-management/SKILL.md`:
-  - Detail `dirban block`, `dirban plan`, and dependency resolution.
+  - Detail `dirban block`, `dirban unblock`, `dirban plan`, and dependency resolution.
   - Define agent protocol for recording `[BLOCKED]` and `[UNBLOCKED]` events with timestamp and rationale in the task's `## Execution Journal`.

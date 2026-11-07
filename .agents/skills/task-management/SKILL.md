@@ -15,12 +15,13 @@ In Dirban, **the physical directory IS the task state**.
 
 ## 1. Core Invariants & Rules for Agents
 
-1. **Directories are Columns**:
-   - `docs/tasks/backlog/` — Default destination for new tasks. Ideas, staging queue, or unscheduled backlog.
-   - `docs/tasks/01-todo/` — Prioritized and refined tasks ready for execution.
-   - `docs/tasks/02-doing/` — The task you are currently implementing.
-   - `docs/tasks/03-done/` — Completed work with passing tests & criteria met.
-   - `docs/tasks/archive/` — Historical partitioned storage (`archive/YYYY/`).
+1. **Directories are States & Tiers**:
+   - `docs/tasks/backlog/` — Reserved intake and capture pool (GTD capture / idea staging). The default destination for new, unscheduled, or blocked tasks waiting for planning.
+   - Active Kanban Workflow Columns (`docs/tasks/<column>/`, configured via `dirban.columns`):
+     - `docs/tasks/01-todo/` — Prioritized and refined tasks ready for execution (`config.columns[0]`).
+     - `docs/tasks/02-doing/` — The task you are currently implementing.
+     - `docs/tasks/03-done/` — Completed work with passing tests & criteria met.
+   - `docs/tasks/archive/` — Reserved terminal tier for historical partitioned storage (`archive/YYYY/`).
 2. **One Task per File**: Every task is an isolated Markdown file. Always inspect only the task you are actively working on to keep token context minimal.
 3. **Never modify `status:` directly in frontmatter**: The directory location dictates task status. Use `dirban move` or `mv` to transition cards.
 4. **Acceptance Criteria are Checkboxes**: Track progress with standard Markdown `- [ ]` and `- [x]` items.
