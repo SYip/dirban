@@ -1,14 +1,17 @@
 ---
-id: "26-004"
-title: "Implement planning view and dependency unblocker"
-type: "task"
-status: "backlog"
-priority: "p2"
-owner: "developer"
-assigned_to: "unassigned"
-created_date: "2026-11-01"
-last_updated: "2026-11-01"
-tags: ["cli", "planning", "dependencies"]
+id: 26-004
+title: Implement planning view and dependency unblocker
+type: task
+status: backlog
+priority: p1
+owner: developer
+assigned_to: unassigned
+created_date: 2026-11-01
+last_updated: 2026-11-07
+tags:
+  - cli
+  - planning
+  - dependencies
 ---
 
 # Implement planning view and dependency unblocker
@@ -25,7 +28,7 @@ Provides a planning and triage view (`dirban plan`) and blocker workflow (`dirba
     - If argument is freeform text/event (e.g. `"Waiting for review"`, URL), stores raw string.
   - Appends new blockers to `relationships.depends_on` (deduplicating existing entries).
   - Automatically demotes the task from `02-doing` (or `01-todo`) back to `backlog` to free the active slot.
-  - Records an execution journal entry noting when execution halted and the blocker reasons.
+  - Updates task metadata and status without injecting manual execution journal entries (Git is the audit log).
 - [ ] Automatic dependency resolution: if a dependency references another task ID and that task is in `03-done` or `archive/`, evaluate it as unblocked/resolved.
 - [ ] Add `dirban plan` interactive view:
   - Partitions backlog into "Ready to Promote" and "Blocked / In Limbo".

@@ -1,15 +1,18 @@
 ---
 okf_version: "1.0"
-id: "26-003"
-title: "Implement current task focus view"
+id: 26-003
+title: Implement current task focus view
 type: task
 status: backlog
-priority: p2
+priority: p1
 owner: developer
 assigned_to: unassigned
 created_date: 2026-11-01
-last_updated: 2026-11-01
-tags: ["cli", "view", "ux"]
+last_updated: 2026-11-07
+tags:
+  - cli
+  - view
+  - ux
 relationships:
   depends_on: []
   blocks: []

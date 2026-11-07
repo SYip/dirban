@@ -1,14 +1,18 @@
 ---
-id: "26-005"
-title: "Add git worktree lifecycle integration for task branches"
-type: "task"
-status: "backlog"
-priority: "p2"
-owner: "developer"
-assigned_to: "unassigned"
-created_date: "2026-11-02"
-last_updated: "2026-11-02"
-tags: ["cli", "git", "worktree", "agents"]
+id: 26-005
+title: Add git worktree lifecycle integration for task branches
+type: task
+status: backlog
+priority: p1
+owner: developer
+assigned_to: unassigned
+created_date: 2026-11-02
+last_updated: 2026-11-07
+tags:
+  - cli
+  - git
+  - worktree
+  - agents
 ---
 
 # Add git worktree lifecycle integration for task branches
