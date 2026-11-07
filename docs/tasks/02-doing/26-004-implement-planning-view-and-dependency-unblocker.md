@@ -44,4 +44,6 @@ Provides a planning and triage view (`dirban plan`) and blocker workflow (`dirba
   - `dirban plan --blocked`: Lists currently blocked backlog tasks and blocking sources.
   - `dirban plan --promote=<id>`: Promotes task from backlog to `01-todo` if unblocked.
 - [ ] Add unit test vectors covering `dirban block`, dependency resolution, auto-unblocking upon task completion, and CLI commands.
-- [ ] Document in `docs/cli-reference.md` and `.agents/skills/task-management/SKILL.md`.
+- [ ] Document in `docs/cli-reference.md` and `.agents/skills/task-management/SKILL.md`:
+  - Detail `dirban block`, `dirban plan`, and dependency resolution.
+  - Define agent protocol for recording `[BLOCKED]` and `[UNBLOCKED]` events with timestamp and rationale in the task's `## Execution Journal`.
