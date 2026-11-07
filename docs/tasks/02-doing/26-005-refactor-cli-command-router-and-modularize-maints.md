@@ -27,14 +27,14 @@ Relies on standard library `parseArgs` (`node:util`) without adding external CLI
 
 ## Acceptance Criteria
 
-- [ ] Create `src/cli/commands/` directory structure with domain-grouped handlers:
+- [x] Create `src/cli/commands/` directory structure with domain-grouped handlers:
   - `types.ts`: Define `CliContext` and `CommandHandler` types.
   - `router.ts`: Command dispatch registry table mapping command names & aliases to handlers.
   - `lifecycle.ts`: Handlers for `current` (alias `focus`), `start` (alias `worktree add`), and `done` (alias `finish`).
   - `task-mutation.ts`: Handlers for `new` (alias `create`), `move`, `check`, `set`, and `archive`.
   - `board.ts`: Handlers for `board` (interactive TUI / static table) and `view`.
   - `system.ts`: Handlers for `init`, `next-id`, `priorities`, and formatted `help`.
-- [ ] Slim `main.ts` down to `< 70 lines` focusing strictly on CLI entrypoint bootstrapping, flag parsing via `parseArgs`, and routing via `dispatchCommand`.
-- [ ] Preserve all existing CLI flag options, aliases, stdout outputs, and exit codes.
-- [ ] Existing and new unit tests pass (`bun test`).
-- [ ] Strict TypeScript checks pass with zero errors (`bun run typecheck`).
+- [x] Slim `main.ts` down to `< 70 lines` focusing strictly on CLI entrypoint bootstrapping, flag parsing via `parseArgs`, and routing via `dispatchCommand`.
+- [x] Preserve all existing CLI flag options, aliases, stdout outputs, and exit codes.
+- [x] Existing and new unit tests pass (`bun test`).
+- [x] Strict TypeScript checks pass with zero errors (`bun run typecheck`).
