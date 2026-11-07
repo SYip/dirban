@@ -121,7 +121,7 @@ We eliminate the in-file `## Execution Journal`. Git commits already record auth
     2. Injecting and rewriting an `order: 12` integer into frontmatter, which pollutes Git diffs and creates constant merge conflicts.
 - **The Priority Alternative**:
   - If a task needs to be done sooner, **elevate its priority** (`p0` > `p1` > `p2` > `p3`).
-  - Priority communicates *intent and business value*, whereas arbitrary drag rank is often accidental or subjective.
+  - Priority communicates *intent and business value*, whereas arbitrary drag rank would be accidental.
   - Within the same priority tier, cards sort deterministically by **date** or **ticket ID**.
   - This keeps files completely static, avoids cascading renames, and produces zero artificial Git diff churn.
 
