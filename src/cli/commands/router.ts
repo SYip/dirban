@@ -1,45 +1,127 @@
 import pc from "picocolors"
-import type { CliContext, CommandHandler } from "./types.ts"
-import { handleCurrent, handleDone, handlePath, handleStart } from "./lifecycle.ts"
+import type { CliContext, CommandDefinition, CommandHandler } from "./types.ts"
 import {
+  currentCommand,
+  doneCommand,
+  handleCurrent,
+  handleDone,
+  handlePath,
+  handleStart,
+  pathCommand,
+  startCommand,
+} from "./lifecycle.ts"
+import {
+  archiveCommand,
+  checkCommand,
   handleArchive,
   handleCheck,
   handleMove,
   handleNew,
   handleSet,
+  moveCommand,
+  newCommand,
+  setCommand,
 } from "./task-mutation.ts"
-import { handleBoard, handleView } from "./board.ts"
+import { boardCommand, handleBoard, handleView, viewCommand } from "./board.ts"
 import {
   handleHelp,
   handleInit,
   handleNextId,
   handlePriorities,
+  helpCommand,
+  initCommand,
+  nextIdCommand,
   printHelp,
+  prioritiesCommand,
 } from "./system.ts"
-import { handleBlock, handlePlan, handleUnblock } from "./plan.ts"
+import {
+  blockCommand,
+  handleBlock,
+  handlePlan,
+  handleUnblock,
+  planCommand,
+  unblockCommand,
+} from "./plan.ts"
+import { validateConfig } from "../../config/config.ts"
 
-const COMMAND_MAP: Readonly<Record<string, CommandHandler>> = {
-  init: handleInit,
-  board: handleBoard,
-  current: handleCurrent,
-  focus: handleCurrent,
-  start: handleStart,
-  done: handleDone,
-  finish: handleDone,
-  path: handlePath,
-  new: handleNew,
-  create: handleNew,
-  "next-id": handleNextId,
-  priorities: handlePriorities,
-  move: handleMove,
-  view: handleView,
-  check: handleCheck,
-  set: handleSet,
-  archive: handleArchive,
-  plan: handlePlan,
-  block: handleBlock,
-  unblock: handleUnblock,
-  help: handleHelp,
+export const ALL_COMMANDS: readonly CommandDefinition[] = Object.freeze([
+  initCommand,
+  boardCommand,
+  currentCommand,
+  startCommand,
+  doneCommand,
+  pathCommand,
+  newCommand,
+  nextIdCommand,
+  prioritiesCommand,
+  moveCommand,
+  viewCommand,
+  checkCommand,
+  setCommand,
+  archiveCommand,
+  planCommand,
+  blockCommand,
+  unblockCommand,
+  helpCommand,
+])
+
+export const findCommandDefinition = (nameOrAlias: string): CommandDefinition | undefined => {
+  const target = nameOrAlias.trim().toLowerCase()
+  return ALL_COMMANDS.find((cmd) => {
+    if (cmd.name.toLowerCase() === target) return true
+    return cmd.aliases?.some((alias) => alias.toLowerCase() === target) ?? false
+  })
+}
+
+export const printCommandHelp = (cmd: CommandDefinition): void => {
+  console.log(`\n${pc.bold(pc.cyan("dirban " + cmd.name))} - ${cmd.summary}\n`)
+
+  console.log(`${pc.bold("USAGE:")}`)
+  for (const line of cmd.usage.split("\n")) {
+    console.log(`  ${line}`)
+  }
+
+  if (cmd.aliases != null && cmd.aliases.length > 0) {
+    console.log(`\n${pc.bold("ALIASES:")} ${cmd.aliases.join(", ")}`)
+  }
+
+  if (cmd.options != null && cmd.options.length > 0) {
+    console.log(`\n${pc.bold("OPTIONS:")}`)
+    for (const opt of cmd.options) {
+      console.log(`  ${pc.yellow(opt.flag.padEnd(24))} ${opt.description}`)
+    }
+  }
+
+  if (cmd.examples != null && cmd.examples.length > 0) {
+    console.log(`\n${pc.bold("EXAMPLES:")}`)
+    for (const ex of cmd.examples) {
+      console.log(`  ${pc.gray(ex)}`)
+    }
+  }
+  console.log()
+}
+
+export const printGlobalHelp = (): void => {
+  console.log(`
+${pc.bold(pc.cyan("Dirban (dirban)"))} - Zero-Database, Agent-Native Kanban Backed by Git & OKF
+
+${pc.bold("USAGE:")}
+  dirban [command] [options]
+  dirban <command> --help
+
+${pc.bold("COMMANDS:")}`)
+
+  for (const cmd of ALL_COMMANDS) {
+    if (cmd.name === "help") continue
+    const aliasStr = cmd.aliases != null && cmd.aliases.length > 0
+      ? ` (aliases: ${cmd.aliases.join(", ")})`
+      : ""
+    console.log(`  ${pc.yellow(cmd.name.padEnd(16))} ${cmd.summary}${pc.gray(aliasStr)}`)
+  }
+
+  console.log(`
+Run "${pc.cyan("dirban <command> --help")}" or "${pc.cyan("dirban help <command>")}" for detailed options and examples.
+`)
 }
 
 export const dispatchCommand = async (
@@ -51,8 +133,22 @@ export const dispatchCommand = async (
     return handleStart(ctx)
   }
 
-  const handler = COMMAND_MAP[commandName]
-  if (handler == null) {
+  // Handle 'dirban help <command>' or 'dirban help'
+  if (commandName === "help") {
+    const targetCmdName = ctx.positionals[1]
+    if (targetCmdName != null && targetCmdName.trim() !== "") {
+      const targetCmd = findCommandDefinition(targetCmdName)
+      if (targetCmd != null) {
+        printCommandHelp(targetCmd)
+        return 0
+      }
+    }
+    printGlobalHelp()
+    return 0
+  }
+
+  const cmdDef = findCommandDefinition(commandName)
+  if (cmdDef == null) {
     console.error(
       pc.red(
         `Unknown command: ${commandName}. Run "dirban --help" for available commands.`,
@@ -61,8 +157,25 @@ export const dispatchCommand = async (
     return 1
   }
 
-  return handler(ctx)
+  // Handle 'dirban <command> --help' or '-h'
+  if (ctx.flags.help) {
+    printCommandHelp(cmdDef)
+    return 0
+  }
+
+  // Pre-execution Config Validation Pipeline
+  const validationRes = validateConfig(ctx.config, {
+    requireTasksDir: cmdDef.requiresTasksDir ?? false,
+    workspaceRoot: ctx.cwd,
+  })
+
+  if (validationRes.isErr()) {
+    console.error(pc.red(`Configuration Error: ${validationRes.error.message}`))
+    return 1
+  }
+
+  return cmdDef.execute(ctx)
 }
 
-export { printHelp }
+export { printGlobalHelp as printHelp }
 

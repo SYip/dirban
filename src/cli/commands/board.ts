@@ -4,7 +4,7 @@ import pc from "picocolors"
 import { discoverBoard, findTaskWithFuzzy } from "../../board/discovery.ts"
 import { formatBoardStatic, formatTaskDetail } from "../formatters.ts"
 import { startInteractiveTui } from "../tui.ts"
-import type { CommandHandler } from "./types.ts"
+import type { CommandDefinition, CommandHandler } from "./types.ts"
 
 export const handleBoard: CommandHandler = async (ctx) => {
   if (!ctx.flags.static && process.stdin.isTTY) {
@@ -75,5 +75,41 @@ export const handleView: CommandHandler = async (ctx) => {
     })
   }
   return 0
+}
+
+export const boardCommand: CommandDefinition = {
+  name: "board",
+  summary: "Display kanban board (Interactive TUI by default in TTY, or static table)",
+  usage: "dirban board [options]",
+  options: [
+    { flag: "--static, -s", description: "Force static output instead of launching interactive TUI" },
+    { flag: "--tag=<tag>", description: "Filter tasks by tag" },
+    { flag: "--owner=<owner>", description: "Filter tasks by owner or assignee" },
+    { flag: "--search=<query>", description: "Search keyword in title, ID, or body" },
+    { flag: "--sort=<mode>", description: "Sort mode: priority (default), recency, id" },
+  ],
+  examples: [
+    "dirban board",
+    "dirban board --static",
+    "dirban board --tag=cli --sort=recency",
+  ],
+  requiresTasksDir: true,
+  execute: handleBoard,
+}
+
+export const viewCommand: CommandDefinition = {
+  name: "view",
+  summary: "Inspect task metadata, relationships, and acceptance criteria",
+  usage: "dirban view <id|fuzzy-slug> [options]",
+  options: [
+    { flag: "--open", description: "Open the task Markdown file in your default editor ($EDITOR or code)" },
+  ],
+  examples: [
+    "dirban view 26-001",
+    "dirban view search-filter",
+    "dirban view 26-001 --open",
+  ],
+  requiresTasksDir: true,
+  execute: handleView,
 }
 

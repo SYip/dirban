@@ -14,7 +14,7 @@ export const runCli = async (args: readonly string[]): Promise<number> => {
   })
   const flags = values as CliFlags
 
-  if (flags.help || positionals[0] === "help") {
+  if (flags.help && positionals.length === 0) {
     printHelp()
     return 0
   }

@@ -70,17 +70,40 @@ export const discoverBoard = (
   }
 
   const orderedColNames: string[] = []
+
+  // 1. Backlog always on the far left (if present in discovered directories)
+  const backlogDirs = discoveredDirNames.filter(
+    (name) => name.toLowerCase() === "backlog" || name.toLowerCase().endsWith("-backlog"),
+  )
+  orderedColNames.push(...backlogDirs)
+
+  // 2. Configured workflow columns in the middle
   for (const configuredCol of config.columns) {
-    if (discoveredDirNames.includes(configuredCol)) {
+    if (discoveredDirNames.includes(configuredCol) && !orderedColNames.includes(configuredCol)) {
       orderedColNames.push(configuredCol)
     }
   }
 
+  // 3. Unlisted / custom intermediate columns
   const unlistedCols = discoveredDirNames
-    .filter((name) => !config.columns.includes(name))
+    .filter(
+      (name) =>
+        !config.columns.includes(name) &&
+        !orderedColNames.includes(name) &&
+        name.toLowerCase() !== "archive" &&
+        !name.toLowerCase().endsWith("-archive"),
+    )
     .sort((a, b) => a.localeCompare(b))
 
   orderedColNames.push(...unlistedCols)
+
+  // 4. Archive always on the far right (if present in discovered directories)
+  const archiveDirs = discoveredDirNames.filter(
+    (name) =>
+      (name.toLowerCase() === "archive" || name.toLowerCase().endsWith("-archive")) &&
+      !orderedColNames.includes(name),
+  )
+  orderedColNames.push(...archiveDirs)
 
   const columns: Column[] = []
   let totalTasks = 0

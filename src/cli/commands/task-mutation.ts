@@ -6,7 +6,7 @@ import { checkTaskItem } from "../../operations/check.ts"
 import { setTaskMetadata } from "../../operations/set.ts"
 import { archiveTasks } from "../../operations/archive.ts"
 import type { Priority } from "../../okf/types.ts"
-import type { CommandHandler } from "./types.ts"
+import type { CommandDefinition, CommandHandler } from "./types.ts"
 
 export const handleNew: CommandHandler = (ctx) => {
   const title = ctx.positionals.slice(1).join(" ").trim()
@@ -181,5 +181,83 @@ export const handleArchive: CommandHandler = (ctx) => {
     ),
   )
   return 0
+}
+
+export const newCommand: CommandDefinition = {
+  name: "new",
+  aliases: ["create"],
+  summary: "Create a new task with auto-assigned YY-001 ID (alias: create)",
+  usage: "dirban new <title> [options]",
+  options: [
+    { flag: "--column=<col>", description: "Target column (defaults to backlog or first column)" },
+    { flag: "--priority=<p>", description: "Task priority (defaults to configured default priority)" },
+    { flag: "--tags=<tag1,tag2>", description: "Comma-separated list of tags" },
+    { flag: "--assignee=<user>", description: "Assignee name" },
+    { flag: "--owner=<owner>", description: "Task owner (developer | agent | unassigned)" },
+  ],
+  examples: [
+    "dirban new 'Implement search filter'",
+    "dirban new 'Fix login bug' --priority=p0 --column=01-todo",
+  ],
+  requiresTasksDir: true,
+  execute: handleNew,
+}
+
+export const moveCommand: CommandDefinition = {
+  name: "move",
+  summary: "Atomically move a task to target column and record journal",
+  usage: "dirban move <id> <target-column>",
+  options: [],
+  examples: [
+    "dirban move 26-001 02-doing",
+    "dirban move 26-001 03-done",
+  ],
+  requiresTasksDir: true,
+  execute: handleMove,
+}
+
+export const checkCommand: CommandDefinition = {
+  name: "check",
+  summary: "Toggle acceptance criteria checkbox item (1-based index)",
+  usage: "dirban check <id> <index>",
+  options: [],
+  examples: [
+    "dirban check 26-001 1",
+    "dirban check 26-001 2",
+  ],
+  requiresTasksDir: true,
+  execute: handleCheck,
+}
+
+export const setCommand: CommandDefinition = {
+  name: "set",
+  summary: "Mutate task frontmatter (priority, assignee, owner, title, tags)",
+  usage: "dirban set <id> [options]",
+  options: [
+    { flag: "--priority=<p0..p3>", description: "Update task priority" },
+    { flag: "--assignee=<user>", description: "Assign task to user" },
+    { flag: "--owner=<owner>", description: "Update task owner (developer | agent | unassigned)" },
+    { flag: "--title=<title>", description: "Update task title" },
+    { flag: "--tags=<tag1,tag2>", description: "Set comma-separated tags" },
+  ],
+  examples: [
+    "dirban set 26-001 --priority=p0",
+    "dirban set 26-001 --assignee=andrew --tags=core,cli",
+  ],
+  requiresTasksDir: true,
+  execute: handleSet,
+}
+
+export const archiveCommand: CommandDefinition = {
+  name: "archive",
+  summary: "Archive completed tasks directly to archive/",
+  usage: "dirban archive [<id>|all]",
+  options: [],
+  examples: [
+    "dirban archive all",
+    "dirban archive 26-001",
+  ],
+  requiresTasksDir: true,
+  execute: handleArchive,
 }
 
