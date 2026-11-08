@@ -2,7 +2,7 @@ import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
 import { calculateNextTaskId } from "../../operations/create.ts"
 import { initializeBoard } from "../../operations/init.ts"
-import type { CommandHandler } from "./types.ts"
+import type { CommandDefinition, CommandHandler } from "./types.ts"
 
 export const printHelp = (): void => {
   console.log(`
@@ -150,5 +150,62 @@ export const handlePriorities: CommandHandler = (ctx) => {
 
   console.log(`${pc.bold("Available priorities:")} ${listFormatted}`)
   return 0
+}
+
+export const initCommand: CommandDefinition = {
+  name: "init",
+  summary: "Initialize board directory structure and settings (.dirban.json or .vscode)",
+  usage: "dirban init [options]",
+  options: [
+    { flag: "--config=<vscode|dirban>", description: "Target configuration file format" },
+    { flag: "-y, --yes", description: "Accept all defaults non-interactively" },
+  ],
+  examples: [
+    "dirban init",
+    "dirban init --config=dirban",
+    "dirban init -y",
+  ],
+  requiresTasksDir: false,
+  execute: handleInit,
+}
+
+export const nextIdCommand: CommandDefinition = {
+  name: "next-id",
+  summary: "Print the next available task ID for the current year",
+  usage: "dirban next-id",
+  options: [],
+  examples: [
+    "dirban next-id",
+    "export ID=$(dirban next-id)",
+  ],
+  requiresTasksDir: true,
+  execute: handleNextId,
+}
+
+export const prioritiesCommand: CommandDefinition = {
+  name: "priorities",
+  summary: "List available task priority levels and highlight the default",
+  usage: "dirban priorities",
+  options: [],
+  examples: [
+    "dirban priorities",
+  ],
+  requiresTasksDir: false,
+  execute: handlePriorities,
+}
+
+export const helpCommand: CommandDefinition = {
+  name: "help",
+  aliases: ["--help", "-h"],
+  summary: "Show general help or command-specific usage",
+  usage: "dirban help [command]\n       dirban <command> --help",
+  options: [],
+  examples: [
+    "dirban help",
+    "dirban help plan",
+    "dirban start --help",
+  ],
+  requiresTasksDir: false,
+  execute: handleHelp,
 }
 

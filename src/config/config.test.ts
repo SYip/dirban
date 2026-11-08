@@ -7,6 +7,7 @@ import {
   loadConfig,
   resolveFocusColumn,
   resolveNextColumn,
+  validateConfig,
 } from "./config.ts"
 
 describe("Config Module Tests", () => {
@@ -204,5 +205,65 @@ describe("Config Module Tests", () => {
     // 5. Default configuration preservation
     expect(resolveFocusColumn(DEFAULT_CONFIG)).toBe("02-doing")
     expect(resolveNextColumn(DEFAULT_CONFIG, "02-doing")).toBe("03-done")
+  })
+
+  it("Vector 8 (Config Validation): Validates priorities, unique columns, and tasksDir presence", () => {
+    // 1. Valid default config
+    expect(validateConfig(DEFAULT_CONFIG).isOk()).toBe(true)
+
+    // 2. Empty priorities array fails
+    const emptyPriorities = { ...DEFAULT_CONFIG, priorities: [] }
+    const emptyPrioRes = validateConfig(emptyPriorities)
+    expect(emptyPrioRes.isErr()).toBe(true)
+    if (emptyPrioRes.isErr()) {
+      expect(emptyPrioRes.error.kind).toBe("VALIDATION_ERROR")
+      expect(emptyPrioRes.error.message).toContain("cannot be empty")
+    }
+
+    // 3. defaultPriority not in priorities fails
+    const mismatchPriority = { ...DEFAULT_CONFIG, defaultPriority: "non-existent" }
+    const mismatchRes = validateConfig(mismatchPriority)
+    expect(mismatchRes.isErr()).toBe(true)
+    if (mismatchRes.isErr()) {
+      expect(mismatchRes.error.kind).toBe("VALIDATION_ERROR")
+      expect(mismatchRes.error.message).toContain('defaultPriority "non-existent" must be one of')
+    }
+
+    // 4. Duplicate columns fail
+    const duplicateCols = { ...DEFAULT_CONFIG, columns: ["todo", "doing", "TODO"] }
+    const duplicateRes = validateConfig(duplicateCols)
+    expect(duplicateRes.isErr()).toBe(true)
+    if (duplicateRes.isErr()) {
+      expect(duplicateRes.error.kind).toBe("VALIDATION_ERROR")
+      expect(duplicateRes.error.message).toContain("duplicate column name")
+    }
+
+    // 5. Empty column name fails
+    const emptyCol = { ...DEFAULT_CONFIG, columns: ["todo", "   "] }
+    const emptyColRes = validateConfig(emptyCol)
+    expect(emptyColRes.isErr()).toBe(true)
+
+    // 6. requireTasksDir verification against disk
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-val-"))
+    try {
+      const nonExistentTasksRes = validateConfig(DEFAULT_CONFIG, {
+        requireTasksDir: true,
+        workspaceRoot: tempDir,
+      })
+      expect(nonExistentTasksRes.isErr()).toBe(true)
+      if (nonExistentTasksRes.isErr()) {
+        expect(nonExistentTasksRes.error.message).toContain("Tasks directory not found at:")
+      }
+
+      // Create tasksDir -> passes
+      fs.mkdirSync(path.join(tempDir, DEFAULT_CONFIG.tasksDir), { recursive: true })
+      const existentTasksRes = validateConfig(DEFAULT_CONFIG, {
+        requireTasksDir: true,
+        workspaceRoot: tempDir,
+      })
+      expect(existentTasksRes.isOk()).toBe(true)
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
   })
 })

@@ -40,6 +40,69 @@ export const DEFAULT_CONFIG: DirbanConfig = Object.freeze({
   focusColumn: undefined,
 })
 
+export interface ConfigValidationOptions {
+  readonly requireTasksDir?: boolean
+  readonly workspaceRoot?: string
+}
+
+export const validateConfig = (
+  config: DirbanConfig,
+  options?: ConfigValidationOptions,
+): Result<DirbanConfig, ConfigError> => {
+  // 1. priorities must not be empty
+  if (config.priorities.length === 0) {
+    return err({
+      kind: "VALIDATION_ERROR",
+      message: "Config error: 'priorities' array cannot be empty.",
+    })
+  }
+
+  // 2. defaultPriority must exist in priorities
+  if (!config.priorities.includes(config.defaultPriority)) {
+    return err({
+      kind: "VALIDATION_ERROR",
+      message: `Config error: defaultPriority "${config.defaultPriority}" must be one of configured priorities [${config.priorities.join(", ")}].`,
+    })
+  }
+
+  // 3. columns must have unique, non-empty names
+  const seenColumns = new Set<string>()
+  for (const col of config.columns) {
+    const trimmed = col.trim()
+    if (trimmed === "") {
+      return err({
+        kind: "VALIDATION_ERROR",
+        message: "Config error: column names cannot be empty strings.",
+      })
+    }
+    const lower = trimmed.toLowerCase()
+    if (seenColumns.has(lower)) {
+      return err({
+        kind: "VALIDATION_ERROR",
+        message: `Config error: duplicate column name detected: "${trimmed}".`,
+      })
+    }
+    seenColumns.add(lower)
+  }
+
+  // 4. If requireTasksDir is requested, verify that tasksDir exists on disk
+  if (options?.requireTasksDir) {
+    const workspaceRoot = options.workspaceRoot ?? process.cwd()
+    const resolvedTasksDir = path.isAbsolute(config.tasksDir)
+      ? config.tasksDir
+      : path.join(workspaceRoot, config.tasksDir)
+
+    if (!fs.existsSync(resolvedTasksDir)) {
+      return err({
+        kind: "VALIDATION_ERROR",
+        message: `Tasks directory not found at: ${resolvedTasksDir}. Run "dirban init" to initialize your board.`,
+      })
+    }
+  }
+
+  return ok(config)
+}
+
 export const resolveFocusColumn = (config: DirbanConfig): string | null => {
   const columns = config.columns
   if (columns.length === 0) {

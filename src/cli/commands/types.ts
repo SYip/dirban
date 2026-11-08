@@ -62,3 +62,19 @@ export interface CliContext {
 }
 
 export type CommandHandler = (ctx: CliContext) => Promise<number> | number
+
+export interface CommandOption {
+  readonly flag: string
+  readonly description: string
+}
+
+export interface CommandDefinition {
+  readonly name: string
+  readonly aliases?: readonly string[]
+  readonly summary: string
+  readonly usage: string
+  readonly options?: readonly CommandOption[]
+  readonly examples?: readonly string[]
+  readonly requiresTasksDir?: boolean
+  readonly execute: CommandHandler
+}

@@ -4,7 +4,7 @@ import { blockTask, unblockTask } from "../../operations/block.ts"
 import { partitionBacklog, promoteTask, promoteTasks } from "../../operations/plan.ts"
 import { formatPlanView } from "../formatters.ts"
 import { startInteractivePlanTui } from "../plan-tui.ts"
-import type { CommandHandler } from "./types.ts"
+import type { CommandDefinition, CommandHandler } from "./types.ts"
 
 export const handlePlan: CommandHandler = async (ctx) => {
   const boardRes = discoverBoard(ctx.config, ctx.cwd)
@@ -165,5 +165,53 @@ export const handleUnblock: CommandHandler = (ctx) => {
     console.log(pc.cyan(`   All blockers cleared. Task is ready for planning / promotion.`))
   }
   return 0
+}
+
+export const planCommand: CommandDefinition = {
+  name: "plan",
+  summary: "View backlog triage and planning (options: --ready, --blocked, --promote=<ids|all>, -i)",
+  usage: "dirban plan [options]\n       dirban plan promote <id...> [--to=<column>]",
+  options: [
+    { flag: "--ready", description: "List only unblocked backlog tasks ready to be scheduled" },
+    { flag: "--blocked", description: "List only currently blocked backlog tasks and blocking sources" },
+    { flag: "--promote=<ids|all>", description: "Promote unblocked backlog tasks (single ID, comma-separated, or 'all')" },
+    { flag: "--to=<column>", description: "Target column for promotion (defaults to first active column)" },
+    { flag: "-i, --interactive", description: "Launch interactive terminal planner to triage, multi-select, and promote tasks" },
+  ],
+  examples: [
+    "dirban plan",
+    "dirban plan --ready",
+    "dirban plan --promote=all",
+    "dirban plan promote 26-001 26-002",
+    "dirban plan -i",
+  ],
+  requiresTasksDir: true,
+  execute: handlePlan,
+}
+
+export const blockCommand: CommandDefinition = {
+  name: "block",
+  summary: "Record blocker reasons / task dependencies and demote to backlog",
+  usage: "dirban block <id-or-path> <reasons...>",
+  options: [],
+  examples: [
+    "dirban block 26-002 26-001",
+    "dirban block 26-002 'Waiting on API key' 'PR #42 review'",
+  ],
+  requiresTasksDir: true,
+  execute: handleBlock,
+}
+
+export const unblockCommand: CommandDefinition = {
+  name: "unblock",
+  summary: "Remove a resolved blocker from a task",
+  usage: "dirban unblock <id-or-path> [reason]",
+  options: [],
+  examples: [
+    "dirban unblock 26-002",
+    "dirban unblock 26-002 'Waiting on API key'",
+  ],
+  requiresTasksDir: true,
+  execute: handleUnblock,
 }
 

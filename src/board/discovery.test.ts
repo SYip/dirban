@@ -124,6 +124,8 @@ describe("Board Discovery and Sorting Tests", () => {
     try {
       const tasksDir = path.join(tempDir, "docs/tasks")
       fs.mkdirSync(path.join(tasksDir, "backlog"), { recursive: true })
+      fs.mkdirSync(path.join(tasksDir, "01-todo"), { recursive: true })
+      fs.mkdirSync(path.join(tasksDir, "archive"), { recursive: true })
       fs.mkdirSync(path.join(tasksDir, "99-custom-stage"), {
         recursive: true,
       })
@@ -134,6 +136,11 @@ describe("Board Discovery and Sorting Tests", () => {
         const colNames = result.value.columns.map((c) => c.name)
         expect(colNames.includes("backlog")).toBe(true)
         expect(colNames.includes("99-custom-stage")).toBe(true)
+        expect(colNames.includes("archive")).toBe(true)
+        // backlog is index 0 (far left)
+        expect(colNames[0]).toBe("backlog")
+        // archive is last index (far right)
+        expect(colNames[colNames.length - 1]).toBe("archive")
       }
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })

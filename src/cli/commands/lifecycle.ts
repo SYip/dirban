@@ -13,7 +13,7 @@ import { startTask } from "../../operations/start.ts"
 import { doneTask } from "../../operations/done.ts"
 import { getVcsProvider } from "../../vcs/index.ts"
 import type { BranchStrategy } from "../../config/types.ts"
-import type { CommandHandler } from "./types.ts"
+import type { CommandDefinition, CommandHandler } from "./types.ts"
 
 export const handleCurrent: CommandHandler = (ctx) => {
   const explicitId = ctx.positionals[1]
@@ -167,5 +167,68 @@ export const handlePath: CommandHandler = (ctx) => {
   // Print raw path to stdout (clean for command substitution like `cd $(dirban path)`)
   console.log(pathResult.value)
   return 0
+}
+
+export const currentCommand: CommandDefinition = {
+  name: "current",
+  aliases: ["focus"],
+  summary: "Show active task (alias: focus). Detects git branch/worktree or focus column",
+  usage: "dirban current [id] [options]",
+  options: [
+    { flag: "--raw", description: "Print raw Markdown content to stdout for AI agent piping" },
+  ],
+  examples: [
+    "dirban current",
+    "dirban focus",
+    "dirban current --raw",
+  ],
+  requiresTasksDir: true,
+  execute: handleCurrent,
+}
+
+export const startCommand: CommandDefinition = {
+  name: "start",
+  aliases: ["worktree add"],
+  summary: "Start work on task. Moves to focus column & provisions branch/worktree",
+  usage: "dirban start <id> [options]",
+  options: [
+    { flag: "--checkout", description: "Create/checkout in-place task branch" },
+    { flag: "--worktree", description: "Create isolated sibling git worktree" },
+  ],
+  examples: [
+    "dirban start 26-001",
+    "dirban start 26-001 --worktree",
+    "dirban start 26-001 --checkout",
+  ],
+  requiresTasksDir: true,
+  execute: handleStart,
+}
+
+export const doneCommand: CommandDefinition = {
+  name: "done",
+  aliases: ["finish"],
+  summary: "Finish task (alias: finish). Moves to next column or archive & merges git branch",
+  usage: "dirban done [id]",
+  options: [],
+  examples: [
+    "dirban done",
+    "dirban done 26-001",
+    "dirban finish",
+  ],
+  requiresTasksDir: true,
+  execute: handleDone,
+}
+
+export const pathCommand: CommandDefinition = {
+  name: "path",
+  summary: "Print absolute filesystem path of a task worktree or main repository",
+  usage: "dirban path [id|main]",
+  options: [],
+  examples: [
+    "cd $(dirban path)",
+    "cd $(dirban path 26-001)",
+  ],
+  requiresTasksDir: false,
+  execute: handlePath,
 }
 

@@ -2,7 +2,7 @@
 id: "26-018"
 title: "Decouple Command-Level Help and Implement Pre-Execution Config Validation Pipeline"
 type: "task"
-status: "backlog"
+status: "doing"
 priority: "p2"
 owner: "developer"
 assigned_to: "unassigned"
@@ -28,14 +28,14 @@ Currently, the CLI has two design limitations:
 This task introduces a decentralized command definition registry where each command encapsulates its own help/usage, along with a pre-execution validation pipeline.
 
 ## Acceptance Criteria
-- [ ] Define `CommandDefinition` interface with `name`, `aliases`, `summary`, `usage`, `options`, `examples`, and `execute`.
-- [ ] Refactor command modules (`lifecycle.ts`, `task-mutation.ts`, `board.ts`, `plan.ts`, `system.ts`) to export command definitions encapsulating their own help metadata.
-- [ ] Implement command-specific help: `dirban <command> --help` or `dirban help <command>` renders targeted usage, flags, and examples for that command.
-- [ ] Keep global `dirban --help` clean and concise as a high-level command index table with one-line summaries.
-- [ ] Implement `validateConfig(config, options)` checking:
+- [x] Define `CommandDefinition` interface with `name`, `aliases`, `summary`, `usage`, `options`, `examples`, and `execute`.
+- [x] Refactor command modules (`lifecycle.ts`, `task-mutation.ts`, `board.ts`, `plan.ts`, `system.ts`) to export command definitions encapsulating their own help metadata.
+- [x] Implement command-specific help: `dirban <command> --help` or `dirban help <command>` renders targeted usage, flags, and examples for that command.
+- [x] Keep global `dirban --help` clean and concise as a high-level command index table with one-line summaries.
+- [x] Implement `validateConfig(config, options)` checking:
   - `defaultPriority` is an element of `priorities`.
   - Column names are unique and non-empty.
   - Operational commands (all except `init`, `help`, `--version`) verify that `tasksDir` exists before execution, returning a clean actionable error if uninitialized.
-- [ ] Add unit test vectors covering command-specific help output and config validation edge cases.
-- [ ] Ensure all existing tests pass and typecheck passes with 0 errors.
+- [x] Add unit test vectors covering command-specific help output and config validation edge cases.
+- [x] Ensure all existing tests pass and typecheck passes with 0 errors.
 
