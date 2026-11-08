@@ -4,7 +4,6 @@ import * as fs from "node:fs"
 import type { Board, BoardTask } from "../board/types.ts"
 import type { DirbanConfig } from "../config/types.ts"
 import { findTaskByIdOrName } from "../board/discovery.ts"
-import { getIsoDate } from "./move.ts"
 import type { OperationError } from "./types.ts"
 
 export interface ArchiveResult {
@@ -18,15 +17,12 @@ export const archiveTasks = (
   taskIdOrAll?: string,
   workspaceRoot: string = process.cwd(),
 ): Result<ArchiveResult, OperationError> => {
-  const currentYear = getIsoDate().slice(0, 4)
   const archiveBaseDir = path.isAbsolute(config.archiveDir)
     ? config.archiveDir
     : path.join(workspaceRoot, config.archiveDir)
 
-  const targetYearDir = path.join(archiveBaseDir, currentYear)
-
   try {
-    fs.mkdirSync(targetYearDir, { recursive: true })
+    fs.mkdirSync(archiveBaseDir, { recursive: true })
   } catch (mkdirErr) {
     return err({
       kind: "FS_ERROR",
@@ -63,14 +59,14 @@ export const archiveTasks = (
   const archived: BoardTask[] = []
 
   for (const task of tasksToArchive) {
-    const destPath = path.join(targetYearDir, task.filename)
+    const destPath = path.join(archiveBaseDir, task.filename)
     try {
       fs.renameSync(task.filePath, destPath)
-      archived.push(Object.freeze({
+      archived.push({
         ...task,
         filePath: destPath,
-        column: `archive/${currentYear}`,
-      }))
+        column: "archive",
+      })
     } catch (renameErr) {
       return err({
         kind: "FS_ERROR",
@@ -81,8 +77,8 @@ export const archiveTasks = (
     }
   }
 
-  return ok(Object.freeze({
-    archivedTasks: Object.freeze(archived),
-    targetDirectory: targetYearDir,
-  }))
+  return ok({
+    archivedTasks: archived,
+    targetDirectory: archiveBaseDir,
+  })
 }

@@ -2,7 +2,7 @@
 id: "26-007"
 title: "Configurable Focus Column with Automated Todo and Done Relative Transitions"
 type: "task"
-status: "backlog"
+status: "doing"
 priority: "p2"
 owner: "developer"
 assigned_to: "unassigned"
@@ -25,11 +25,20 @@ By introducing a configurable `focusColumn` (with auto-detection fallback), role
 - `current`: Resolves active tasks in `focusColumn`.
 - `done`: Advances completed work to `focus + 1` (the handoff stage, e.g. `test` or `03-done`).
 
+### Zero-Column Workflow Principle (`columns: []`)
+If `columns: []` is configured (empty active workflow):
+- `resolveFocusColumn` returns `null` (no intermediate in-progress or staging columns exist).
+- The workflow reduces directly to `backlog` $\rightarrow$ `archive`.
+- `dirban done` transitions finished tasks straight to `archive/` (flat, allowing user-organized structure).
+- `dirban current` does not check intermediate columns, resolving only git branch/worktree contexts.
+
 ## Acceptance Criteria
-- [ ] Add optional `focusColumn?: string` to `DirbanConfig` schema and parsing logic in `src/config/`.
-- [ ] Implement focus column resolution helper that respects explicit `config.focusColumn`, falls back to substring match (`doing` / `progress`), or defaults to `columns[1]` (or middle column).
-- [ ] Update `dirban start` operation to move target task into resolved `focusColumn`.
-- [ ] Update `dirban current` operation to track active tasks in resolved `focusColumn`.
-- [ ] Update `dirban done` operation to transition task to relative `focus + 1` column (or last column if focus is at end).
-- [ ] Add unit tests verifying custom workflows (e.g. `["todo", "develop", "test", "production"]` with `focusColumn: "develop"`).
-- [ ] Verify existing default workflow (`backlog`, `01-todo`, `02-doing`, `03-done`) continues working without breaking changes.
+- [x] Add optional `focusColumn?: string` to `DirbanConfig` schema and parsing logic in `src/config/`.
+- [x] Implement focus column resolution helper that respects explicit `config.focusColumn` and defaults positionally to `columns[1]` (or `columns[0]`).
+- [x] Return `null` from `resolveFocusColumn` when `columns` is empty (`columns: []`), representing a pure `backlog -> archive` workflow with no intermediate focus column.
+- [x] Update `dirban start` operation to move target task into resolved `focusColumn`.
+- [x] Update `dirban current` operation to track active tasks in resolved `focusColumn`.
+- [x] Update `dirban done` operation to transition task to relative `focus + 1` column (or last column if focus is at end), or directly to archive if no active columns exist.
+- [x] Add unit tests verifying custom workflows (e.g. `["todo", "develop", "test", "production"]` with `focusColumn: "develop"`).
+- [x] Add unit test verifying empty columns workflow (`columns: []`), where focus column is `null` and `done` transitions to archive.
+- [x] Verify existing default workflow (`backlog`, `01-todo`, `02-doing`, `03-done`) continues working without breaking changes.

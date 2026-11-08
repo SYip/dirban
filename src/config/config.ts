@@ -37,7 +37,52 @@ export const DEFAULT_CONFIG: DirbanConfig = Object.freeze({
   branchStrategy: DEFAULT_BRANCH_STRATEGY,
   worktreesDir: DEFAULT_WORKTREES_DIR,
   branchPrefix: DEFAULT_BRANCH_PREFIX,
+  focusColumn: undefined,
 })
+
+export const resolveFocusColumn = (config: DirbanConfig): string | null => {
+  const columns = config.columns
+  if (columns.length === 0) {
+    return null
+  }
+
+  // 1. Explicit user configuration
+  if (config.focusColumn != null && config.focusColumn.trim() !== "") {
+    const matched = columns.find(
+      (c) => c.toLowerCase() === config.focusColumn!.toLowerCase().trim(),
+    )
+    if (matched != null) {
+      return matched
+    }
+    return config.focusColumn.trim()
+  }
+
+  // 2. Positional default: columns[1] (e.g. 02-doing) if >= 2 columns, else columns[0]
+  return columns.length > 1 ? columns[1]! : columns[0]!
+}
+
+export const resolveNextColumn = (
+  config: DirbanConfig,
+  currentColumn: string,
+): string => {
+  const columns = config.columns
+  if (columns.length === 0) {
+    return "archive"
+  }
+
+  const currentIndex = columns.findIndex(
+    (c) => c.toLowerCase() === currentColumn.toLowerCase(),
+  )
+
+  if (currentIndex === -1) {
+    // If not found in columns, return last column (e.g. done)
+    return columns[columns.length - 1]!
+  }
+
+  // Return next column (or stay at last column if already at end)
+  const nextIndex = Math.min(currentIndex + 1, columns.length - 1)
+  return columns[nextIndex]!
+}
 
 /**
  * Strips single-line and multi-line comments and trailing commas to tolerate JSONC in .vscode/settings.json
@@ -112,6 +157,12 @@ const parseRawConfigObject = (
       ? branchPrefixRaw.trim()
       : undefined
 
+  const focusColumnRaw = getVal("focusColumn")
+  const focusColumn =
+    typeof focusColumnRaw === "string" && focusColumnRaw.trim() !== ""
+      ? focusColumnRaw.trim()
+      : undefined
+
   return {
     tasksDir,
     archiveDir,
@@ -121,6 +172,7 @@ const parseRawConfigObject = (
     branchStrategy,
     worktreesDir,
     branchPrefix,
+    focusColumn,
   }
 }
 
@@ -181,5 +233,6 @@ export const loadConfig = (
     branchStrategy: parsed.branchStrategy ?? DEFAULT_CONFIG.branchStrategy,
     worktreesDir: parsed.worktreesDir ?? DEFAULT_CONFIG.worktreesDir,
     branchPrefix: parsed.branchPrefix ?? DEFAULT_CONFIG.branchPrefix,
+    focusColumn: parsed.focusColumn ?? DEFAULT_CONFIG.focusColumn,
   }))
 }

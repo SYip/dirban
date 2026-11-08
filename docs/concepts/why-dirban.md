@@ -32,7 +32,22 @@ Developers building software individually or in small teams ($\le 5$ people), es
 2. **Monolithic Markdown tools** force all tasks into a single file, creating frequent Git merge conflicts even when editing completely unrelated tasks, while heavily polluting token context windows.
 3. **Raw filesystem directories** lack Kanban mechanics, visual state transitions, priority-based sorting, and checklist progress indicators.
 
-**Dirban** (`dirban`) exists at the exact intersection of these three extremes.
+### The Real-World AI Agent Workflow: Iteration & Cross-Project Juggling
+
+The catalyst for Dirban came directly from day-to-day experience running modern AI agent workflows:
+
+- **AI is Powerful, but Good Software is Iterated, Not Built in One Shot**:  
+  If the goal is merely copying established software with static requirements, an AI agent might deliver in a single prompt. But when building something genuinely new—or when product requirements are still emerging—software cannot be built all at once; it must be iterated upon.
+- **The 5-to-30 Minute Autonomous Loop**:  
+  You set clear requirements and acceptance criteria up front, then let the agent run autonomously for 5 to 30 minutes while you step away from the code. You return only to do the final verification, review the diff, and steer the next iteration.
+- **Cross-Project Juggling (e.g., using `herdr`)**:  
+  Because an agent is working autonomously in that 5-to-30 minute window, staying idle on one project is inefficient. Developers naturally switch between multiple concurrent projects (especially when orchestrating multi-repo agent sessions with tools like `herdr`).
+- **The Context-Switching Tax of Browser Task Managers**:  
+  When you hop back to a project after a run, you need to know immediately: *"Where was I? What was in flight? What did the agent just finish or get stuck on?"*  
+  With existing cloud or browser-based tools (Linear, Jira, Trello), you must break your flow: alt-tab to the browser, locate the tab, switch projects/organizations, find the active ticket, and cross-reference branch names.  
+  By keeping the task tracker local to the repository in plain Markdown files, the terminal or IDE tells you directly what you were focusing on (`dirban current`, `ls tasks/02-doing/`, or editor status bar/TUI) the split-second you switch project folders.
+
+**Dirban** (`dirban`) exists at the exact intersection of these realities.
 
 ---
 

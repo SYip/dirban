@@ -2,7 +2,9 @@ import { ok, err, type Result } from "neverthrow"
 import type { Board, BoardTask } from "../board/types.ts"
 import { findTaskExact } from "../board/discovery.ts"
 import type { DirbanConfig } from "../config/types.ts"
+import { resolveFocusColumn, resolveNextColumn } from "../config/config.ts"
 import { moveTask } from "./move.ts"
+import { archiveTasks } from "./archive.ts"
 import { resolveCurrentTask } from "./current.ts"
 import { getVcsProvider, type VersionControlProvider } from "../vcs/index.ts"
 
@@ -68,25 +70,40 @@ export const doneTask = (
   // 2. Count unchecked acceptance criteria
   const uncheckedCount = countUncheckedCriteria(taskToDone)
 
-  // 3. Move task file to 03-done on the filesystem
-  const doneColName = config.columns.find((c) =>
-    c.toLowerCase() === "03-done" || c.toLowerCase().includes("done")
-  ) ?? "03-done"
-
+  // 3. Transition completed task file:
+  // If no columns are configured, transition directly to flat archive
+  const focusColName = resolveFocusColumn(config)
   let updatedTask: BoardTask = taskToDone
-  if (taskToDone.column !== doneColName) {
-    const moveResult = moveTask(
-      board,
-      taskToDone.document.id ?? taskToDone.filename,
-      doneColName,
-    )
-    if (moveResult.isErr()) {
+
+  if (focusColName == null) {
+    const archiveResult = archiveTasks(board, config, taskToDone.document.id ?? taskToDone.filename, cwd)
+    if (archiveResult.isErr()) {
       return err({
         kind: "MOVE_ERROR",
-        message: moveResult.error.message,
+        message: archiveResult.error.message,
       })
     }
-    updatedTask = moveResult.value
+    const archivedTask = archiveResult.value.archivedTasks[0]
+    if (archivedTask != null) {
+      updatedTask = archivedTask
+    }
+  } else {
+    // Transition to relative next column (focus + 1, e.g. 03-done or test)
+    const targetColName = resolveNextColumn(config, focusColName)
+    if (taskToDone.column !== targetColName) {
+      const moveResult = moveTask(
+        board,
+        taskToDone.document.id ?? taskToDone.filename,
+        targetColName,
+      )
+      if (moveResult.isErr()) {
+        return err({
+          kind: "MOVE_ERROR",
+          message: moveResult.error.message,
+        })
+      }
+      updatedTask = moveResult.value
+    }
   }
 
   // 4. VCS branch & worktree auto-merge

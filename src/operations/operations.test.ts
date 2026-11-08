@@ -4,6 +4,7 @@ import * as path from "node:path"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import { DEFAULT_CONFIG } from "../config/config.ts"
+import type { DirbanConfig } from "../config/types.ts"
 import { discoverBoard } from "../board/discovery.ts"
 import { moveTask } from "./move.ts"
 import { checkTaskItem } from "./check.ts"
@@ -158,7 +159,7 @@ describe("Task Operations Domain Tests", () => {
     }
   })
 
-  it("Vector 4 (Archive): Partitions completed tasks into archive/YYYY/", () => {
+  it("Vector 4 (Archive): Places completed tasks flat into archive/", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-ops-"))
     try {
       const tasksDir = path.join(tempDir, "docs/tasks")
@@ -182,7 +183,8 @@ describe("Task Operations Domain Tests", () => {
         if (archiveRes.isOk()) {
           expect(archiveRes.value.archivedTasks.length).toBe(1)
           const targetDir = archiveRes.value.targetDirectory
-          expect(targetDir.includes("archive")).toBe(true)
+          expect(targetDir.endsWith(path.join("docs", "tasks", "archive"))).toBe(true)
+          expect(fs.existsSync(path.join(targetDir, "26-001.md"))).toBe(true)
         }
       }
     } finally {
@@ -507,6 +509,66 @@ describe("Task Operations Domain Tests", () => {
         expect(doneRes.value.task.column).toBe("03-done")
         expect(doneRes.value.gitSkipped).toBe(true)
         expect(doneRes.value.uncheckedCount).toBe(1)
+      }
+
+      // 3. Custom workflow with explicit focusColumn ("develop") and relative focus + 1 ("test")
+      const customWorkflowConfig: DirbanConfig = {
+        ...DEFAULT_CONFIG,
+        columns: ["todo", "develop", "test", "production"],
+        focusColumn: "develop",
+      }
+      for (const col of customWorkflowConfig.columns) {
+        fs.mkdirSync(path.join(tempDir, "docs/tasks", col), { recursive: true })
+      }
+      const boardCustom = discoverBoard(customWorkflowConfig, tempDir)._unsafeUnwrap()
+      const customTask = createTask(boardCustom, {
+        title: "Custom Flow Feature",
+        column: "todo",
+      })._unsafeUnwrap()
+
+      const boardWithCustom = discoverBoard(customWorkflowConfig, tempDir)._unsafeUnwrap()
+      const startCustomRes = startTask(boardWithCustom, customWorkflowConfig, customTask.id, { cwd: tempDir })
+      expect(startCustomRes.isOk()).toBe(true)
+      if (startCustomRes.isOk()) {
+        expect(startCustomRes.value.task.column).toBe("develop")
+      }
+
+      // Verify current picks active task in "develop"
+      const boardInDevelop = discoverBoard(customWorkflowConfig, tempDir)._unsafeUnwrap()
+      const currentCustomRes = resolveCurrentTask(boardInDevelop, customWorkflowConfig, undefined, tempDir)
+      expect(currentCustomRes.isOk()).toBe(true)
+      if (currentCustomRes.isOk()) {
+        expect(currentCustomRes.value.task.column).toBe("develop")
+        expect(currentCustomRes.value.task.document.id).toBe(customTask.id)
+      }
+
+      // Verify done transitions task from "develop" to "test" (focus + 1)
+      const doneCustomRes = doneTask(boardInDevelop, customWorkflowConfig, undefined, { cwd: tempDir })
+      expect(doneCustomRes.isOk()).toBe(true)
+      if (doneCustomRes.isOk()) {
+        expect(doneCustomRes.value.task.column).toBe("test")
+      }
+
+      // 4. Zero-column workflow (columns: []): backlog -> archive transition
+      const zeroColConfig: DirbanConfig = {
+        ...DEFAULT_CONFIG,
+        columns: [],
+        focusColumn: undefined,
+      }
+      const boardZero = discoverBoard(zeroColConfig, tempDir)._unsafeUnwrap()
+      const zeroTask = createTask(boardZero, {
+        title: "Zero Column Task",
+        column: "backlog",
+      })._unsafeUnwrap()
+
+      const boardWithZero = discoverBoard(zeroColConfig, tempDir)._unsafeUnwrap()
+      const currentZeroRes = resolveCurrentTask(boardWithZero, zeroColConfig, undefined, tempDir)
+      expect(currentZeroRes.isErr()).toBe(true)
+
+      const doneZeroRes = doneTask(boardWithZero, zeroColConfig, zeroTask.id, { cwd: tempDir })
+      expect(doneZeroRes.isOk()).toBe(true)
+      if (doneZeroRes.isOk()) {
+        expect(doneZeroRes.value.task.column).toContain("archive")
       }
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })

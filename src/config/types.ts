@@ -9,6 +9,7 @@ export interface DirbanConfig {
   readonly branchStrategy?: BranchStrategy
   readonly worktreesDir?: string
   readonly branchPrefix?: string
+  readonly focusColumn?: string
 }
 
 export type ConfigError =

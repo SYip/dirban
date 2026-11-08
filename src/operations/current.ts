@@ -3,6 +3,7 @@ import type { Board, BoardTask } from "../board/types.ts"
 import { findTaskExact } from "../board/discovery.ts"
 import { sortTasksByPriority } from "../board/sorter.ts"
 import type { DirbanConfig } from "../config/types.ts"
+import { resolveFocusColumn } from "../config/config.ts"
 import { getVcsProvider, type VersionControlProvider } from "../vcs/index.ts"
 
 export type CurrentResolutionSource = "explicit" | "git-branch" | "git-worktree" | "doing-column"
@@ -60,12 +61,17 @@ export const resolveCurrentTask = (
     }
   }
 
-  // 3. Doing Column Resolution
-  const doingCol = board.columns.find((col) =>
-    col.name.toLowerCase() === "02-doing" ||
-    col.name.toLowerCase().endsWith("doing") ||
-    col.name.toLowerCase().includes("doing") ||
-    col.name.toLowerCase().includes("progress")
+  // 3. Focus Column Resolution
+  const focusColName = resolveFocusColumn(config)
+  if (focusColName == null) {
+    return err({
+      kind: "NO_ACTIVE_TASK",
+      message: "No active task in progress (no workflow columns configured).",
+    })
+  }
+
+  const doingCol = board.columns.find(
+    (col) => col.name.toLowerCase() === focusColName.toLowerCase(),
   )
 
   const doingTasks = doingCol?.tasks ?? []

@@ -2,7 +2,12 @@ import { describe, expect, it } from "bun:test"
 import * as path from "node:path"
 import * as fs from "node:fs"
 import * as os from "node:os"
-import { DEFAULT_CONFIG, loadConfig } from "./config.ts"
+import {
+  DEFAULT_CONFIG,
+  loadConfig,
+  resolveFocusColumn,
+  resolveNextColumn,
+} from "./config.ts"
 
 describe("Config Module Tests", () => {
   it("Vector 1 (Baseline): Missing config file returns default config", () => {
@@ -26,6 +31,7 @@ describe("Config Module Tests", () => {
         columns: ["todo", "doing", "done"],
         archiveDir: "custom/archive",
         defaultPriority: "p0",
+        focusColumn: "doing",
       }
       fs.writeFileSync(
         path.join(tempDir, ".dirban.json"),
@@ -40,6 +46,7 @@ describe("Config Module Tests", () => {
         expect(result.value.columns).toEqual(["todo", "doing", "done"])
         expect(result.value.archiveDir).toBe("custom/archive")
         expect(result.value.defaultPriority).toBe("p0")
+        expect(result.value.focusColumn).toBe("doing")
       }
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
@@ -153,5 +160,49 @@ describe("Config Module Tests", () => {
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }
+  })
+
+  it("Vector 7 (Focus & Next Column Resolution): Handles custom workflows and fallbacks", () => {
+    // 1. Explicit focusColumn
+    const explicitConfig = {
+      ...DEFAULT_CONFIG,
+      columns: ["todo", "develop", "test", "production"],
+      focusColumn: "develop",
+    }
+    expect(resolveFocusColumn(explicitConfig)).toBe("develop")
+    expect(resolveNextColumn(explicitConfig, "develop")).toBe("test")
+    expect(resolveNextColumn(explicitConfig, "test")).toBe("production")
+    expect(resolveNextColumn(explicitConfig, "production")).toBe("production")
+
+    // 2. Positional default: columns[1] when focusColumn is not specified
+    const positionalConfig = {
+      ...DEFAULT_CONFIG,
+      columns: ["open", "working", "resolved"],
+      focusColumn: undefined,
+    }
+    expect(resolveFocusColumn(positionalConfig)).toBe("working")
+    expect(resolveNextColumn(positionalConfig, "working")).toBe("resolved")
+
+    // 3. Single column edge case defaults to columns[0]
+    const singleColConfig = {
+      ...DEFAULT_CONFIG,
+      columns: ["only-column"],
+      focusColumn: undefined,
+    }
+    expect(resolveFocusColumn(singleColConfig)).toBe("only-column")
+    expect(resolveNextColumn(singleColConfig, "only-column")).toBe("only-column")
+
+    // 4. Zero-column workflow: columns: [] yields null focusColumn and advances to "archive"
+    const zeroColConfig = {
+      ...DEFAULT_CONFIG,
+      columns: [],
+      focusColumn: undefined,
+    }
+    expect(resolveFocusColumn(zeroColConfig)).toBe(null)
+    expect(resolveNextColumn(zeroColConfig, "backlog")).toBe("archive")
+
+    // 5. Default configuration preservation
+    expect(resolveFocusColumn(DEFAULT_CONFIG)).toBe("02-doing")
+    expect(resolveNextColumn(DEFAULT_CONFIG, "02-doing")).toBe("03-done")
   })
 })
