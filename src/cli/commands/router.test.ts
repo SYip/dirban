@@ -222,4 +222,55 @@ describe("CLI Router and Modular Command Handlers", () => {
       console.error = origErr
     }
   })
+
+  it("Vector 8: Dispatches 'next' command and supports --raw output", async () => {
+    let output = ""
+    const origLog = console.log
+    const origWrite = process.stdout.write
+    console.log = (...args: unknown[]) => {
+      output += args.join(" ") + "\n"
+    }
+    process.stdout.write = (str: string | Uint8Array): boolean => {
+      output += typeof str === "string" ? str : new TextDecoder().decode(str)
+      return true
+    }
+
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-router-next-"))
+    try {
+      initializeBoard(MOCK_CONFIG, tempDir)
+      fs.writeFileSync(
+        path.join(tempDir, "docs/tasks/01-todo/26-001-sample-task.md"),
+        `---\nokf_version: "1.0"\nid: "26-001"\ntitle: "Sample Next Task"\npriority: "p1"\nstatus: "todo"\n---\n# Sample\n`,
+      )
+
+      // 1. Standard format
+      const ctxNext: CliContext = {
+        flags: {},
+        positionals: ["next"],
+        config: MOCK_CONFIG,
+        cwd: tempDir,
+      }
+      const exitNext = await dispatchCommand("next", ctxNext)
+      expect(exitNext).toBe(0)
+      expect(output).toContain("Next Recommended Task")
+      expect(output).toContain("26-001")
+      expect(output).toContain("dirban start 26-001")
+
+      // 2. --raw format
+      output = ""
+      const ctxRaw: CliContext = {
+        flags: { raw: true },
+        positionals: ["next"],
+        config: MOCK_CONFIG,
+        cwd: tempDir,
+      }
+      const exitRaw = await dispatchCommand("next", ctxRaw)
+      expect(exitRaw).toBe(0)
+      expect(output).toBe("26-001")
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+      console.log = origLog
+      process.stdout.write = origWrite
+    }
+  })
 })

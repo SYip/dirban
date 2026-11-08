@@ -5,8 +5,10 @@ import {
   doneCommand,
   handleCurrent,
   handleDone,
+  handleNext,
   handlePath,
   handleStart,
+  nextCommand,
   pathCommand,
   startCommand,
 } from "./lifecycle.ts"
@@ -47,6 +49,7 @@ import { validateConfig } from "../../config/config.ts"
 export const ALL_COMMANDS: readonly CommandDefinition[] = Object.freeze([
   initCommand,
   boardCommand,
+  nextCommand,
   currentCommand,
   startCommand,
   doneCommand,

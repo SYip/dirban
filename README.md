@@ -68,6 +68,25 @@ By treating **directories as columns** and **isolated Markdown files as tasks**,
 
 ---
 
+## Intent-Driven Workflow Guide
+
+Dirban maps directly to how humans and AI coding agents execute work across three primary phases:
+
+| Workflow Phase | Question Being Answered | Command | Description |
+| :--- | :--- | :--- | :--- |
+| **Phase 1: Planning** | *"What unblocked tasks can we schedule?"* | `dirban plan` | Shows ready vs blocked backlog tasks |
+| | *"What is holding up blocked work?"* | `dirban plan --blocked` | Inspects missing dependencies / blocker reasons |
+| | *"How do I schedule tasks for execution?"* | `dirban plan --promote=<ids>` | Moves ready tasks from backlog into `01-todo` |
+| **Phase 2: Action** | *"What should I focus on next?"* | `dirban next` | Recommends highest-priority task from `01-todo` |
+| | *"How do I start working on it?"* | `dirban start <id>` | Moves to `02-doing` & creates branch/worktree |
+| | *"What am I currently doing?"* | `dirban current` | Inspects active task, progress & criteria checklist |
+| | *"How do I complete my task?"* | `dirban done` | Moves to `03-done`, auto-merges & cleans branch |
+| **Phase 3: Review** | *"Where do things stand overall?"* | `dirban board` | Interactive TUI or `--static` board overview |
+| | *"What are the full details of a task?"* | `dirban view <id>` | Inspects task metadata, links & acceptance criteria |
+| | *"What work has already been completed?"* | `dirban archive` | Archives completed cards into `archive/` |
+
+---
+
 ## Directory Layout
 
 A Dirban board is organized inside your repository (by default under `docs/tasks/` or `tasks/`):
