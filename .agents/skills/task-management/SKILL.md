@@ -144,7 +144,8 @@ When an active task encounters blockers (e.g. waiting on dependency, upstream PR
    ```bash
    dirban block <id> "<blocker reason or prerequisite task ID>"
    ```
-   * Automatically adds entries to `relationships.depends_on` and demotes the task back to `backlog/` to free the active slot.
+   * Automatically normalizes task arguments to canonical task IDs (e.g. `26-001`), adds entries to `relationships.depends_on`, and demotes the task back to `backlog/` to free the active slot.
+   * **Invariant**: Never use file paths in `relationships.depends_on` or `relationships.blocks` (e.g. `docs/tasks/backlog/26-001.md`). Always use bare canonical IDs (`26-001`) because physical file paths change continuously as tasks move between columns.
 2. **Record Rationale in `## Execution Journal`**:
    Add an entry with timestamp and context to the task Markdown file:
    ```markdown
