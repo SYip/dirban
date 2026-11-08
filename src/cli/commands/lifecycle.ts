@@ -17,13 +17,13 @@ import type { CommandHandler } from "./types.ts"
 
 export const handleCurrent: CommandHandler = (ctx) => {
   const explicitId = ctx.positionals[1]
-  const boardRes = discoverBoard(ctx.config)
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
     console.error(pc.red(`Board Error: ${boardRes.error.message}`))
     return 1
   }
 
-  const currentRes = resolveCurrentTask(boardRes.value, ctx.config, explicitId)
+  const currentRes = resolveCurrentTask(boardRes.value, ctx.config, explicitId, ctx.cwd)
   if (currentRes.isErr()) {
     console.log(currentRes.error.message)
     return 0
@@ -66,7 +66,7 @@ export const handleStart: CommandHandler = (ctx) => {
     return 1
   }
 
-  const boardRes = discoverBoard(ctx.config)
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
     console.error(pc.red(`Board Error: ${boardRes.error.message}`))
     return 1
@@ -78,7 +78,7 @@ export const handleStart: CommandHandler = (ctx) => {
     ? "checkout"
     : undefined
 
-  const startRes = startTask(boardRes.value, ctx.config, taskId.trim(), { strategy })
+  const startRes = startTask(boardRes.value, ctx.config, taskId.trim(), { strategy, cwd: ctx.cwd })
   if (startRes.isErr()) {
     console.error(pc.red(`Start Error: ${startRes.error.message}`))
     return 1
@@ -113,13 +113,13 @@ export const handleStart: CommandHandler = (ctx) => {
 
 export const handleDone: CommandHandler = (ctx) => {
   const taskId = ctx.positionals[1]
-  const boardRes = discoverBoard(ctx.config)
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
     console.error(pc.red(`Board Error: ${boardRes.error.message}`))
     return 1
   }
 
-  const doneRes = doneTask(boardRes.value, ctx.config, taskId)
+  const doneRes = doneTask(boardRes.value, ctx.config, taskId, { cwd: ctx.cwd })
   if (doneRes.isErr()) {
     console.error(pc.red(`Done Error: ${doneRes.error.message}`))
     return 1

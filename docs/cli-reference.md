@@ -253,10 +253,18 @@ dirban plan --blocked
 # Promote an unblocked task into the active workflow (defaults to config.columns[0])
 dirban plan --promote=26-004
 
+# Batch promote multiple tasks (comma-separated or positional)
+dirban plan --promote=26-004,26-005,26-006
+dirban plan promote 26-004 26-005 26-006
+
+# Promote all unblocked/ready tasks at once
+dirban plan --promote=all
+
 # Promote to a specific target column
 dirban plan --promote=26-004 --to=01-todo
+dirban plan promote 26-004 26-005 --to=01-todo
 
-# Launch interactive terminal planner
+# Launch interactive terminal planner (Space to toggle select, 'p' to promote batch)
 dirban plan --interactive
 dirban plan -i
 ```

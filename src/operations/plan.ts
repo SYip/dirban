@@ -55,6 +55,58 @@ export interface PromoteTaskResult {
   readonly targetColumn: string
 }
 
+export interface BatchPromoteResult {
+  readonly promoted: readonly PromoteTaskResult[]
+  readonly failed: readonly {
+    readonly taskId: string
+    readonly error: OperationError
+  }[]
+}
+
+export const promoteTasks = (
+  board: Board,
+  config: DirbanConfig,
+  taskIdsOrPaths: readonly string[],
+  targetColumnOverride?: string,
+): BatchPromoteResult => {
+  const promoted: PromoteTaskResult[] = []
+  const failed: { taskId: string; error: OperationError }[] = []
+
+  let currentBoard = board
+  for (const taskId of taskIdsOrPaths) {
+    const trimmed = taskId.trim()
+    if (trimmed === "") continue
+
+    const res = promoteTask(currentBoard, config, trimmed, targetColumnOverride)
+    if (res.isOk()) {
+      promoted.push(res.value)
+      // Update local board state so subsequent promotions and dependency evaluations reflect the move
+      const updatedBacklogTasks = currentBoard.columns
+        .find((c) => c.name.toLowerCase() === BACKLOG_COLUMN)
+        ?.tasks.filter((t) => (t.document.id ?? t.filename) !== (res.value.task.document.id ?? res.value.task.filename)) ?? []
+
+      const targetColName = res.value.targetColumn
+      const updatedColumns = currentBoard.columns.map((c) => {
+        if (c.name.toLowerCase() === BACKLOG_COLUMN) {
+          return { ...c, tasks: updatedBacklogTasks }
+        }
+        if (c.name.toLowerCase() === targetColName.toLowerCase()) {
+          return { ...c, tasks: [...c.tasks, res.value.task] }
+        }
+        return c
+      })
+      currentBoard = { ...currentBoard, columns: updatedColumns }
+    } else {
+      failed.push({ taskId: trimmed, error: res.error })
+    }
+  }
+
+  return {
+    promoted,
+    failed,
+  }
+}
+
 export const promoteTask = (
   board: Board,
   config: DirbanConfig,

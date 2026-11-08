@@ -17,7 +17,7 @@ export const handleNew: CommandHandler = (ctx) => {
     return 1
   }
 
-  const boardRes = discoverBoard(ctx.config)
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
     console.error(pc.red(`Board Error: ${boardRes.error.message}`))
     return 1
@@ -62,7 +62,7 @@ export const handleMove: CommandHandler = (ctx) => {
     return 1
   }
 
-  const boardRes = discoverBoard(ctx.config)
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
     console.error(pc.red(`Board Error: ${boardRes.error.message}`))
     return 1
@@ -97,7 +97,7 @@ export const handleCheck: CommandHandler = (ctx) => {
     return 1
   }
 
-  const boardRes = discoverBoard(ctx.config)
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
     console.error(pc.red(`Board Error: ${boardRes.error.message}`))
     return 1
@@ -128,7 +128,7 @@ export const handleSet: CommandHandler = (ctx) => {
     return 1
   }
 
-  const boardRes = discoverBoard(ctx.config)
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
     console.error(pc.red(`Board Error: ${boardRes.error.message}`))
     return 1
@@ -163,13 +163,13 @@ export const handleSet: CommandHandler = (ctx) => {
 export const handleArchive: CommandHandler = (ctx) => {
   const target = ctx.positionals[1] || "all"
 
-  const boardRes = discoverBoard(ctx.config)
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
     console.error(pc.red(`Board Error: ${boardRes.error.message}`))
     return 1
   }
 
-  const archiveRes = archiveTasks(boardRes.value, ctx.config, target)
+  const archiveRes = archiveTasks(boardRes.value, ctx.config, target, ctx.cwd)
   if (archiveRes.isErr()) {
     console.error(pc.red(`Archive Error: ${archiveRes.error.message}`))
     return 1
