@@ -570,6 +570,48 @@ describe("Task Operations Domain Tests", () => {
       if (doneZeroRes.isOk()) {
         expect(doneZeroRes.value.task.column).toContain("archive")
       }
+
+      // 5. Strategy delegation verification in startTask and doneTask
+      const customStrategyTrack: string[] = []
+      const trackingStrategy = {
+        name: "directory-only" as const,
+        onStart: () => {
+          customStrategyTrack.push("onStart")
+          return ok({
+            branchName: "custom/branch",
+            strategy: "directory-only" as const,
+            gitSkipped: true,
+          })
+        },
+        onDone: () => {
+          customStrategyTrack.push("onDone")
+          return ok({
+            gitSkipped: true,
+          })
+        },
+      }
+
+      const boardForTracking = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const taskForTracking = createTask(boardForTracking, {
+        title: "Tracking Task",
+        column: "01-todo",
+      })._unsafeUnwrap()
+      const refreshedBoard = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+
+      const startWithStrategyRes = startTask(refreshedBoard, DEFAULT_CONFIG, taskForTracking.id, {
+        cwd: tempDir,
+        workspaceStrategy: trackingStrategy,
+      })
+      expect(startWithStrategyRes.isOk()).toBe(true)
+      expect(customStrategyTrack).toContain("onStart")
+
+      const boardForDoneTracking = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const doneWithStrategyRes = doneTask(boardForDoneTracking, DEFAULT_CONFIG, taskForTracking.id, {
+        cwd: tempDir,
+        workspaceStrategy: trackingStrategy,
+      })
+      expect(doneWithStrategyRes.isOk()).toBe(true)
+      expect(customStrategyTrack).toContain("onDone")
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }
