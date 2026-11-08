@@ -5,10 +5,12 @@ import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
 import {
   formatCurrentTaskView,
+  formatNextTaskView,
   formatTerminalLink,
   toRelativePath,
 } from "../formatters.ts"
 import { resolveCurrentTask } from "../../operations/current.ts"
+import { resolveNextTask } from "../../operations/next.ts"
 import { startTask } from "../../operations/start.ts"
 import { doneTask } from "../../operations/done.ts"
 import { getVcsProvider } from "../../vcs/index.ts"
@@ -55,6 +57,31 @@ export const handleCurrent: CommandHandler = (ctx) => {
   }
 
   console.log(formatCurrentTaskView(task))
+  return 0
+}
+
+export const handleNext: CommandHandler = (ctx) => {
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
+  if (boardRes.isErr()) {
+    console.error(pc.red(`Board Error: ${boardRes.error.message}`))
+    return 1
+  }
+
+  const nextRes = resolveNextTask(boardRes.value, ctx.config)
+  if (nextRes.isErr()) {
+    console.log(pc.yellow(nextRes.error.message))
+    return 0
+  }
+
+  const { task, sourceColumn, queueCount } = nextRes.value
+  const taskId = task.document.id ?? task.filename
+
+  if (ctx.flags.raw) {
+    process.stdout.write(taskId)
+    return 0
+  }
+
+  console.log(formatNextTaskView(task, sourceColumn, queueCount, ctx.cwd))
   return 0
 }
 
@@ -220,6 +247,22 @@ export const currentCommand: CommandDefinition = {
   ],
   requiresTasksDir: true,
   execute: handleCurrent,
+}
+
+export const nextCommand: CommandDefinition = {
+  name: "next",
+  summary: "Show next recommended task to work on from todo queue",
+  usage: "dirban next [options]",
+  options: [
+    { flag: "--raw", description: "Print bare task ID to stdout for shell composition (e.g. dirban start $(dirban next --raw))" },
+  ],
+  examples: [
+    "dirban next",
+    "dirban next --raw",
+    "dirban start $(dirban next --raw)",
+  ],
+  requiresTasksDir: true,
+  execute: handleNext,
 }
 
 export const startCommand: CommandDefinition = {

@@ -16,6 +16,7 @@ ${pc.bold("USAGE:")}
 ${pc.bold("COMMANDS (Filesystem / Core):")}
   init                  Initialize board directory structure (backlog, 01-todo, 02-doing, 03-done, archive)
   board                 Display kanban board (Interactive TUI by default in TTY, or static table)
+  next [options]        Show next recommended task from todo queue (supports --raw)
   current [id]          Show active task (alias: focus). Detects git branch/worktree or 02-doing
   new <title>           Create a new task with auto-assigned YY-001 ID (alias: create)
   next-id               Print the next available task ID for the current year

@@ -2,7 +2,7 @@
 id: "26-015"
 title: "Implement dirban next command and intent-driven workflow guide"
 type: "task"
-status: "backlog"
+status: "doing"
 priority: "p2"
 owner: "developer"
 assigned_to: "unassigned"
@@ -54,19 +54,19 @@ Introduces `dirban next` to answer the question *"What should I focus on next?"*
 ## Acceptance Criteria
 
 ### CLI Command `dirban next`
-- [ ] Implement `handleNext` in `src/cli/commands/lifecycle.ts` and register `next` in `src/cli/commands/router.ts`.
-- [ ] Target the column immediately preceding `focusColumn` (`focusIndex - 1`, typically `01-todo`).
-- [ ] Pick the highest-priority task and format a clean terminal view with OSC 8 link and `dirban start <id>` instructions.
-- [ ] Gracefully handle empty todo columns by suggesting `dirban plan` to promote unblocked backlog tasks.
-- [ ] Support `--raw` flag to print bare task ID to stdout for shell composition.
+- [x] Implement `handleNext` in `src/cli/commands/lifecycle.ts` and register `next` in `src/cli/commands/router.ts`.
+- [x] Target the column immediately preceding `focusColumn` (`focusIndex - 1`, typically `01-todo`).
+- [x] Pick the highest-priority task and format a clean terminal view with OSC 8 link and `dirban start <id>` instructions.
+- [x] Gracefully handle empty todo columns by suggesting `dirban plan` to promote unblocked backlog tasks.
+- [x] Support `--raw` flag to print bare task ID to stdout for shell composition.
 
 ### Documentation & Intent-Driven Guide
-- [ ] Update `README.md` and `docs/cli-reference.md` with a question-and-answer intent mapping table covering Planning, Action, and Review phases.
-- [ ] Update `dirban help` command summary to list `next`.
+- [x] Update `README.md` and `docs/cli-reference.md` with a question-and-answer intent mapping table covering Planning, Action, and Review phases.
+- [x] Update `dirban help` command summary to list `next`.
 
 ### Testing & Verification
-- [ ] Add unit tests in `src/operations/lifecycle.test.ts` (or `next.test.ts`) covering:
+- [x] Add unit tests in `src/operations/next.test.ts` and `src/cli/commands/router.test.ts` covering:
   - Vector 1: Standard case with multiple prioritized tasks in todo column.
   - Vector 2: Empty todo column with guidance fallback.
   - Vector 3: `--raw` flag outputting bare ID.
-- [ ] Ensure all tests pass (`bun test && bun run typecheck`).
+- [x] Ensure all tests pass (`bun test && bun x tsc --noEmit`).

@@ -53,6 +53,25 @@ dirban priorities
 # Available priorities: p0, p1, p2 (default), p3
 ```
 
+#### `next`
+Recommends the single top-priority task ready to be worked on from the queue preceding the focus column (e.g. `01-todo`).
+
+- **Priority Sorting**: Inspects `p0` $\rightarrow$ `p1` $\rightarrow$ `p2` $\rightarrow$ `p3`, ordered by recency.
+- **Empty Queue Guidance**: If no tasks remain in `01-todo`, suggests running `dirban plan` to promote unblocked tasks from the backlog.
+- **Scriptability (`--raw`)**: Outputs only the task ID, allowing direct shell composition like `dirban start $(dirban next --raw)`.
+
+```bash
+# Display formatted recommendation with acceptance criteria and start instructions
+dirban next
+
+# Output bare task ID for shell composition
+dirban next --raw
+# Output: 26-001
+
+# Automatically start the next scheduled task
+dirban start $(dirban next --raw)
+```
+
 #### `current [id]` (alias: `focus`)
 Displays the active task currently being executed.
 

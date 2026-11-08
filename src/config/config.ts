@@ -125,6 +125,26 @@ export const resolveFocusColumn = (config: DirbanConfig): string | null => {
   return columns.length > 1 ? columns[1]! : columns[0]!
 }
 
+export const resolvePreviousColumn = (
+  config: DirbanConfig,
+  currentColumn: string,
+): string | null => {
+  const columns = config.columns
+  if (columns.length === 0) {
+    return null
+  }
+
+  const currentIndex = columns.findIndex(
+    (c) => c.toLowerCase() === currentColumn.toLowerCase(),
+  )
+
+  if (currentIndex <= 0) {
+    return null
+  }
+
+  return columns[currentIndex - 1]!
+}
+
 export const resolveNextColumn = (
   config: DirbanConfig,
   currentColumn: string,

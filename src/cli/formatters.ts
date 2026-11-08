@@ -310,3 +310,39 @@ export const formatPlanView = (
 
   return lines.join("\n")
 }
+
+export const formatNextTaskView = (
+  task: BoardTask,
+  sourceColumn: string,
+  queueCount: number,
+  basePath: string = process.cwd(),
+): string => {
+  const lines: string[] = []
+  const taskId = task.document.id ?? task.filename
+  const priority = task.document.priority ?? "p3"
+  const badge = getPriorityBadge(priority)
+  const relPath = toRelativePath(task.filePath, basePath)
+  const linkedTask = formatTerminalLink(taskId, task.filePath)
+
+  lines.push("")
+  lines.push(pc.bold(pc.cyan(`Next Recommended Task (from ${sourceColumn}, 1 of ${queueCount}):`)))
+  lines.push(pc.gray("─".repeat(60)))
+  lines.push(`  ${badge} ${pc.bold(linkedTask)}: ${pc.bold(task.document.title)}`)
+  lines.push(pc.dim(`  Path: ${relPath}`))
+
+  if (task.document.acceptanceCriteria.length > 0) {
+    lines.push("")
+    lines.push(pc.dim("  Acceptance Criteria:"))
+    for (const item of task.document.acceptanceCriteria) {
+      const box = item.checked ? pc.green("[x]") : pc.red("[ ]")
+      lines.push(`    ${box} #${item.index}: ${item.text}`)
+    }
+  }
+
+  lines.push("")
+  lines.push(pc.gray("To start work on this task, run:"))
+  lines.push(pc.cyan(`  dirban start ${taskId}`))
+  lines.push("")
+
+  return lines.join("\n")
+}
