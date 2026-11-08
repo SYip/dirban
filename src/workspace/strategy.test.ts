@@ -4,6 +4,7 @@ import type { BoardTask } from "../board/types.ts"
 import { DEFAULT_CONFIG } from "../config/config.ts"
 import type { VersionControlProvider, VcsContext, VcsError } from "../vcs/types.ts"
 import { NoopVcsProvider } from "../vcs/noop.ts"
+import { CurrentBranchStrategy } from "./current-branch-strategy.ts"
 import { DirectoryOnlyStrategy } from "./directory-only-strategy.ts"
 import { GitBranchStrategy } from "./git-branch-strategy.ts"
 import { GitWorktreeStrategy } from "./git-worktree-strategy.ts"
@@ -121,6 +122,39 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
       expect(s.name).toBe("checkout")
       expect(s instanceof GitBranchStrategy).toBe(true)
     })
+
+    it("Vector 6 (Current Branch Strategy 'none'): Resolves CurrentBranchStrategy when strategy is 'none'", () => {
+      const vcsCtx: VcsContext = {
+        isAvailable: true,
+        repoRoot: "/workspace",
+        currentBranch: "feature/pre-created-branch",
+      }
+      const s1 = resolveWorkspaceStrategy({ strategy: "none" }, vcsCtx, DEFAULT_CONFIG)
+      expect(s1.name).toBe("none")
+      expect(s1 instanceof CurrentBranchStrategy).toBe(true)
+
+      const s2 = detectWorkspaceDoneStrategy(
+        MOCK_TASK,
+        { strategy: "none" },
+        vcsCtx,
+        new NoopVcsProvider(),
+        DEFAULT_CONFIG,
+        "/workspace",
+      )
+      expect(s2.name).toBe("none")
+      expect(s2 instanceof CurrentBranchStrategy).toBe(true)
+
+      const s3 = detectWorkspaceDoneStrategy(
+        MOCK_TASK,
+        undefined,
+        vcsCtx,
+        new NoopVcsProvider(),
+        { ...DEFAULT_CONFIG, branchStrategy: "none" },
+        "/workspace",
+      )
+      expect(s3.name).toBe("none")
+      expect(s3 instanceof CurrentBranchStrategy).toBe(true)
+    })
   })
 
   describe("DirectoryOnlyStrategy", () => {
@@ -216,23 +250,43 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
       }
     })
 
-    it("Vector 3 (Error Boundary - Branch conflict): Handles git checkout error cleanly", () => {
+    it("Vector 4 (No-merge flag / config): Preserves branch without merging when noMerge is specified", () => {
+      let mergeAttempted = false
       const mockVcs: VersionControlProvider = Object.assign(Object.create(new NoopVcsProvider()), {
-        switchOrCreateBranch: () => err({ kind: "BRANCH_CONFLICT" as const, message: "Uncommitted changes" } as VcsError),
+        extractTaskId: (branch: string) => (branch.includes("26-001") ? "26-001" : null),
+        autoMergeAndCleanup: () => {
+          mergeAttempted = true
+          return ok({ worktreeRemoved: false })
+        },
       })
 
       const strategy = new GitBranchStrategy()
       const ctx: WorkspaceLifecycleContext = {
         vcs: mockVcs,
-        vcsCtx: { isAvailable: true, repoRoot: "/workspace", currentBranch: "main" },
+        vcsCtx: { isAvailable: true, repoRoot: "/workspace", currentBranch: "task/26-001-sample-feature" },
         config: DEFAULT_CONFIG,
         cwd: "/workspace",
       }
 
-      const startRes = strategy.onStart(MOCK_TASK, ctx)
-      expect(startRes.isErr()).toBe(true)
-      if (startRes.isErr()) {
-        expect(startRes.error.kind).toBe("GIT_CONFLICT")
+      // 1. Explicit noMerge option
+      const doneWithOptionRes = strategy.onDone(MOCK_TASK, ctx, { noMerge: true })
+      expect(doneWithOptionRes.isOk()).toBe(true)
+      expect(mergeAttempted).toBe(false)
+      if (doneWithOptionRes.isOk()) {
+        expect(doneWithOptionRes.value.gitSkipped).toBe(true)
+        expect(doneWithOptionRes.value.message).toContain("--no-merge")
+      }
+
+      // 2. Config autoMerge: false
+      const doneWithConfigRes = strategy.onDone(
+        MOCK_TASK,
+        { ...ctx, config: { ...DEFAULT_CONFIG, autoMerge: false } },
+        undefined,
+      )
+      expect(doneWithConfigRes.isOk()).toBe(true)
+      expect(mergeAttempted).toBe(false)
+      if (doneWithConfigRes.isOk()) {
+        expect(doneWithConfigRes.value.gitSkipped).toBe(true)
       }
     })
   })
@@ -335,6 +389,37 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
       expect(doneRes.isErr()).toBe(true)
       if (doneRes.isErr()) {
         expect(doneRes.error.kind).toBe("GIT_ERROR")
+      }
+    })
+    it("Vector 4 (No-merge flag / config on Worktree): Preserves worktree without merging when noMerge is specified", () => {
+      let mergeAttempted = false
+      const mockVcs: VersionControlProvider = Object.assign(Object.create(new NoopVcsProvider()), {
+        extractTaskId: (branch: string) => (branch.includes("26-001") ? "26-001" : null),
+        autoMergeAndCleanup: () => {
+          mergeAttempted = true
+          return ok({ worktreeRemoved: false })
+        },
+      })
+
+      const strategy = new GitWorktreeStrategy()
+      const ctx: WorkspaceLifecycleContext = {
+        vcs: mockVcs,
+        vcsCtx: {
+          isAvailable: true,
+          repoRoot: "/workspace",
+          currentBranch: "task/26-001-sample-feature",
+          isWorktree: true,
+        },
+        config: DEFAULT_CONFIG,
+        cwd: "/workspace.worktrees/26-001-sample-feature",
+      }
+
+      const doneRes = strategy.onDone(MOCK_TASK, ctx, { noMerge: true })
+      expect(doneRes.isOk()).toBe(true)
+      expect(mergeAttempted).toBe(false)
+      if (doneRes.isOk()) {
+        expect(doneRes.value.gitSkipped).toBe(true)
+        expect(doneRes.value.message).toContain("--no-merge")
       }
     })
   })

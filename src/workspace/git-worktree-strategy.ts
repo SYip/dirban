@@ -104,6 +104,19 @@ export class GitWorktreeStrategy implements WorkspaceLifecycleStrategy {
       })
     }
 
+    const shouldSkipMerge =
+      options?.noMerge === true || ctx.config.autoMerge === false
+
+    if (shouldSkipMerge) {
+      return ok({
+        mergedBranch: undefined,
+        baseBranch,
+        worktreeRemoved: false,
+        gitSkipped: true,
+        message: `Worktree for ${taskBranch} retained without merging (--no-merge).`,
+      })
+    }
+
     const commitMessage = `docs: complete task ${effectiveId} and move to done`
 
     const mergeResult = ctx.vcs.autoMergeAndCleanup({

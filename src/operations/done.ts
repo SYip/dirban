@@ -36,6 +36,7 @@ export interface DoneTaskOptions {
   readonly vcsProvider?: VersionControlProvider
   readonly strategy?: LifecycleStrategyType
   readonly noGit?: boolean
+  readonly noMerge?: boolean
   readonly workspaceStrategy?: WorkspaceLifecycleStrategy
 }
 

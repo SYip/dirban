@@ -1,6 +1,7 @@
 import type { BoardTask } from "../board/types.ts"
 import type { DirbanConfig } from "../config/types.ts"
 import type { VersionControlProvider, VcsContext } from "../vcs/types.ts"
+import { CurrentBranchStrategy } from "./current-branch-strategy.ts"
 import { DirectoryOnlyStrategy } from "./directory-only-strategy.ts"
 import { GitBranchStrategy } from "./git-branch-strategy.ts"
 import { GitWorktreeStrategy } from "./git-worktree-strategy.ts"
@@ -21,11 +22,19 @@ export const resolveWorkspaceStrategy = (
     options?.noGit ||
     options?.strategy === "directory-only"
 
-  if (isNoGitRequested || !vcsCtx.isAvailable || vcsCtx.repoRoot == null) {
+  if (isNoGitRequested) {
     return new DirectoryOnlyStrategy()
   }
 
   const requestedStrategy = options?.strategy ?? config.branchStrategy ?? "checkout"
+
+  if (requestedStrategy === "none") {
+    return new CurrentBranchStrategy()
+  }
+
+  if (!vcsCtx.isAvailable || vcsCtx.repoRoot == null) {
+    return new DirectoryOnlyStrategy()
+  }
 
   if (requestedStrategy === "worktree") {
     return new GitWorktreeStrategy()
@@ -40,7 +49,8 @@ export const resolveWorkspaceStrategy = (
  * Otherwise, inspects runtime environment:
  * 1. Inside a git worktree (`vcsCtx.isWorktree === true`) or task has an active worktree -> GitWorktreeStrategy
  * 2. On a matching task branch in git -> GitBranchStrategy
- * 3. Otherwise -> DirectoryOnlyStrategy or fallback to config
+ * 3. Strategy set to "none" -> CurrentBranchStrategy
+ * 4. Otherwise -> DirectoryOnlyStrategy or fallback to config
  */
 export const detectWorkspaceDoneStrategy = (
   task: BoardTask,
@@ -54,11 +64,24 @@ export const detectWorkspaceDoneStrategy = (
     options?.noGit ||
     options?.strategy === "directory-only"
 
-  if (isNoGitRequested || !vcsCtx.isAvailable || vcsCtx.repoRoot == null) {
+  if (isNoGitRequested) {
     return new DirectoryOnlyStrategy()
   }
 
   // Explicit strategy override takes precedence if user supplied it
+  if (options?.strategy === "none") {
+    return new CurrentBranchStrategy()
+  }
+
+  // If config specifies branchStrategy: "none", honor it
+  if (config.branchStrategy === "none") {
+    return new CurrentBranchStrategy()
+  }
+
+  if (!vcsCtx.isAvailable || vcsCtx.repoRoot == null) {
+    return new DirectoryOnlyStrategy()
+  }
+
   if (options?.strategy === "worktree") {
     return new GitWorktreeStrategy()
   }
@@ -92,7 +115,7 @@ export const detectWorkspaceDoneStrategy = (
     return new GitBranchStrategy()
   }
 
-  // Fallback to configured branchStrategy or DirectoryOnlyStrategy
+  // Fallback to configured branchStrategy or GitBranchStrategy
   if (config.branchStrategy === "worktree") {
     return new GitWorktreeStrategy()
   }

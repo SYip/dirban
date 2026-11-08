@@ -1,4 +1,4 @@
-export type BranchStrategy = "checkout" | "worktree"
+export type BranchStrategy = "checkout" | "worktree" | "none"
 
 export interface DirbanConfig {
   readonly tasksDir: string
@@ -7,6 +7,7 @@ export interface DirbanConfig {
   readonly priorities: readonly string[]
   readonly defaultPriority: string
   readonly branchStrategy?: BranchStrategy
+  readonly autoMerge?: boolean
   readonly worktreesDir?: string
   readonly branchPrefix?: string
   readonly focusColumn?: string

@@ -35,6 +35,7 @@ export const DEFAULT_CONFIG: DirbanConfig = Object.freeze({
   priorities: DEFAULT_PRIORITIES,
   defaultPriority: DEFAULT_PRIORITY,
   branchStrategy: DEFAULT_BRANCH_STRATEGY,
+  autoMerge: true,
   worktreesDir: DEFAULT_WORKTREES_DIR,
   branchPrefix: DEFAULT_BRANCH_PREFIX,
   focusColumn: undefined,
@@ -204,9 +205,15 @@ const parseRawConfigObject = (
 
   const branchStrategyRaw = getVal("branchStrategy")
   const branchStrategy =
-    branchStrategyRaw === "checkout" || branchStrategyRaw === "worktree"
+    branchStrategyRaw === "checkout" ||
+    branchStrategyRaw === "worktree" ||
+    branchStrategyRaw === "none"
       ? branchStrategyRaw
       : undefined
+
+  const autoMergeRaw = getVal("autoMerge")
+  const autoMerge =
+    typeof autoMergeRaw === "boolean" ? autoMergeRaw : undefined
 
   const worktreesDirRaw = getVal("worktreesDir")
   const worktreesDir =
@@ -233,6 +240,7 @@ const parseRawConfigObject = (
     priorities,
     defaultPriority,
     branchStrategy,
+    autoMerge,
     worktreesDir,
     branchPrefix,
     focusColumn,
@@ -294,6 +302,7 @@ export const loadConfig = (
     priorities: parsed.priorities ?? DEFAULT_CONFIG.priorities,
     defaultPriority: parsed.defaultPriority ?? DEFAULT_CONFIG.defaultPriority,
     branchStrategy: parsed.branchStrategy ?? DEFAULT_CONFIG.branchStrategy,
+    autoMerge: parsed.autoMerge ?? DEFAULT_CONFIG.autoMerge,
     worktreesDir: parsed.worktreesDir ?? DEFAULT_CONFIG.worktreesDir,
     branchPrefix: parsed.branchPrefix ?? DEFAULT_CONFIG.branchPrefix,
     focusColumn: parsed.focusColumn ?? DEFAULT_CONFIG.focusColumn,
