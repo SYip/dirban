@@ -612,6 +612,39 @@ describe("Task Operations Domain Tests", () => {
       })
       expect(doneWithStrategyRes.isOk()).toBe(true)
       expect(customStrategyTrack).toContain("onDone")
+
+      // 6. Support strategy 'none' / CurrentBranchStrategy across startTask and doneTask
+      const noneConfig: DirbanConfig = {
+        ...DEFAULT_CONFIG,
+        branchStrategy: "none",
+        autoMerge: false,
+      }
+      const boardForNone = discoverBoard(noneConfig, tempDir)._unsafeUnwrap()
+      const taskForNone = createTask(boardForNone, {
+        title: "Current Branch Task",
+        column: "01-todo",
+      })._unsafeUnwrap()
+      const refreshedNoneBoard = discoverBoard(noneConfig, tempDir)._unsafeUnwrap()
+
+      const startNoneRes = startTask(refreshedNoneBoard, noneConfig, taskForNone.id, {
+        cwd: tempDir,
+      })
+      expect(startNoneRes.isOk()).toBe(true)
+      if (startNoneRes.isOk()) {
+        expect(startNoneRes.value.strategy).toBe("none")
+        expect(startNoneRes.value.gitSkipped).toBe(true)
+      }
+
+      const boardForDoneNone = discoverBoard(noneConfig, tempDir)._unsafeUnwrap()
+      const doneNoneRes = doneTask(boardForDoneNone, noneConfig, taskForNone.id, {
+        cwd: tempDir,
+        noMerge: true,
+      })
+      expect(doneNoneRes.isOk()).toBe(true)
+      if (doneNoneRes.isOk()) {
+        expect(doneNoneRes.value.gitSkipped).toBe(true)
+        expect(doneNoneRes.value.task.column).toBe("03-done")
+      }
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }

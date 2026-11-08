@@ -1,6 +1,7 @@
 export * from "./types.ts"
 export * from "./slug.ts"
 export * from "./directory-only-strategy.ts"
+export * from "./current-branch-strategy.ts"
 export * from "./git-branch-strategy.ts"
 export * from "./git-worktree-strategy.ts"
 export * from "./resolve-strategy.ts"

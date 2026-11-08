@@ -73,14 +73,18 @@ export const handleStart: CommandHandler = (ctx) => {
   }
 
   const strategyParam = ctx.flags.strategy
-  const strategy: LifecycleStrategyType | undefined =
-    strategyParam === "worktree" || strategyParam === "checkout" || strategyParam === "directory-only"
-      ? strategyParam
-      : ctx.flags.worktree
-      ? "worktree"
-      : ctx.flags.checkout
-      ? "checkout"
-      : undefined
+  const isNoneStrategy =
+    strategyParam === "none" || ctx.flags.current || ctx.flags["no-branch"]
+
+  const strategy: LifecycleStrategyType | undefined = isNoneStrategy
+    ? "none"
+    : strategyParam === "worktree" || strategyParam === "checkout" || strategyParam === "directory-only"
+    ? strategyParam
+    : ctx.flags.worktree
+    ? "worktree"
+    : ctx.flags.checkout
+    ? "checkout"
+    : undefined
 
   const noGit = ctx.flags["no-git"]
 
@@ -130,21 +134,27 @@ export const handleDone: CommandHandler = (ctx) => {
   }
 
   const strategyParam = ctx.flags.strategy
-  const strategy: LifecycleStrategyType | undefined =
-    strategyParam === "worktree" || strategyParam === "checkout" || strategyParam === "directory-only"
-      ? strategyParam
-      : ctx.flags.worktree
-      ? "worktree"
-      : ctx.flags.checkout
-      ? "checkout"
-      : undefined
+  const isNoneStrategy =
+    strategyParam === "none" || ctx.flags.current || ctx.flags["no-branch"]
+
+  const strategy: LifecycleStrategyType | undefined = isNoneStrategy
+    ? "none"
+    : strategyParam === "worktree" || strategyParam === "checkout" || strategyParam === "directory-only"
+    ? strategyParam
+    : ctx.flags.worktree
+    ? "worktree"
+    : ctx.flags.checkout
+    ? "checkout"
+    : undefined
 
   const noGit = ctx.flags["no-git"]
+  const noMerge = ctx.flags["no-merge"]
 
   const doneRes = doneTask(boardRes.value, ctx.config, taskId, {
     cwd: ctx.cwd,
     strategy,
     noGit,
+    noMerge,
   })
   if (doneRes.isErr()) {
     console.error(pc.red(`Done Error: ${doneRes.error.message}`))
@@ -218,14 +228,17 @@ export const startCommand: CommandDefinition = {
   summary: "Start work on task. Moves to focus column & provisions branch/worktree",
   usage: "dirban start <id> [options]",
   options: [
-    { flag: "--strategy <type>", description: "Lifecycle strategy: checkout | worktree | directory-only" },
+    { flag: "--strategy <type>", description: "Lifecycle strategy: checkout | worktree | none | directory-only" },
     { flag: "--checkout", description: "Shorthand for --strategy checkout" },
     { flag: "--worktree", description: "Shorthand for --strategy worktree" },
+    { flag: "--current", description: "Stay on current branch (shorthand for --strategy none)" },
+    { flag: "--no-branch", description: "Alias for --current" },
     { flag: "--no-git", description: "Skip Git operations (shorthand for --strategy directory-only)" },
   ],
   examples: [
     "dirban start 26-001",
     "dirban start 26-001 --strategy worktree",
+    "dirban start 26-001 --current",
     "dirban start 26-001 --no-git",
   ],
   requiresTasksDir: true,
@@ -238,12 +251,14 @@ export const doneCommand: CommandDefinition = {
   summary: "Finish task (alias: finish). Moves to next column or archive & merges git branch",
   usage: "dirban done [id] [options]",
   options: [
-    { flag: "--strategy <type>", description: "Override auto-detected lifecycle strategy: checkout | worktree | directory-only" },
+    { flag: "--strategy <type>", description: "Override auto-detected lifecycle strategy: checkout | worktree | none | directory-only" },
+    { flag: "--no-merge", description: "Preserve active branch/worktree without merging into base branch" },
     { flag: "--no-git", description: "Skip Git merge & cleanup" },
   ],
   examples: [
     "dirban done",
     "dirban done 26-001",
+    "dirban done 26-001 --no-merge",
     "dirban finish",
   ],
   requiresTasksDir: true,

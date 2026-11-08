@@ -3,7 +3,7 @@ import type { BoardTask } from "../board/types.ts"
 import type { DirbanConfig } from "../config/types.ts"
 import type { VersionControlProvider, VcsContext } from "../vcs/types.ts"
 
-export type LifecycleStrategyType = "directory-only" | "checkout" | "worktree"
+export type LifecycleStrategyType = "directory-only" | "checkout" | "worktree" | "none"
 
 export interface WorkspaceLifecycleContext {
   readonly vcs: VersionControlProvider
@@ -31,6 +31,7 @@ export type WorkspaceStartError =
 
 export interface WorkspaceDoneOptions {
   readonly baseBranch?: string
+  readonly noMerge?: boolean
 }
 
 export interface WorkspaceDoneResult {
