@@ -16,6 +16,7 @@ export interface StartTaskSuccess {
 
 export type StartTaskError =
   | { readonly kind: "TASK_NOT_FOUND"; readonly id: string; readonly message: string }
+  | { readonly kind: "ALREADY_STARTED"; readonly message: string }
   | { readonly kind: "GIT_CONFLICT"; readonly message: string }
   | { readonly kind: "MOVE_ERROR"; readonly message: string }
 
@@ -33,6 +34,38 @@ const extractSlugFromTask = (task: BoardTask): string => {
       .replace(/^-+|-+$/g, "")
   }
   return stem
+}
+
+const checkAlreadyStarted = (
+  vcs: VersionControlProvider,
+  vcsCtx: ReturnType<VersionControlProvider["getContext"]>,
+  branchName: string,
+  strategy: BranchStrategy,
+  taskId: string,
+  cwd: string,
+): Result<void, StartTaskError> => {
+  if (!vcsCtx.isAvailable || vcsCtx.repoRoot == null) {
+    return ok(undefined)
+  }
+
+  if (vcsCtx.currentBranch === branchName) {
+    return err({
+      kind: "ALREADY_STARTED",
+      message: `Task is already started: currently active on branch ${branchName}`,
+    })
+  }
+
+  if (strategy === "worktree") {
+    const existingWorktreeResult = vcs.resolveWorktreePath(taskId, cwd)
+    if (existingWorktreeResult.isOk()) {
+      return err({
+        kind: "ALREADY_STARTED",
+        message: `Task is already started: active worktree found at ${existingWorktreeResult.value}`,
+      })
+    }
+  }
+
+  return ok(undefined)
 }
 
 export const startTask = (
@@ -56,7 +89,20 @@ export const startTask = (
     })
   }
 
-  // 1. Move task to doing column on filesystem first
+  const effectiveId = task.document.id ?? task.document.frontmatter.id ?? taskId
+  const slug = extractSlugFromTask(task)
+  const branchPrefix = config.branchPrefix ?? "task/"
+  const branchName = vcs.deriveBranchName(branchPrefix, effectiveId, slug)
+  const strategy = options?.strategy ?? config.branchStrategy ?? "checkout"
+
+  // 1. VCS guard: prevent start if already on branch or worktree is already created
+  const vcsCtx = vcs.getContext(cwd)
+  const guardRes = checkAlreadyStarted(vcs, vcsCtx, branchName, strategy, effectiveId, cwd)
+  if (guardRes.isErr()) {
+    return err(guardRes.error)
+  }
+
+  // 2. Move task to doing column on filesystem
   const doingColName = config.columns.find((c) =>
     c.toLowerCase() === "02-doing" || c.toLowerCase().includes("doing")
   ) ?? "02-doing"
@@ -73,14 +119,7 @@ export const startTask = (
     updatedTask = moveResult.value
   }
 
-  const effectiveId = updatedTask.document.id ?? updatedTask.document.frontmatter.id ?? taskId
-  const slug = extractSlugFromTask(updatedTask)
-  const branchPrefix = config.branchPrefix ?? "task/"
-  const branchName = vcs.deriveBranchName(branchPrefix, effectiveId, slug)
-  const strategy = options?.strategy ?? config.branchStrategy ?? "checkout"
-
-  // 2. VCS handling
-  const vcsCtx = vcs.getContext(cwd)
+  // 3. VCS checkout or worktree creation
   if (!vcsCtx.isAvailable || vcsCtx.repoRoot == null) {
     return ok({
       task: updatedTask,
@@ -101,12 +140,9 @@ export const startTask = (
     }
 
     if (checkoutResult.value.alreadyOnBranch) {
-      return ok({
-        task: updatedTask,
-        branchName,
-        strategy,
-        gitSkipped: false,
-        gitMessage: `Already on branch ${branchName}.`,
+      return err({
+        kind: "ALREADY_STARTED",
+        message: `Task is already started: already on branch ${branchName}.`,
       })
     }
 

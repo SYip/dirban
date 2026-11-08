@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test"
+import { ok } from "neverthrow"
 import * as path from "node:path"
 import * as fs from "node:fs"
 import * as os from "node:os"
@@ -21,6 +22,7 @@ import {
   NoopVcsProvider,
   getVcsProvider,
   parseGitWorktreeListPorcelain,
+  type VersionControlProvider,
 } from "../vcs/index.ts"
 
 const SAMPLE_TASK = `---
@@ -456,6 +458,45 @@ describe("Task Operations Domain Tests", () => {
         expect(startRes.value.task.column).toBe("02-doing")
         expect(startRes.value.gitSkipped).toBe(true)
         expect(startRes.value.branchName).toBe(`task/${created.id}-lifecycle-feature`)
+      }
+
+      // 1b. Guard check: starting a task when already on that branch fails with ALREADY_STARTED
+      const baseNoop = new NoopVcsProvider()
+      const mockGitVcs: VersionControlProvider = Object.assign(Object.create(baseNoop), {
+        getContext: () => ({
+          isAvailable: true,
+          currentBranch: `task/${created.id}-lifecycle-feature`,
+          repoRoot: tempDir,
+          isWorktree: false,
+        }),
+      })
+      const restartRes = startTask(boardWithTask, DEFAULT_CONFIG, created.id, {
+        cwd: tempDir,
+        vcsProvider: mockGitVcs,
+      })
+      expect(restartRes.isErr()).toBe(true)
+      if (restartRes.isErr()) {
+        expect(restartRes.error.kind).toBe("ALREADY_STARTED")
+      }
+
+      // 1c. Worktree guard check: starting with worktree strategy when worktree already exists fails
+      const mockWorktreeVcs: VersionControlProvider = Object.assign(Object.create(baseNoop), {
+        getContext: () => ({
+          isAvailable: true,
+          currentBranch: "main",
+          repoRoot: tempDir,
+          isWorktree: false,
+        }),
+        resolveWorktreePath: () => ok(path.join(tempDir, "existing-worktree")),
+      })
+      const startWorktreeRes = startTask(boardWithTask, DEFAULT_CONFIG, created.id, {
+        cwd: tempDir,
+        strategy: "worktree",
+        vcsProvider: mockWorktreeVcs,
+      })
+      expect(startWorktreeRes.isErr()).toBe(true)
+      if (startWorktreeRes.isErr()) {
+        expect(startWorktreeRes.error.kind).toBe("ALREADY_STARTED")
       }
 
       // 2. dirban done in non-git directory without explicit ID (picks single doing task)
