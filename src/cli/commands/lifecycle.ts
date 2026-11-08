@@ -1,8 +1,13 @@
 import * as fs from "node:fs"
+import * as path from "node:path"
 import * as process from "node:process"
 import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
-import { formatCurrentTaskView } from "../formatters.ts"
+import {
+  formatCurrentTaskView,
+  formatTerminalLink,
+  toRelativePath,
+} from "../formatters.ts"
 import { resolveCurrentTask } from "../../operations/current.ts"
 import { startTask } from "../../operations/start.ts"
 import { doneTask } from "../../operations/done.ts"
@@ -80,9 +85,13 @@ export const handleStart: CommandHandler = (ctx) => {
   }
 
   const { task, branchName, strategy: usedStrategy, worktreePath, gitSkipped, gitMessage } = startRes.value
+  const taskDisplayName = task.document.id ?? task.filename
+  const relPath = toRelativePath(task.filePath)
+  const linkedTask = formatTerminalLink(taskDisplayName, task.filePath)
+
   console.log(
     pc.green(
-      `✔ Moved task ${task.document.id ?? task.filename} to ${task.column}`,
+      `✔ Moved task ${linkedTask} to ${task.column} (${pc.dim(relPath)})`,
     ),
   )
 

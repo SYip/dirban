@@ -1,5 +1,43 @@
+import * as path from "node:path"
+import * as process from "node:process"
 import pc from "picocolors"
 import type { Board, BoardTask } from "../board/types.ts"
+
+const OSC_8_START = "\u001b]8;;"
+const OSC_8_END = "\u0007"
+const OSC_8_CLOSE = "\u001b]8;;\u0007"
+
+export const formatTerminalLink = (label: string, fileOrUrl: string): string => {
+  const isHttpUrl = fileOrUrl.startsWith("http://") || fileOrUrl.startsWith("https://")
+  const targetUrl = isHttpUrl
+    ? fileOrUrl
+    : `file://${path.isAbsolute(fileOrUrl) ? fileOrUrl : path.resolve(process.cwd(), fileOrUrl)}`
+  return `${OSC_8_START}${targetUrl}${OSC_8_END}${label}${OSC_8_CLOSE}`
+}
+
+export const toRelativePath = (targetPath: string, basePath: string = process.cwd()): string => {
+  return path.isAbsolute(targetPath) ? path.relative(basePath, targetPath) : targetPath
+}
+
+export const formatTaskPathLink = (targetPath: string, basePath: string = process.cwd()): string => {
+  const relPath = toRelativePath(targetPath, basePath)
+  return formatTerminalLink(relPath, targetPath)
+}
+
+export const formatAcceptanceCriteriaList = (
+  criteria: readonly { readonly index: number; readonly checked: boolean; readonly text: string }[],
+): readonly string[] => {
+  if (criteria.length === 0) {
+    return [pc.dim("  (none defined)")]
+  }
+  const completed = criteria.filter((a) => a.checked).length
+  const progressLine = `  Progress: ${renderProgressBar(completed, criteria.length, 16)}\n`
+  const items = criteria.map((item) => {
+    const box = item.checked ? pc.green("[x]") : pc.red("[ ]")
+    return `  ${box} #${item.index}: ${item.text}`
+  })
+  return [progressLine, items.join("\n\n")]
+}
 
 export const getPriorityBadge = (priority: string): string => {
   switch (priority) {
@@ -107,6 +145,8 @@ export const formatTaskDetail = (task: BoardTask): string => {
   const id = doc.id ?? fm.id ?? task.filename
   const lines: string[] = []
 
+  const linkedPath = formatTaskPathLink(task.filePath)
+
   lines.push(
     pc.bold(
       pc.cyan(`\n═══════════════════════════════════════════════════════`),
@@ -117,7 +157,7 @@ export const formatTaskDetail = (task: BoardTask): string => {
       pc.green(id)
     })`,
   )
-  lines.push(pc.gray(`Path: ${task.filePath}`))
+  lines.push(pc.gray(`Path: ${linkedPath}`))
   lines.push(
     pc.bold(
       pc.cyan(`───────────────────────────────────────────────────────`),
@@ -161,17 +201,7 @@ export const formatTaskDetail = (task: BoardTask): string => {
   }
 
   lines.push(`\n${pc.bold("Acceptance Criteria:")}`)
-  const acList = task.document.acceptanceCriteria
-  if (acList.length === 0) {
-    lines.push(pc.dim("  (none defined)"))
-  } else {
-    const completed = acList.filter((a) => a.checked).length
-    lines.push(`  Progress: ${renderProgressBar(completed, acList.length, 16)}`)
-    for (const item of acList) {
-      const box = item.checked ? pc.green("[x]") : pc.red("[ ]")
-      lines.push(`  ${box} #${item.index}: ${item.text}`)
-    }
-  }
+  lines.push(...formatAcceptanceCriteriaList(task.document.acceptanceCriteria))
 
   if (task.document.executionJournal.length > 0) {
     lines.push(`\n${pc.bold("Execution Journal:")}`)
@@ -195,24 +225,15 @@ export const formatCurrentTaskView = (task: BoardTask): string => {
   const title = doc.title ?? fm.title ?? task.filename
   const id = doc.id ?? fm.id ?? task.filename
   const lines: string[] = []
+  const linkedPath = formatTaskPathLink(task.filePath)
 
   lines.push(
     `${getPriorityBadge(priority)} ${pc.bold(pc.white(title))} (${pc.green(id)})`,
   )
-  lines.push(pc.gray(`Column: ${task.column} | Path: ${task.filePath}`))
+  lines.push(pc.gray(`Column: ${task.column} | Path: ${linkedPath}`))
 
-  const acList = doc.acceptanceCriteria
   lines.push(`\n${pc.bold("Acceptance Criteria:")}`)
-  if (acList.length === 0) {
-    lines.push(pc.dim("  (none defined)"))
-  } else {
-    const completed = acList.filter((a) => a.checked).length
-    lines.push(`  Progress: ${renderProgressBar(completed, acList.length, 16)}`)
-    for (const item of acList) {
-      const box = item.checked ? pc.green("[x]") : pc.red("[ ]")
-      lines.push(`  ${box} #${item.index}: ${item.text}`)
-    }
-  }
+  lines.push(...formatAcceptanceCriteriaList(doc.acceptanceCriteria))
 
   return lines.join("\n")
 }
@@ -239,7 +260,7 @@ export const formatPlanView = (
   )
 
   // Ready section
-  lines.push(pc.bold(pc.green(`✔ Ready to Promote (${plan.ready.length}):`)))
+  lines.push(pc.bold(pc.green(`✔ Ready (${plan.ready.length}):`)))
   lines.push(pc.gray("─".repeat(50)))
   if (plan.ready.length === 0) {
     lines.push(pc.dim("  (no unblocked tasks in backlog)"))
@@ -249,7 +270,8 @@ export const formatPlanView = (
       const badge = getPriorityBadge(priority)
       const idStr = pc.bold(item.task.document.id)
       const title = item.task.document.title
-      lines.push(`  ${badge} ${idStr} - ${title}`)
+      const linkedItem = formatTerminalLink(`${idStr} - ${title}`, item.task.filePath)
+      lines.push(`  ${badge} ${linkedItem}`)
       if (item.evaluation.resolved.length > 0) {
         lines.push(
           pc.gray(`     Dependencies resolved: [${item.evaluation.resolved.join(", ")}]`),
@@ -261,7 +283,7 @@ export const formatPlanView = (
   lines.push("")
 
   // Blocked section
-  lines.push(pc.bold(pc.yellow(`⛔ Blocked / In Limbo (${plan.blocked.length}):`)))
+  lines.push(pc.bold(pc.yellow(`⛔ Blocked (${plan.blocked.length}):`)))
   lines.push(pc.gray("─".repeat(50)))
   if (plan.blocked.length === 0) {
     lines.push(pc.dim("  (no blocked tasks in backlog)"))
@@ -271,7 +293,8 @@ export const formatPlanView = (
       const badge = getPriorityBadge(priority)
       const idStr = pc.bold(item.task.document.id)
       const title = item.task.document.title
-      lines.push(`  ${badge} ${idStr} - ${title}`)
+      const linkedItem = formatTerminalLink(`${idStr} - ${title}`, item.task.filePath)
+      lines.push(`  ${badge} ${linkedItem}`)
       for (const blocker of item.evaluation.unresolved) {
         lines.push(pc.red(`     ✖ Blocked by: ${blocker}`))
       }
