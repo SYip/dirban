@@ -28,9 +28,16 @@ Instead of relying on cloud databases, proprietary sync servers, or monolithic b
 
 ## Origin & The Agent-First Workflow
 
-Dirban was created to solve real bottlenecks in an agent-first software engineering workflow.
+Dirban was created to solve real bottlenecks in modern agent-first software engineering workflows:
 
-When juggling multiple projects with autonomous AI coding agents (Claude Code, Cursor, Antigravity, Copilot), context-switching kills momentum. Having to tab out to a browser-based project manager completely shatters the continuous flow state. Tasks need to be **pinned directly inside the editor** as plain files alongside the code, making it instant to refocus, switch workspaces, or review what an agent is doing.
+- **Good Software is Iterated, Not Built in One Shot**:  
+  AI agents are powerful, but when building novel software or refining unconfirmed requirements, one-shot code generation doesn't cut it. Progress happens in rapid iterations.
+- **The 5-to-30 Minute Autonomous Loop**:  
+  You set clear requirements and acceptance criteria up front, let the agent execute autonomously for 5 to 30 minutes, and return only to review diffs and guide the next iteration.
+- **Cross-Project Juggling (e.g., with `herdr`)**:  
+  While agents work, you switch between multiple concurrent projects. But switching projects introduces severe context-switching fatigue.
+- **No Browser Tab Switching**:  
+  With traditional tools (Linear, Jira), checking project state requires alt-tabbing to a browser, navigating through workspaces, and hunting down the active issue. In Dirban, the project state lives right in the repository: your terminal and IDE tell you directly what you were focusing on (`dirban current`, `tasks/02-doing/`, or the editor status bar) the moment you open the directory.
 
 In this workflow, the goal is for agents to:
 
@@ -67,7 +74,7 @@ docs/tasks/
 ├── 01-todo/             # Prioritized work ready to be picked up
 ├── 02-doing/            # Actively executing tasks (humans or AI agents)
 ├── 03-done/             # Completed tasks awaiting archival
-└── archive/             # Partitioned terminal storage (e.g., archive/2026/)
+└── archive/             # Terminal completed storage (archive/)
 ```
 
 ### Example Task (`docs/tasks/01-todo/26-001-add-search.md`)
@@ -161,27 +168,60 @@ bun run build
 
 ## Configuration (`.dirban.json`)
 
-Dirban works out-of-the-box with zero configuration, but you can customize root directories and column definitions:
+Dirban works out-of-the-box with zero configuration, but workflows and column stages are completely customizable:
 
+### Default Workflow (`01-todo` $\rightarrow$ `02-doing` $\rightarrow$ `03-done`)
 ```json
 {
   "tasksDir": "docs/tasks",
-  "columns": [
-    "backlog",
-    "01-todo",
-    "02-doing",
-    "03-done"
-  ],
-  "priorities": [
-    "p0",
-    "p1",
-    "p2",
-    "p3"
-  ],
+  "columns": ["01-todo", "02-doing", "03-done"],
+  "focusColumn": "02-doing",
+  "priorities": ["p0", "p1", "p2", "p3"],
   "defaultPriority": "p2",
   "archiveDir": "docs/tasks/archive"
 }
 ```
+
+### Custom Workflow Examples
+
+#### 1. Custom Semantic Priorities (`01-todo` $\rightarrow$ `02-doing` $\rightarrow$ `03-done`)
+```json
+{
+  "tasksDir": "docs/tasks",
+  "columns": ["01-todo", "02-doing", "03-done"],
+  "focusColumn": "02-doing",
+  "priorities": ["urgent", "high", "normal", "low"],
+  "defaultPriority": "normal"
+}
+```
+
+#### 2. Unprefixed Minimalist (`todo` $\rightarrow$ `doing` $\rightarrow$ `done`)
+```json
+{
+  "tasksDir": "docs/tasks",
+  "columns": ["todo", "doing", "done"],
+  "focusColumn": "doing"
+}
+```
+
+#### 2. Enterprise Delivery (`ready` $\rightarrow$ `develop` $\rightarrow$ `test` $\rightarrow$ `uat` $\rightarrow$ `production`)
+```json
+{
+  "columns": ["ready", "develop", "test", "uat", "production"],
+  "focusColumn": "develop"
+}
+```
+* `dirban start <id>` moves cards into `develop` (`focusColumn`).
+* `dirban current` tracks active work in `develop`.
+* `dirban done` advances completed work to `focus + 1` (`test`).
+
+#### 3. Direct Intake (`backlog` $\rightarrow$ `archive`)
+```json
+{
+  "columns": []
+}
+```
+* When `columns` is empty, there are no intermediate staging columns; `dirban done` moves completed tasks directly into `archive/`.
 
 ---
 

@@ -10,6 +10,7 @@
   "scripts": {
     "dirban": "bun run main.ts",
     "build": "bun build ./main.ts --compile --outfile dirban",
+    "install:local": "bun build ./main.ts --compile --outfile ~/.local/bin/dirban",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },

@@ -227,7 +227,7 @@ dirban set 26-001 --tags=cli,search,ux
 ```
 
 #### `archive [<id>|all]`
-Partitions completed tasks into terminal archive storage (`archive/YYYY/`).
+Moves completed tasks directly into terminal archive storage (`archive/`).
 
 ```bash
 # Archive a specific completed task
@@ -344,6 +344,7 @@ Dirban automatically resolves configuration from `.dirban.json` located in the w
 | :--- | :--- | :--- | :--- |
 | `tasksDir` | `string` | `"docs/tasks"` | Root directory containing column subdirectories |
 | `columns` | `string[]` | `["01-todo", "02-doing", "03-done"]` | Ordered list of active workflow column folder names (`backlog/` and `archive/` are intrinsic reserved tiers) |
+| `focusColumn` | `string` | `"02-doing"` | Name of the primary in-progress column (defaults to `columns[1]` or `columns[0]`). If `columns: []`, focus is `null` |
 | `priorities` | `string[]` | `["p0", "p1", "p2", "p3"]` | Ordered list of priority levels (index 0 is highest priority) |
 | `defaultPriority` | `string` | `"p2"` | Default priority assigned to newly created tasks (must be in `priorities`) |
 | `archiveDir` | `string` | `"docs/tasks/archive"` | Directory where archived tasks are moved |
@@ -352,14 +353,40 @@ Dirban automatically resolves configuration from `.dirban.json` located in the w
 
 You can define custom workflow columns and semantic priority levels:
 
+#### Example 1: Classic Minimalist (`todo` $\rightarrow$ `doing` $\rightarrow$ `done`)
 ```json
 {
   "tasksDir": "docs/tasks",
   "columns": ["01-todo", "02-doing", "03-done"],
+  "focusColumn": "02-doing",
   "priorities": ["urgent", "high", "normal", "low"],
   "defaultPriority": "normal"
 }
 ```
+
+#### Example 2: Enterprise Software Delivery Pipeline
+```json
+{
+  "tasksDir": "docs/tasks",
+  "columns": ["ready", "develop", "test", "uat", "production"],
+  "focusColumn": "develop",
+  "branchPrefix": "feature/",
+  "priorities": ["p0", "p1", "p2", "p3"]
+}
+```
+*In this workflow:*
+- `dirban start <id>` moves task into `develop` (`focusColumn`) and provisions a git branch.
+- `dirban current` tracks active work in `develop`.
+- `dirban done` automatically transitions the task to the relative handoff stage `focus + 1` (`test`).
+
+#### Example 3: Zero-Column Direct Flow (`backlog` $\rightarrow$ `archive`)
+```json
+{
+  "tasksDir": "tasks",
+  "columns": []
+}
+```
+*When `columns` is empty, there are no intermediate staging columns; `dirban done` transitions completed cards directly from `backlog` into `archive/`.*
 
 Or inside `.vscode/settings.json`:
 ```json

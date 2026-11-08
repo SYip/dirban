@@ -57,7 +57,7 @@ tasks/
 ├── 01-ready/        # Configurable active pipeline (default)
 ├── 02-doing/        # Configurable active pipeline (default)
 ├── 03-done/         # Configurable active pipeline (default)
-└── archive/         # Mandatory terminal storage (partitioned by year or topic)
+└── archive/         # Mandatory terminal storage (flat by default, user-organizable)
 ```
 
 1. **`backlog/` (Mandatory Queue)**:
@@ -69,7 +69,7 @@ tasks/
    - Number prefixes are optional (e.g., `ready/` is just as valid as `01-ready/`).
 3. **`archive/` (Mandatory Terminal State)**:
    - Completed tasks moved out of the active board are stored here.
-   - Can be partitioned hierarchically (e.g., `archive/2026/`) to maintain high filesystem performance and clean navigation.
+   - Tasks are archived flat by default directly into `archive/`, allowing users to optionally organize them hierarchically (e.g., `archive/2026/`, `archive/milestone/`) if desired.
 
 ---
 

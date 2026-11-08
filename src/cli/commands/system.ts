@@ -24,7 +24,7 @@ ${pc.bold("COMMANDS (Filesystem / Core):")}
   view <id>             Inspect task metadata, relationships, and acceptance criteria
   check <id> <index>    Toggle acceptance criteria checkbox item (1-based index)
   set <id> [options]    Mutate task frontmatter (priority, assignee, owner, tags)
-  archive [<id>|all]    Archive completed tasks to archive/YYYY/
+  archive [<id>|all]    Archive completed tasks directly to archive/
   plan [options]        View backlog triage and planning (options: --ready, --blocked, --promote=<id>, -i)
   block <id> <reasons>  Record blocker reasons / task dependencies and demote to backlog
   unblock <id> [reason] Remove a resolved blocker from a task

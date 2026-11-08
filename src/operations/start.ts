@@ -1,6 +1,7 @@
 import { ok, err, type Result } from "neverthrow"
 import type { Board, BoardTask } from "../board/types.ts"
 import { findTaskExact } from "../board/discovery.ts"
+import { resolveFocusColumn } from "../config/config.ts"
 import type { BranchStrategy, DirbanConfig } from "../config/types.ts"
 import { moveTask } from "./move.ts"
 import { getVcsProvider, type VersionControlProvider } from "../vcs/index.ts"
@@ -102,14 +103,12 @@ export const startTask = (
     return err(guardRes.error)
   }
 
-  // 2. Move task to doing column on filesystem
-  const doingColName = config.columns.find((c) =>
-    c.toLowerCase() === "02-doing" || c.toLowerCase().includes("doing")
-  ) ?? "02-doing"
+  // 2. Move task to focus column on filesystem (if a focus column exists)
+  const focusColName = resolveFocusColumn(config)
 
   let updatedTask: BoardTask = task
-  if (task.column !== doingColName) {
-    const moveResult = moveTask(board, taskId, doingColName)
+  if (focusColName != null && task.column !== focusColName) {
+    const moveResult = moveTask(board, taskId, focusColName)
     if (moveResult.isErr()) {
       return err({
         kind: "MOVE_ERROR",
