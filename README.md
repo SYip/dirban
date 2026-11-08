@@ -30,10 +30,14 @@ Instead of relying on cloud databases, proprietary sync servers, or monolithic b
 
 Dirban was created to solve real bottlenecks in modern agent-first software engineering workflows:
 
+- **The Evolution from SpecKit to Code-as-Spec**:  
+  Dirban builds on ideas similar to in-repo spec workflows like SpecKit, which kept implementation details close to the code. However, as LLM models have become increasingly capable, **generating exhaustive specifications prior to implementation is no longer necessary**:
+  1. *Generated specs are too long*: AI-generated design specs often become walls of prose that are tedious and inefficient for human developers to review.
+  2. *Code and test cases are the clearest specification*: Natural language is prone to ambiguity. Concrete code and test vectors are far clearer—it is faster and more precise to implement directly or write a test case to verify that actual execution matches expectation.
 - **Good Software is Iterated, Not Built in One Shot**:  
   AI agents are powerful, but when building novel software or refining unconfirmed requirements, one-shot code generation doesn't cut it. Progress happens in rapid iterations.
 - **The 5-to-30 Minute Autonomous Loop**:  
-  You set clear requirements and acceptance criteria up front, let the agent execute autonomously for 5 to 30 minutes, and return only to review diffs and guide the next iteration.
+  You set concise requirements and testable acceptance criteria up front, let the agent execute autonomously for 5 to 30 minutes, and return only to review diffs and guide the next iteration.
 - **Cross-Project Juggling (e.g., with `herdr`)**:  
   While agents work, you switch between multiple concurrent projects. But switching projects introduces severe context-switching fatigue.
 - **No Browser Tab Switching**:  

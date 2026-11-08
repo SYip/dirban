@@ -36,10 +36,14 @@ Developers building software individually or in small teams ($\le 5$ people), es
 
 The catalyst for Dirban came directly from day-to-day experience running modern AI agent workflows:
 
+- **The Evolution from SpecKit to Code-as-Spec**:  
+  The core philosophy shares roots with in-repo specification workflows like SpecKit, which kept implementation details versioned inside the project. However, as LLM capabilities have progressed, **generating exhaustive upfront specification documents before implementation has become unnecessary overhead**:
+  1. *Specs become too long to review*: Generated design documents and multi-page specs are often bloated. It is exhausting and inefficient for human developers to read pages of prose to hunt down subtle architectural flaws or edge cases.
+  2. *Code and tests are the clearest specification*: Code is unambiguous; natural language is not. Writing the implementation or concrete test cases and checking whether the actual behavior matches expectations provides far faster, clearer, and more reliable validation than parsing prose documents.
 - **AI is Powerful, but Good Software is Iterated, Not Built in One Shot**:  
   If the goal is merely copying established software with static requirements, an AI agent might deliver in a single prompt. But when building something genuinely new—or when product requirements are still emerging—software cannot be built all at once; it must be iterated upon.
 - **The 5-to-30 Minute Autonomous Loop**:  
-  You set clear requirements and acceptance criteria up front, then let the agent run autonomously for 5 to 30 minutes while you step away from the code. You return only to do the final verification, review the diff, and steer the next iteration.
+  Instead of massive upfront documents, you set crisp requirements and testable acceptance criteria up front, then let the agent run autonomously for 5 to 30 minutes while you step away from the code. You return only to do the final verification, review the diff, and steer the next iteration.
 - **Cross-Project Juggling (e.g., using `herdr`)**:  
   Because an agent is working autonomously in that 5-to-30 minute window, staying idle on one project is inefficient. Developers naturally switch between multiple concurrent projects (especially when orchestrating multi-repo agent sessions with tools like `herdr`).
 - **The Context-Switching Tax of Browser Task Managers**:  
