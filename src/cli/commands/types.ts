@@ -17,8 +17,10 @@ export interface CliFlags {
   readonly config?: string
   readonly yes?: boolean
   readonly raw?: boolean
+  readonly strategy?: string
   readonly checkout?: boolean
   readonly worktree?: boolean
+  readonly "no-git"?: boolean
   readonly ready?: boolean
   readonly blocked?: boolean
   readonly promote?: string
@@ -47,6 +49,8 @@ export const CLI_PARSE_OPTIONS: NonNullable<ParseArgsConfig["options"]> = {
   raw: { type: "boolean" },
   checkout: { type: "boolean" },
   worktree: { type: "boolean" },
+  strategy: { type: "string" },
+  "no-git": { type: "boolean" },
   ready: { type: "boolean" },
   blocked: { type: "boolean" },
   promote: { type: "string" },

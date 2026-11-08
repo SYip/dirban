@@ -12,7 +12,7 @@ import { resolveCurrentTask } from "../../operations/current.ts"
 import { startTask } from "../../operations/start.ts"
 import { doneTask } from "../../operations/done.ts"
 import { getVcsProvider } from "../../vcs/index.ts"
-import type { BranchStrategy } from "../../config/types.ts"
+import type { LifecycleStrategyType } from "../../workspace/types.ts"
 import type { CommandDefinition, CommandHandler } from "./types.ts"
 
 export const handleCurrent: CommandHandler = (ctx) => {
@@ -72,13 +72,23 @@ export const handleStart: CommandHandler = (ctx) => {
     return 1
   }
 
-  const strategy: BranchStrategy | undefined = ctx.flags.worktree
-    ? "worktree"
-    : ctx.flags.checkout
-    ? "checkout"
-    : undefined
+  const strategyParam = ctx.flags.strategy
+  const strategy: LifecycleStrategyType | undefined =
+    strategyParam === "worktree" || strategyParam === "checkout" || strategyParam === "directory-only"
+      ? strategyParam
+      : ctx.flags.worktree
+      ? "worktree"
+      : ctx.flags.checkout
+      ? "checkout"
+      : undefined
 
-  const startRes = startTask(boardRes.value, ctx.config, taskId.trim(), { strategy, cwd: ctx.cwd })
+  const noGit = ctx.flags["no-git"]
+
+  const startRes = startTask(boardRes.value, ctx.config, taskId.trim(), {
+    strategy,
+    noGit,
+    cwd: ctx.cwd,
+  })
   if (startRes.isErr()) {
     console.error(pc.red(`Start Error: ${startRes.error.message}`))
     return 1
@@ -119,7 +129,23 @@ export const handleDone: CommandHandler = (ctx) => {
     return 1
   }
 
-  const doneRes = doneTask(boardRes.value, ctx.config, taskId, { cwd: ctx.cwd })
+  const strategyParam = ctx.flags.strategy
+  const strategy: LifecycleStrategyType | undefined =
+    strategyParam === "worktree" || strategyParam === "checkout" || strategyParam === "directory-only"
+      ? strategyParam
+      : ctx.flags.worktree
+      ? "worktree"
+      : ctx.flags.checkout
+      ? "checkout"
+      : undefined
+
+  const noGit = ctx.flags["no-git"]
+
+  const doneRes = doneTask(boardRes.value, ctx.config, taskId, {
+    cwd: ctx.cwd,
+    strategy,
+    noGit,
+  })
   if (doneRes.isErr()) {
     console.error(pc.red(`Done Error: ${doneRes.error.message}`))
     return 1
@@ -192,13 +218,15 @@ export const startCommand: CommandDefinition = {
   summary: "Start work on task. Moves to focus column & provisions branch/worktree",
   usage: "dirban start <id> [options]",
   options: [
-    { flag: "--checkout", description: "Create/checkout in-place task branch" },
-    { flag: "--worktree", description: "Create isolated sibling git worktree" },
+    { flag: "--strategy <type>", description: "Lifecycle strategy: checkout | worktree | directory-only" },
+    { flag: "--checkout", description: "Shorthand for --strategy checkout" },
+    { flag: "--worktree", description: "Shorthand for --strategy worktree" },
+    { flag: "--no-git", description: "Skip Git operations (shorthand for --strategy directory-only)" },
   ],
   examples: [
     "dirban start 26-001",
-    "dirban start 26-001 --worktree",
-    "dirban start 26-001 --checkout",
+    "dirban start 26-001 --strategy worktree",
+    "dirban start 26-001 --no-git",
   ],
   requiresTasksDir: true,
   execute: handleStart,
@@ -208,8 +236,11 @@ export const doneCommand: CommandDefinition = {
   name: "done",
   aliases: ["finish"],
   summary: "Finish task (alias: finish). Moves to next column or archive & merges git branch",
-  usage: "dirban done [id]",
-  options: [],
+  usage: "dirban done [id] [options]",
+  options: [
+    { flag: "--strategy <type>", description: "Override auto-detected lifecycle strategy: checkout | worktree | directory-only" },
+    { flag: "--no-git", description: "Skip Git merge & cleanup" },
+  ],
   examples: [
     "dirban done",
     "dirban done 26-001",

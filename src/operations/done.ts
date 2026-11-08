@@ -7,6 +7,12 @@ import { moveTask } from "./move.ts"
 import { archiveTasks } from "./archive.ts"
 import { resolveCurrentTask } from "./current.ts"
 import { getVcsProvider, type VersionControlProvider } from "../vcs/index.ts"
+import {
+  detectWorkspaceDoneStrategy,
+  type LifecycleStrategyType,
+  type WorkspaceLifecycleStrategy,
+  type WorkspaceDoneResult,
+} from "../workspace/index.ts"
 
 export interface DoneTaskSuccess {
   readonly task: BoardTask
@@ -24,6 +30,15 @@ export type DoneTaskError =
   | { readonly kind: "MOVE_ERROR"; readonly message: string }
   | { readonly kind: "GIT_ERROR"; readonly message: string }
 
+export interface DoneTaskOptions {
+  readonly cwd?: string
+  readonly baseBranch?: string
+  readonly vcsProvider?: VersionControlProvider
+  readonly strategy?: LifecycleStrategyType
+  readonly noGit?: boolean
+  readonly workspaceStrategy?: WorkspaceLifecycleStrategy
+}
+
 /**
  * Counts how many acceptance criteria items remain unchecked ([ ]).
  */
@@ -35,11 +50,7 @@ export const doneTask = (
   board: Board,
   config: DirbanConfig,
   taskId?: string,
-  options?: {
-    readonly cwd?: string
-    readonly baseBranch?: string
-    readonly vcsProvider?: VersionControlProvider
-  },
+  options?: DoneTaskOptions,
 ): Result<DoneTaskSuccess, DoneTaskError> => {
   const cwd = options?.cwd ?? process.cwd()
   const vcs = options?.vcsProvider ?? getVcsProvider(cwd)
@@ -106,69 +117,26 @@ export const doneTask = (
     }
   }
 
-  // 4. VCS branch & worktree auto-merge
+  // 4. VCS branch & worktree auto-merge delegated to lifecycle strategy (with automatic runtime detection)
   const vcsCtx = vcs.getContext(cwd)
-  if (!vcsCtx.isAvailable || vcsCtx.repoRoot == null) {
-    return ok({
-      task: updatedTask,
-      uncheckedCount,
-      gitSkipped: true,
-      message: "Git repository not detected; moved card to done on filesystem only.",
-    })
+  const strategy =
+    options?.workspaceStrategy ??
+    detectWorkspaceDoneStrategy(updatedTask, options, vcsCtx, vcs, config, cwd)
+  const workspaceCtx = { vcs, vcsCtx, config, cwd }
+
+  const doneResult = strategy.onDone(updatedTask, workspaceCtx, options)
+  if (doneResult.isErr()) {
+    return err(doneResult.error)
   }
 
-  const effectiveId = updatedTask.document.id ?? updatedTask.document.frontmatter.id ?? ""
-  const detectedId = vcs.extractTaskId(vcsCtx.currentBranch, cwd)
-  const isTaskBranchOrWorktree =
-    detectedId != null &&
-    effectiveId != null &&
-    (detectedId === effectiveId || effectiveId.endsWith(detectedId))
-
-  if (!isTaskBranchOrWorktree || vcsCtx.currentBranch == null) {
-    return ok({
-      task: updatedTask,
-      uncheckedCount,
-      gitSkipped: true,
-      message: "Not currently on task branch or worktree; skipped git merge.",
-    })
-  }
-
-  const baseBranch = options?.baseBranch ?? "main"
-  const taskBranch = vcsCtx.currentBranch
-
-  if (taskBranch === baseBranch) {
-    return ok({
-      task: updatedTask,
-      uncheckedCount,
-      gitSkipped: true,
-      message: `Already on base branch ${baseBranch}; skipped git merge.`,
-    })
-  }
-
-  const resolvedTaskId = updatedTask.document.id ?? updatedTask.filename
-  const commitMessage = `docs: complete task ${resolvedTaskId} and move to done`
-
-  const mergeResult = vcs.autoMergeAndCleanup({
-    taskBranch,
-    baseBranch,
-    isWorktree: vcsCtx.isWorktree ?? false,
-    cwd,
-    commitMessage,
-  })
-
-  if (mergeResult.isErr()) {
-    return err({
-      kind: "GIT_ERROR",
-      message: mergeResult.error.message,
-    })
-  }
-
+  const doneValue: WorkspaceDoneResult = doneResult.value
   return ok({
     task: updatedTask,
     uncheckedCount,
-    mergedBranch: taskBranch,
-    baseBranch,
-    worktreeRemoved: mergeResult.value.worktreeRemoved,
-    gitSkipped: false,
+    mergedBranch: doneValue.mergedBranch,
+    baseBranch: doneValue.baseBranch,
+    worktreeRemoved: doneValue.worktreeRemoved,
+    gitSkipped: doneValue.gitSkipped,
+    message: doneValue.message,
   })
 }
