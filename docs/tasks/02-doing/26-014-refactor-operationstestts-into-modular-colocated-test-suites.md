@@ -2,7 +2,7 @@
 id: "26-014"
 title: "Refactor operations.test.ts into modular colocated test suites"
 type: "task"
-status: "backlog"
+status: "doing"
 priority: "p2"
 owner: "developer"
 assigned_to: "unassigned"
@@ -36,12 +36,12 @@ Decomposes the monolithic `src/operations/operations.test.ts` (over 700 lines, 1
 
 ## Acceptance Criteria
 
-- [ ] Split `src/operations/operations.test.ts` into cohesive, domain-scoped test files:
+- [x] Split `src/operations/operations.test.ts` into cohesive, domain-scoped test files:
   - `src/operations/mutation.test.ts`
   - `src/operations/project.test.ts`
   - `src/operations/lifecycle.test.ts`
   - `src/operations/plan.test.ts`
   - `src/vcs/git.test.ts`
-- [ ] Remove `src/operations/operations.test.ts` once all 14 test vectors are partitioned.
-- [ ] Ensure all 14 test vectors maintain strict assertions and preserve identical coverage.
-- [ ] Verify test suite and type checking pass (`bun test && bun run typecheck`).
+- [x] Remove `src/operations/operations.test.ts` once all 14 test vectors are partitioned.
+- [x] Ensure all 14 test vectors maintain strict assertions and preserve identical coverage.
+- [x] Verify test suite and type checking pass (`bun test && bun x tsc --noEmit`).
