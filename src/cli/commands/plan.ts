@@ -1,13 +1,13 @@
 import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
 import { blockTask, unblockTask } from "../../operations/block.ts"
-import { partitionBacklog, promoteTask } from "../../operations/plan.ts"
+import { partitionBacklog, promoteTask, promoteTasks } from "../../operations/plan.ts"
 import { formatPlanView } from "../formatters.ts"
 import { startInteractivePlanTui } from "../plan-tui.ts"
 import type { CommandHandler } from "./types.ts"
 
 export const handlePlan: CommandHandler = async (ctx) => {
-  const boardRes = discoverBoard(ctx.config)
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
     console.error(pc.red(`Board Error: ${boardRes.error.message}`))
     return 1
@@ -15,18 +15,51 @@ export const handlePlan: CommandHandler = async (ctx) => {
 
   const board = boardRes.value
 
-  // 1. Scriptable promotion flag: dirban plan --promote=<id> [--to=<col>]
-  if (ctx.flags.promote != null && ctx.flags.promote.trim() !== "") {
-    const promoteRes = promoteTask(board, ctx.config, ctx.flags.promote.trim(), ctx.flags.to)
-    if (promoteRes.isErr()) {
-      console.error(pc.red(`Promote Error: ${promoteRes.error.message}`))
+  // 1. Scriptable promotion:
+  // - Positional syntax: dirban plan promote <id1> <id2> ... [--to=<col>]
+  // - Flag syntax: dirban plan --promote=<id1>,<id2> | --promote=all [--to=<col>]
+  const isPositionalPromote = ctx.positionals[1] === "promote"
+  const positionalIds = isPositionalPromote ? ctx.positionals.slice(2) : []
+
+  let idsToPromote: string[] = []
+
+  if (positionalIds.length > 0) {
+    idsToPromote = positionalIds
+  } else if (ctx.flags.promote != null && ctx.flags.promote.trim() !== "") {
+    const rawVal = ctx.flags.promote.trim()
+    if (rawVal === "all" || rawVal === "ready") {
+      const plan = partitionBacklog(board)
+      idsToPromote = plan.ready.map((item) => item.task.document.id ?? item.task.filename)
+      if (idsToPromote.length === 0) {
+        console.log(pc.yellow("No unblocked tasks ready to promote in backlog."))
+        return 0
+      }
+    } else {
+      idsToPromote = rawVal
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
+    }
+  }
+
+  if (idsToPromote.length > 0) {
+    const result = promoteTasks(board, ctx.config, idsToPromote, ctx.flags.to)
+
+    for (const item of result.promoted) {
+      console.log(
+        pc.green(
+          `✔ Successfully promoted task ${item.task.document.id} to ${item.targetColumn}`,
+        ),
+      )
+    }
+
+    for (const fail of result.failed) {
+      console.error(pc.red(`✖ Failed to promote ${fail.taskId}: ${fail.error.message}`))
+    }
+
+    if (result.failed.length > 0 && result.promoted.length === 0) {
       return 1
     }
-    console.log(
-      pc.green(
-        `✔ Successfully promoted task ${promoteRes.value.task.document.id} to ${promoteRes.value.targetColumn}`,
-      ),
-    )
     return 0
   }
 
@@ -70,7 +103,7 @@ export const handleBlock: CommandHandler = (ctx) => {
     return 1
   }
 
-  const boardRes = discoverBoard(ctx.config)
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
     console.error(pc.red(`Board Error: ${boardRes.error.message}`))
     return 1
@@ -105,7 +138,7 @@ export const handleUnblock: CommandHandler = (ctx) => {
     return 1
   }
 
-  const boardRes = discoverBoard(ctx.config)
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
     console.error(pc.red(`Board Error: ${boardRes.error.message}`))
     return 1

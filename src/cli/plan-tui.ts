@@ -2,7 +2,7 @@ import pc from "picocolors"
 import * as process from "node:process"
 import type { DirbanConfig } from "../config/types.ts"
 import { discoverBoard } from "../board/discovery.ts"
-import { partitionBacklog, promoteTask } from "../operations/plan.ts"
+import { partitionBacklog, promoteTask, promoteTasks } from "../operations/plan.ts"
 import { unblockTask } from "../operations/block.ts"
 import { getPriorityBadge } from "./formatters.ts"
 
@@ -24,8 +24,7 @@ export const startInteractivePlanTui = async (
   let board = boardRes.value
   let plan = partitionBacklog(board)
   let selectedIndex = 0
-  let mode: "list" | "unblock_prompt" = "list"
-  let promptTaskId = ""
+  const selectedTaskIds = new Set<string>()
   let statusMessage = ""
 
   // Flatten items for list selection
@@ -52,7 +51,7 @@ export const startInteractivePlanTui = async (
       ),
     )
     console.log(
-      pc.gray("↑/↓: Navigate | p: Promote (if ready) | u: Unblock (if blocked) | q: Quit\n"),
+      pc.gray("↑/↓: Navigate | Space: Toggle select | p: Promote (selected/current) | u: Unblock | q: Quit\n"),
     )
 
     if (statusMessage !== "") {
@@ -65,22 +64,26 @@ export const startInteractivePlanTui = async (
     }
 
     items.forEach((item, index) => {
-      const isSelected = index === selectedIndex
-      const pointer = isSelected ? pc.cyan("▶ ") : "  "
+      const isCursor = index === selectedIndex
+      const taskId = item.task.document.id
+      const isMarked = selectedTaskIds.has(taskId)
+
+      const pointer = isCursor ? pc.cyan("▶") : " "
+      const checkbox = isMarked ? pc.green("[✔]") : pc.gray("[ ]")
       const priority = item.task.document.priority ?? "p3"
       const badge = getPriorityBadge(priority)
-      const id = pc.bold(item.task.document.id)
+      const id = pc.bold(taskId)
       const title = item.task.document.title
       const statusIcon = item.type === "ready" ? pc.green("✔") : pc.red("✖")
 
-      console.log(`${pointer}${statusIcon} ${badge} ${id} - ${title}`)
+      console.log(`${pointer} ${checkbox} ${statusIcon} ${badge} ${id} - ${title}`)
       if (item.type === "blocked") {
         for (const blocker of item.evaluation.unresolved) {
-          console.log(pc.red(`       Blocked by: ${blocker}`))
+          console.log(pc.red(`         Blocked by: ${blocker}`))
         }
       } else if (item.evaluation.resolved.length > 0) {
         console.log(
-          pc.gray(`       Resolved: [${item.evaluation.resolved.join(", ")}]`),
+          pc.gray(`         Resolved: [${item.evaluation.resolved.join(", ")}]`),
         )
       }
     })
@@ -126,32 +129,60 @@ export const startInteractivePlanTui = async (
         return
       }
 
-      // 'p' or 'P' to promote
-      if (key === "p" || key === "P") {
+      // Space to toggle select
+      if (key === " ") {
         const selected = items[selectedIndex]
-        if (selected == null) return
-
-        if (selected.type === "blocked") {
-          statusMessage = pc.red(`Cannot promote ${selected.task.document.id}: it is currently blocked.`)
+        if (selected != null) {
+          const id = selected.task.document.id
+          if (selectedTaskIds.has(id)) {
+            selectedTaskIds.delete(id)
+          } else {
+            selectedTaskIds.add(id)
+          }
           render()
-          return
+        }
+        return
+      }
+
+      // 'p' or 'P' to promote (selected batch or current item)
+      if (key === "p" || key === "P") {
+        const ids = selectedTaskIds.size > 0
+          ? Array.from(selectedTaskIds)
+          : items[selectedIndex] != null
+            ? [items[selectedIndex].task.document.id]
+            : []
+
+        if (ids.length === 0) return
+
+        const batchRes = promoteTasks(board, config, ids)
+        const promotedCount = batchRes.promoted.length
+        const failedCount = batchRes.failed.length
+
+        if (promotedCount > 0 && failedCount === 0) {
+          statusMessage = pc.green(`✔ Successfully promoted ${promotedCount} task(s)!`)
+          selectedTaskIds.clear()
+        } else if (promotedCount > 0 && failedCount > 0) {
+          statusMessage = pc.yellow(
+            `✔ Promoted ${promotedCount} task(s), but ${failedCount} failed (${batchRes.failed.map((f) => f.taskId).join(", ")})`,
+          )
+          for (const item of batchRes.promoted) {
+            selectedTaskIds.delete(item.task.document.id)
+          }
+        } else {
+          statusMessage = pc.red(
+            `✖ Promotion failed: ${batchRes.failed.map((f) => `${f.taskId} (${f.error.message})`).join("; ")}`,
+          )
         }
 
-        const promoteRes = promoteTask(board, config, selected.task.document.id)
-        if (promoteRes.isErr()) {
-          statusMessage = pc.red(`Promote failed: ${promoteRes.error.message}`)
-        } else {
-          statusMessage = pc.green(`✔ Promoted ${selected.task.document.id} to ${promoteRes.value.targetColumn}!`)
-          // Reload board and plan
-          const updatedBoard = discoverBoard(config, workspaceRoot)
-          if (updatedBoard.isOk()) {
-            board = updatedBoard.value
-            plan = partitionBacklog(board)
-            if (selectedIndex >= getItems().length) {
-              selectedIndex = Math.max(0, getItems().length - 1)
-            }
+        const updatedBoard = discoverBoard(config, workspaceRoot)
+        if (updatedBoard.isOk()) {
+          board = updatedBoard.value
+          plan = partitionBacklog(board)
+          if (selectedIndex >= getItems().length) {
+            selectedIndex = Math.max(0, getItems().length - 1)
           }
         }
+
         render()
         return
       }

@@ -16,7 +16,7 @@ import { resolveCurrentTask } from "./current.ts"
 import { startTask } from "./start.ts"
 import { doneTask } from "./done.ts"
 import { blockTask, unblockTask } from "./block.ts"
-import { partitionBacklog, promoteTask } from "./plan.ts"
+import { partitionBacklog, promoteTask, promoteTasks } from "./plan.ts"
 import { evaluateTaskBlockers, isDependencyResolved } from "../board/dependencies.ts"
 import {
   GitVcsProvider,
@@ -768,6 +768,35 @@ describe("Task Operations Domain Tests", () => {
         ?.tasks.find((t) => t.document.id === readyTask.id)
 
       expect(promotedInTodo != null).toBe(true)
+
+      // Test batch promotion: promote multiple tasks and handle blocked tasks
+      const batchTask1 = createTask(finalBoard, {
+        title: "Batch Task 1",
+        column: "backlog",
+      })._unsafeUnwrap()
+
+      const boardWithBatch1 = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const batchTask2 = createTask(boardWithBatch1, {
+        title: "Batch Task 2",
+        column: "backlog",
+      })._unsafeUnwrap()
+
+      const boardWithBothBatch = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+
+      // Batch promote both unblocked tasks + the still-blocked task
+      const batchRes = promoteTasks(
+        boardWithBothBatch,
+        DEFAULT_CONFIG,
+        [batchTask1.id, blockedTask.id, batchTask2.id],
+      )
+
+      expect(batchRes.promoted.length).toBe(2)
+      expect(batchRes.failed.length).toBe(1)
+      expect(batchRes.failed[0]?.taskId).toBe(blockedTask.id)
+      expect(batchRes.promoted.map((p) => p.task.document.id)).toEqual([
+        batchTask1.id,
+        batchTask2.id,
+      ])
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }

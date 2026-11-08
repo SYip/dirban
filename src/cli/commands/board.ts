@@ -40,7 +40,7 @@ export const handleView: CommandHandler = async (ctx) => {
     return 1
   }
 
-  const boardRes = discoverBoard(ctx.config)
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
     console.error(pc.red(`Board Error: ${boardRes.error.message}`))
     return 1

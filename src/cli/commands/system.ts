@@ -25,7 +25,7 @@ ${pc.bold("COMMANDS (Filesystem / Core):")}
   check <id> <index>    Toggle acceptance criteria checkbox item (1-based index)
   set <id> [options]    Mutate task frontmatter (priority, assignee, owner, tags)
   archive [<id>|all]    Archive completed tasks directly to archive/
-  plan [options]        View backlog triage and planning (options: --ready, --blocked, --promote=<id>, -i)
+  plan [options]        View backlog triage and planning (options: --ready, --blocked, --promote=<ids|all>, -i)
   block <id> <reasons>  Record blocker reasons / task dependencies and demote to backlog
   unblock <id> [reason] Remove a resolved blocker from a task
   help                  Show this help message
@@ -58,9 +58,9 @@ ${pc.bold("BOARD OPTIONS:")}
 ${pc.bold("PLAN OPTIONS:")}
   --ready               List only unblocked backlog tasks ready to be scheduled
   --blocked             List only currently blocked backlog tasks and blocking sources
-  --promote=<id>        Promote an unblocked backlog task into the active workflow
+  --promote=<ids|all>   Promote unblocked backlog tasks (single ID, comma-separated, or 'all')
   --to=<column>         Target column for promotion (defaults to first active column)
-  --interactive, -i     Launch interactive terminal planner to triage and unblock tasks
+  --interactive, -i     Launch interactive terminal planner to triage, multi-select, and promote tasks
 
 ${pc.bold("SET OPTIONS:")}
   --priority=<p0..p3>   Update task priority
@@ -128,7 +128,7 @@ export const handleInit: CommandHandler = (ctx) => {
 }
 
 export const handleNextId: CommandHandler = (ctx) => {
-  const boardRes = discoverBoard(ctx.config)
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
     console.error(pc.red(`Board Error: ${boardRes.error.message}`))
     return 1
