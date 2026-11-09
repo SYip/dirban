@@ -7,8 +7,9 @@ description: "TypeScript standards: strict typing, no semicolons, pure functions
 
 ## 1. Strict Typing Policy
 * `noImplicitAny: true` is strictly enforced.
-* **Prohibited**: The `any` type is strictly forbidden for function inputs, intermediate state, and outputs.
-* Use `unknown` with runtime type narrowing or validation (e.g., Zod or type guards) if handling raw external inputs.
+* **Prohibited**: The `any` type and `as any` type assertions are strictly forbidden for function inputs, intermediate state, outputs, and fallbacks.
+* If handling untyped external inputs or heterogenous collections, use `unknown` with runtime type narrowing or explicit type guards.
+* Never use `as any` to bypass typecheck errors or construct mock default objects. If a parameter is required, ensure it is provided or explicitly model it as optional in the interface.
 
 ## 2. Form State & Boundary Input Typing (String at the Boundary)
 * **Form Inputs & Component Props**: User inputs bound to HTML inputs (`<input>`) and passed between UI components should be typed strictly as `string` (or `string | null` if optional), **never** `number | string`.

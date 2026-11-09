@@ -1,6 +1,7 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
 import * as process from "node:process"
+import { err, ok } from "neverthrow"
 import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
 import {
@@ -15,7 +16,7 @@ import { startTask } from "../../operations/start.ts"
 import { doneTask } from "../../operations/done.ts"
 import { getVcsProvider } from "../../vcs/index.ts"
 import type { LifecycleStrategyType } from "../../workspace/types.ts"
-import type { CommandDefinition, CommandHandler } from "./types.ts"
+import type { CommandDefinition, CommandHandler, CommandParser, CommandValidationError } from "./types.ts"
 
 export const handleCurrent: CommandHandler = (ctx) => {
   const explicitId = ctx.positionals[1]
@@ -85,23 +86,32 @@ export const handleNext: CommandHandler = (ctx) => {
   return 0
 }
 
-export const handleStart: CommandHandler = (ctx) => {
+export interface StartCommandParams {
+  readonly taskId: string
+  readonly strategy?: LifecycleStrategyType
+  readonly noGit?: boolean
+}
+
+export const parseStart: CommandParser<StartCommandParams> = (ctx) => {
   const isWorktreeCmd = ctx.positionals[0] === "worktree"
   const taskId = isWorktreeCmd ? ctx.positionals[2] : ctx.positionals[1]
   if (taskId == null || taskId.trim() === "") {
-    console.error(pc.red("Error: Missing task ID. Usage: dirban start <id> [--checkout|--worktree]"))
-    return 1
+    return err({ message: "Missing task ID. Usage: dirban start <id> [--checkout|--worktree]" })
   }
 
-  const boardRes = discoverBoard(ctx.config, ctx.cwd)
-  if (boardRes.isErr()) {
-    console.error(pc.red(`Board Error: ${boardRes.error.message}`))
-    return 1
+  const isCurrentOrNoBranch = ctx.flags.current || ctx.flags["no-branch"]
+  if (ctx.flags.worktree && isCurrentOrNoBranch) {
+    return err({ message: "Cannot specify both --worktree and --current / --no-branch." })
+  }
+  if (ctx.flags.checkout && isCurrentOrNoBranch) {
+    return err({ message: "Cannot specify both --checkout and --current / --no-branch." })
+  }
+  if (ctx.flags.checkout && ctx.flags.worktree) {
+    return err({ message: "Cannot specify both --checkout and --worktree." })
   }
 
   const strategyParam = ctx.flags.strategy
-  const isNoneStrategy =
-    strategyParam === "none" || ctx.flags.current || ctx.flags["no-branch"]
+  const isNoneStrategy = strategyParam === "none" || isCurrentOrNoBranch
 
   const strategy: LifecycleStrategyType | undefined = isNoneStrategy
     ? "none"
@@ -115,9 +125,30 @@ export const handleStart: CommandHandler = (ctx) => {
 
   const noGit = ctx.flags["no-git"]
 
-  const startRes = startTask(boardRes.value, ctx.config, taskId.trim(), {
+  return ok({
+    taskId: taskId.trim(),
     strategy,
     noGit,
+  })
+}
+
+export const handleStart: CommandHandler = (ctx) => {
+  const parseRes = parseStart(ctx)
+  if (parseRes.isErr()) {
+    console.error(pc.red(`Error: ${parseRes.error.message}`))
+    return 1
+  }
+  const params = parseRes.value
+
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
+  if (boardRes.isErr()) {
+    console.error(pc.red(`Board Error: ${boardRes.error.message}`))
+    return 1
+  }
+
+  const startRes = startTask(boardRes.value, ctx.config, params.taskId, {
+    strategy: params.strategy,
+    noGit: params.noGit,
     cwd: ctx.cwd,
   })
   if (startRes.isErr()) {
@@ -152,14 +183,19 @@ export const handleStart: CommandHandler = (ctx) => {
   return 0
 }
 
-export const handleDone: CommandHandler = (ctx) => {
-  const taskId = ctx.positionals[1]
-  const boardRes = discoverBoard(ctx.config, ctx.cwd)
-  if (boardRes.isErr()) {
-    console.error(pc.red(`Board Error: ${boardRes.error.message}`))
-    return 1
+export interface DoneCommandParams {
+  readonly taskId?: string
+  readonly strategy?: LifecycleStrategyType
+  readonly noGit?: boolean
+  readonly noMerge?: boolean
+}
+
+export const parseDone: CommandParser<DoneCommandParams> = (ctx) => {
+  if (ctx.flags.merge && ctx.flags["no-merge"]) {
+    return err({ message: "Cannot specify both --merge and --no-merge." })
   }
 
+  const taskId = ctx.positionals[1]
   const strategyParam = ctx.flags.strategy
   const isNoneStrategy =
     strategyParam === "none" || ctx.flags.current || ctx.flags["no-branch"]
@@ -177,11 +213,33 @@ export const handleDone: CommandHandler = (ctx) => {
   const noGit = ctx.flags["no-git"]
   const noMerge = ctx.flags.merge === true ? false : ctx.flags["no-merge"]
 
-  const doneRes = doneTask(boardRes.value, ctx.config, taskId, {
-    cwd: ctx.cwd,
+  return ok({
+    taskId,
     strategy,
     noGit,
     noMerge,
+  })
+}
+
+export const handleDone: CommandHandler = (ctx) => {
+  const parseRes = parseDone(ctx)
+  if (parseRes.isErr()) {
+    console.error(pc.red(`Error: ${parseRes.error.message}`))
+    return 1
+  }
+  const params = parseRes.value
+
+  const boardRes = discoverBoard(ctx.config, ctx.cwd)
+  if (boardRes.isErr()) {
+    console.error(pc.red(`Board Error: ${boardRes.error.message}`))
+    return 1
+  }
+
+  const doneRes = doneTask(boardRes.value, ctx.config, params.taskId, {
+    cwd: ctx.cwd,
+    strategy: params.strategy,
+    noGit: params.noGit,
+    noMerge: params.noMerge,
   })
   if (doneRes.isErr()) {
     console.error(pc.red(`Done Error: ${doneRes.error.message}`))
@@ -285,6 +343,7 @@ export const startCommand: CommandDefinition = {
     "dirban start 26-001 --no-git",
   ],
   requiresTasksDir: true,
+  parse: parseStart,
   execute: handleStart,
 }
 
@@ -295,6 +354,7 @@ export const doneCommand: CommandDefinition = {
   usage: "dirban done [id] [options]",
   options: [
     { flag: "--strategy <type>", description: "Override auto-detected lifecycle strategy: checkout | worktree | none | directory-only" },
+    { flag: "--merge", description: "Force merge into base branch even if autoMerge is disabled in config" },
     { flag: "--no-merge", description: "Preserve active branch/worktree without merging into base branch" },
     { flag: "--no-git", description: "Skip Git merge & cleanup" },
   ],
@@ -305,6 +365,7 @@ export const doneCommand: CommandDefinition = {
     "dirban finish",
   ],
   requiresTasksDir: true,
+  parse: parseDone,
   execute: handleDone,
 }
 
