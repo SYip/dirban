@@ -70,13 +70,28 @@ By treating **directories as columns** and **isolated Markdown files as tasks**,
 
 ## Intent-Driven Workflow Guide
 
-Dirban maps directly to how humans and AI coding agents execute work across three primary phases:
+Dirban maps directly to how humans and AI coding agents execute work through a clean, single-verb lifecycle across three phases:
+
+```mermaid
+flowchart LR
+    Idea(["Idea / Requirement"]) -->|dirban new| Backlog[("backlog/")]
+    Backlog -->|dirban ready| Todo["01-todo/"]
+    Todo -->|dirban start| Doing["02-doing/"]
+    Doing -->|dirban done| Done["03-done/"]
+    Done -->|dirban archive| Archive[("archive/")]
+
+    classDef dir fill:#1e1e1e,stroke:#3b82f6,stroke-width:2px,color:#fff;
+    classDef term fill:#0f172a,stroke:#64748b,stroke-width:1px,stroke-dasharray: 5 5,color:#cbd5e1;
+    class Backlog,Todo,Doing,Done,Archive dir;
+    class Idea term;
+```
 
 | Workflow Phase | Question Being Answered | Command | Description |
 | :--- | :--- | :--- | :--- |
 | **Phase 1: Planning** | *"What unblocked tasks can we schedule?"* | `dirban plan` | Shows ready vs blocked backlog tasks |
 | | *"What is holding up blocked work?"* | `dirban plan --blocked` | Inspects missing dependencies / blocker reasons |
-| | *"How do I schedule tasks for execution?"* | `dirban plan --promote=<ids>` | Moves ready tasks from backlog into `01-todo` |
+| | *"What unblocked tasks are ready to queue?"* | `dirban plan --unblocked` | Lists only backlog tasks with all dependencies satisfied |
+| | *"How do I schedule tasks for execution?"* | `dirban ready <id...>` | Moves ready tasks from backlog into `01-todo` |
 | **Phase 2: Action** | *"What should I focus on next?"* | `dirban next` | Recommends highest-priority task from `01-todo` |
 | | *"How do I start working on it?"* | `dirban start <id>` | Moves to `02-doing` & creates branch/worktree |
 | | *"What am I currently doing?"* | `dirban current` | Inspects active task, progress & criteria checklist |

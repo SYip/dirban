@@ -48,11 +48,11 @@ Establishes a cohesive, natural 5-verb task lifecycle (`new` -> `ready` -> `star
 
 ## Acceptance Criteria
 
-- [ ] Add top-level `dirban ready` command supporting single task IDs, multiple space-separated IDs, numeric short suffixes, and `all`.
-- [ ] Support optional `--to=<column>` parameter on `dirban ready`.
-- [ ] Add short flags `-r` and `-p` for promotion within `dirban plan` (`dirban plan -r <id>`, `dirban plan -p <id>`).
-- [ ] Rename `dirban plan --ready` filter to `--unblocked` and add alias `--no-blocked` (keeping `--ready` as backward-compatible alias).
-- [ ] Update `dirban start` and `dirban done` backlog guard error messages and suggestions to recommend `dirban ready <id>`.
-- [ ] Update CLI help documentation (`dirban --help`, `dirban help plan`, `dirban help ready`).
-- [ ] Add unit tests verifying `dirban ready`, batch execution, `--unblocked`, `--no-blocked`, and error suggestions.
-- [ ] Run full test suite and typechecks (`mise exec -- bun test && mise exec -- bun run typecheck`).
+- [x] Add top-level `dirban ready` command supporting single task IDs, multiple space-separated IDs, numeric short suffixes, and `all`.
+- [x] Support optional `--to=<column>` parameter on `dirban ready`.
+- [x] Add short flags `-r` and `-p` for promotion within `dirban plan` (`dirban plan -r <id>`, `dirban plan -p <id>`).
+- [x] Rename `dirban plan --ready` filter to `--unblocked` and add alias `--no-blocked` (keeping `--ready` as backward-compatible alias).
+- [x] Update `dirban start` and `dirban done` backlog guard error messages and suggestions to recommend `dirban ready <id>`.
+- [x] Update CLI help documentation (`dirban --help`, `dirban help plan`, `dirban help ready`).
+- [x] Add unit tests verifying `dirban ready`, batch execution, `--unblocked`, `--no-blocked`, and error suggestions.
+- [x] Run full test suite and typechecks (`mise exec -- bun test && mise exec -- bun run typecheck`).

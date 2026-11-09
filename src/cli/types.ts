@@ -29,7 +29,8 @@ export interface CliFlags {
   readonly "no-merge"?: boolean
   readonly ready?: boolean
   readonly blocked?: boolean
-  readonly promote?: string
+  readonly unblocked?: boolean
+  readonly "no-blocked"?: boolean
   readonly to?: string
   readonly interactive?: boolean
 }
@@ -62,8 +63,9 @@ export const CLI_PARSE_OPTIONS: NonNullable<ParseArgsConfig["options"]> = {
   merge: { type: "boolean" },
   "no-merge": { type: "boolean" },
   ready: { type: "boolean" },
-  blocked: { type: "boolean" },
-  promote: { type: "string" },
+  blocked: { type: "boolean", short: "b" },
+  unblocked: { type: "boolean", short: "u" },
+  "no-blocked": { type: "boolean" },
   to: { type: "string" },
   interactive: { type: "boolean", short: "i" },
 }

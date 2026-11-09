@@ -68,7 +68,7 @@ describe("Resolve Next Task (dirban next)", () => {
         if (nextRes.error.kind === "QUEUE_EMPTY") {
           expect(nextRes.error.sourceColumn).toBe("01-todo")
         }
-        expect(nextRes.error.message).toContain("dirban plan")
+        expect(nextRes.error.message).toContain("dirban ready")
       }
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })

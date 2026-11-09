@@ -302,8 +302,8 @@ export const formatPlanView = (
   }
 
   lines.push("")
-  lines.push(pc.gray("Promote an unblocked task with:"))
-  lines.push(pc.cyan("  dirban plan --promote=<id>"))
+  lines.push(pc.gray("Ready an unblocked task into the active board with:"))
+  lines.push(pc.cyan("  dirban ready <id>"))
   lines.push(pc.gray("Unblock reasons with:"))
   lines.push(pc.cyan("  dirban unblock <id> [reason]"))
   lines.push("")
