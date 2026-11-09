@@ -50,7 +50,7 @@ Domain modules adhere to a clean separation between pure domain operations and p
 - [x] **Phase 2: Card Mutation & CRUD Domain (`src/tasks/mutation/`)**
   - Relocate `create.ts`, `move.ts`, `check.ts`, `set.ts`, `archive.ts` and `mutation.test.ts` to `src/tasks/mutation/`.
   - Separate pure operations from CLI adapters (`create.cli.ts`, `move.cli.ts`, `check.cli.ts`, `set.cli.ts`, `archive.cli.ts`).
-- [ ] **Phase 3: Task Execution Lifecycle Domain (`src/tasks/lifecycle/`)**
+- [x] **Phase 3: Task Execution Lifecycle Domain (`src/tasks/lifecycle/`)**
   - Relocate `start.ts`, `done.ts`, `next.ts`, `current.ts` and their dedicated unit tests (`start.test.ts`, `done.test.ts`, `next.test.ts`, `current.test.ts`) to `src/tasks/lifecycle/`.
   - Separate pure operations from CLI adapters (`start.cli.ts`, `done.cli.ts`, `next.cli.ts`, `current.cli.ts`, `path.cli.ts`).
 - [ ] **Phase 4: Project Scaffolding & Setup (`src/tasks/project/`)**

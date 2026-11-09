@@ -2,16 +2,24 @@ import pc from "picocolors"
 import type { CliContext, CommandDefinition, CommandHandler } from "./types.ts"
 import {
   currentCommand,
-  doneCommand,
   handleCurrent,
+} from "../../tasks/lifecycle/current.cli.ts"
+import {
+  doneCommand,
   handleDone,
+} from "../../tasks/lifecycle/done.cli.ts"
+import {
   handleNext,
-  handlePath,
-  handleStart,
   nextCommand,
+} from "../../tasks/lifecycle/next.cli.ts"
+import {
+  handlePath,
   pathCommand,
+} from "../../tasks/lifecycle/path.cli.ts"
+import {
+  handleStart,
   startCommand,
-} from "./lifecycle.ts"
+} from "../../tasks/lifecycle/start.cli.ts"
 import {
   archiveCommand,
   handleArchive,
