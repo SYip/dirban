@@ -1,7 +1,7 @@
 import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
-import { calculateNextTaskId } from "../../operations/create.ts"
-import { initializeBoard } from "../../operations/init.ts"
+import { calculateNextTaskId } from "../../tasks/mutation/create.ts"
+import { initializeBoard } from "../../tasks/project/init.ts"
 import type { CommandDefinition, CommandHandler } from "./types.ts"
 
 export const printHelp = (): void => {

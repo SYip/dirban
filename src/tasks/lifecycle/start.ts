@@ -1,16 +1,17 @@
 import { ok, err, type Result } from "neverthrow"
-import type { Board, BoardTask } from "../board/types.ts"
-import { findTaskExact } from "../board/discovery.ts"
-import { resolveFocusColumn } from "../config/config.ts"
-import type { DirbanConfig } from "../config/types.ts"
-import { moveTask } from "./move.ts"
-import { getVcsProvider, type VersionControlProvider } from "../vcs/index.ts"
+import type { Board, BoardTask } from "../../board/types.ts"
+import { findTaskExact } from "../../board/discovery.ts"
+import { resolveFocusColumn } from "../../config/config.ts"
+import type { DirbanConfig } from "../../config/types.ts"
+import { moveTask } from "../mutation/move.ts"
+import { getVcsProvider, type VersionControlProvider } from "../../vcs/index.ts"
 import {
   resolveWorkspaceStrategy,
   type LifecycleStrategyType,
   type WorkspaceLifecycleStrategy,
   type WorkspaceStartResult,
-} from "../workspace/index.ts"
+} from "../../workspace/index.ts"
+import type { OperationError } from "../types.ts"
 
 export interface StartTaskSuccess {
   readonly task: BoardTask

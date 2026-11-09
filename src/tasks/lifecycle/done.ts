@@ -1,18 +1,19 @@
 import { ok, err, type Result } from "neverthrow"
-import type { Board, BoardTask } from "../board/types.ts"
-import { findTaskExact } from "../board/discovery.ts"
-import type { DirbanConfig } from "../config/types.ts"
-import { resolveFocusColumn, resolveNextColumn } from "../config/config.ts"
-import { moveTask } from "./move.ts"
-import { archiveTasks } from "./archive.ts"
+import type { Board, BoardTask } from "../../board/types.ts"
+import { findTaskExact } from "../../board/discovery.ts"
+import type { DirbanConfig } from "../../config/types.ts"
+import { resolveFocusColumn, resolveNextColumn } from "../../config/config.ts"
+import { moveTask } from "../mutation/move.ts"
+import { archiveTasks } from "../mutation/archive.ts"
 import { resolveCurrentTask } from "./current.ts"
-import { getVcsProvider, type VersionControlProvider } from "../vcs/index.ts"
+import { getVcsProvider, type VersionControlProvider } from "../../vcs/index.ts"
 import {
   detectWorkspaceDoneStrategy,
   type LifecycleStrategyType,
   type WorkspaceLifecycleStrategy,
   type WorkspaceDoneResult,
-} from "../workspace/index.ts"
+} from "../../workspace/index.ts"
+import type { OperationError } from "../types.ts"
 
 export interface DoneTaskSuccess {
   readonly task: BoardTask

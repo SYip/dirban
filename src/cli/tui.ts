@@ -3,8 +3,8 @@ import * as process from "node:process"
 import type { DirbanConfig } from "../config/types.ts"
 import { discoverBoard } from "../board/discovery.ts"
 import type { BoardTask } from "../board/types.ts"
-import { checkTaskItem } from "../operations/check.ts"
-import { moveTask } from "../operations/move.ts"
+import { checkTaskItem } from "../tasks/mutation/check.ts"
+import { moveTask } from "../tasks/mutation/move.ts"
 import { formatTaskDetail, getPriorityBadge } from "./formatters.ts"
 
 interface TuiState {

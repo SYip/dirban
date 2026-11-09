@@ -6,7 +6,7 @@ import { dispatchCommand, printHelp } from "./router.ts"
 import { runCli } from "../../../main.ts"
 import type { CliContext } from "./types.ts"
 import type { DirbanConfig } from "../../config/types.ts"
-import { initializeBoard } from "../../operations/init.ts"
+import { initializeBoard } from "../../tasks/project/init.ts"
 
 const MOCK_CONFIG: DirbanConfig = {
   tasksDir: "docs/tasks",

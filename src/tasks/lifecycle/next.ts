@@ -1,7 +1,7 @@
 import { err, ok, type Result } from "neverthrow"
-import type { Board, BoardTask } from "../board/types.ts"
-import { resolveFocusColumn, resolvePreviousColumn } from "../config/config.ts"
-import type { DirbanConfig } from "../config/types.ts"
+import type { Board, BoardTask } from "../../board/types.ts"
+import { resolveFocusColumn, resolvePreviousColumn } from "../../config/config.ts"
+import type { DirbanConfig } from "../../config/types.ts"
 
 export interface ResolveNextTaskSuccess {
   readonly task: BoardTask

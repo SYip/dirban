@@ -6,9 +6,9 @@ import {
   DEFAULT_CONFIG,
   VSCODE_SETTINGS_DIR,
   VSCODE_SETTINGS_FILE,
-} from "../config/config.ts"
-import type { DirbanConfig } from "../config/types.ts"
-import type { OperationError } from "./types.ts"
+} from "../../config/config.ts"
+import type { DirbanConfig } from "../../config/types.ts"
+import type { OperationError } from "../types.ts"
 
 export interface InitOptions {
   /**

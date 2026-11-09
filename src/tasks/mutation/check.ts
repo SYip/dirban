@@ -1,10 +1,10 @@
 import { err, ok, type Result } from "neverthrow"
-import type { Board, BoardTask } from "../board/types.ts"
-import { findTaskByIdOrName } from "../board/discovery.ts"
+import type { Board, BoardTask } from "../../board/types.ts"
+import { findTaskByIdOrName } from "../../board/discovery.ts"
 import * as fs from "node:fs"
-import { LINE_SPLIT_REGEX } from "../okf/parser.ts"
+import { LINE_SPLIT_REGEX } from "../../okf/parser.ts"
 import { getIsoDate } from "./move.ts"
-import type { OperationError } from "./types.ts"
+import type { OperationError } from "../types.ts"
 
 const detectEol = (content: string): "\r\n" | "\n" =>
   content.includes("\r\n") ? "\r\n" : "\n"

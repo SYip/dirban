@@ -39,11 +39,13 @@ import {
 import {
   blockCommand,
   handleBlock,
-  handlePlan,
   handleUnblock,
-  planCommand,
   unblockCommand,
-} from "./plan.ts"
+} from "../../tasks/planning/block.ts"
+import {
+  handlePlan,
+  planCommand,
+} from "../../tasks/planning/plan.ts"
 import { validateConfig } from "../../config/config.ts"
 
 export const ALL_COMMANDS: readonly CommandDefinition[] = Object.freeze([

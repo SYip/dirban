@@ -10,10 +10,10 @@ import {
   formatTerminalLink,
   toRelativePath,
 } from "../formatters.ts"
-import { resolveCurrentTask } from "../../operations/current.ts"
-import { resolveNextTask } from "../../operations/next.ts"
-import { startTask } from "../../operations/start.ts"
-import { doneTask } from "../../operations/done.ts"
+import { resolveCurrentTask } from "../../tasks/lifecycle/current.ts"
+import { resolveNextTask } from "../../tasks/lifecycle/next.ts"
+import { startTask } from "../../tasks/lifecycle/start.ts"
+import { doneTask } from "../../tasks/lifecycle/done.ts"
 import { getVcsProvider } from "../../vcs/index.ts"
 import type { LifecycleStrategyType } from "../../workspace/types.ts"
 import type { CommandDefinition, CommandHandler, CommandParser, CommandValidationError } from "./types.ts"

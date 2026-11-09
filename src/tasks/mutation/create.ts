@@ -1,9 +1,9 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { err, ok, type Result } from "neverthrow"
-import type { Board } from "../board/types.ts"
-import type { Priority } from "../okf/types.ts"
-import type { OperationError } from "./types.ts"
+import type { Board } from "../../board/types.ts"
+import type { Priority } from "../../okf/types.ts"
+import type { OperationError } from "../types.ts"
 
 const SLUGIFY = (text: string): string => {
   return text

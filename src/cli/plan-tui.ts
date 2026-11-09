@@ -2,8 +2,8 @@ import pc from "picocolors"
 import * as process from "node:process"
 import type { DirbanConfig } from "../config/types.ts"
 import { discoverBoard } from "../board/discovery.ts"
-import { partitionBacklog, promoteTask, promoteTasks } from "../operations/plan.ts"
-import { unblockTask } from "../operations/block.ts"
+import { partitionBacklog, promoteTask, promoteTasks } from "../tasks/planning/plan.ts"
+import { unblockTask } from "../tasks/planning/block.ts"
 import { getPriorityBadge } from "./formatters.ts"
 
 export const startInteractivePlanTui = async (

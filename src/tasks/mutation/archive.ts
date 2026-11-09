@@ -1,10 +1,10 @@
 import { err, ok, type Result } from "neverthrow"
 import * as path from "node:path"
 import * as fs from "node:fs"
-import type { Board, BoardTask } from "../board/types.ts"
-import type { DirbanConfig } from "../config/types.ts"
-import { findTaskByIdOrName } from "../board/discovery.ts"
-import type { OperationError } from "./types.ts"
+import type { Board, BoardTask } from "../../board/types.ts"
+import type { DirbanConfig } from "../../config/types.ts"
+import { findTaskByIdOrName } from "../../board/discovery.ts"
+import type { OperationError } from "../types.ts"
 
 export interface ArchiveResult {
   readonly archivedTasks: readonly BoardTask[]
