@@ -3,7 +3,12 @@ import * as path from "node:path"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import { DEFAULT_CONFIG } from "../config/config.ts"
-import { discoverBoard, findTaskByIdOrName } from "./discovery.ts"
+import {
+  discoverBoard,
+  findTaskByIdOrName,
+  findTaskByQuery,
+  getAllBoardTasks,
+} from "./discovery.ts"
 
 const TASK_P1_CARD = `---
 okf_version: "1.0"
@@ -159,6 +164,101 @@ describe("Board Discovery and Sorting Tests", () => {
       }
       // Ensure directory was not secretly created
       expect(fs.existsSync(path.join(tempDir, "docs/tasks"))).toBe(false)
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  it("Vector 5 (Unified Task Query Resolution): Exact, short numeric suffix, ambiguity, and fuzzy matching", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-query-"))
+    try {
+      const tasksDir = path.join(tempDir, "docs/tasks")
+      fs.mkdirSync(path.join(tasksDir, "01-todo"), { recursive: true })
+      fs.mkdirSync(path.join(tasksDir, "02-doing"), { recursive: true })
+
+      fs.writeFileSync(path.join(tasksDir, "01-todo/26-001-login-form.md"), TASK_P1_CARD)
+      fs.writeFileSync(path.join(tasksDir, "02-doing/26-002-auth-security.md"), TASK_P0_CARD)
+
+      const boardRes = discoverBoard(DEFAULT_CONFIG, tempDir)
+      expect(boardRes.isOk()).toBe(true)
+      if (boardRes.isErr()) return
+      const board = boardRes.value
+      const allTasks = getAllBoardTasks(board)
+
+      // 1. Exact match by full ID
+      const exactFull = findTaskByQuery(allTasks, "task.26-001")
+      expect(exactFull.kind).toBe("FOUND")
+      if (exactFull.kind === "FOUND") {
+        expect(exactFull.task.filename).toBe("26-001-login-form.md")
+      }
+
+      // 2. Exact match by filename stem
+      const exactStem = findTaskByQuery(allTasks, "26-002-auth-security")
+      expect(exactStem.kind).toBe("FOUND")
+      if (exactStem.kind === "FOUND") {
+        expect(exactStem.task.filename).toBe("26-002-auth-security.md")
+      }
+
+      // 3. Short numeric suffix (string "001" and number "1")
+      const suffix001 = findTaskByQuery(allTasks, "001")
+      expect(suffix001.kind).toBe("FOUND")
+      if (suffix001.kind === "FOUND") {
+        expect(suffix001.task.filename).toBe("26-001-login-form.md")
+      }
+
+      const suffix1 = findTaskByQuery(allTasks, "1")
+      expect(suffix1.kind).toBe("FOUND")
+      if (suffix1.kind === "FOUND") {
+        expect(suffix1.task.filename).toBe("26-001-login-form.md")
+      }
+
+      // 4. Fuzzy search (enabled via option)
+      const fuzzyMatch = findTaskByQuery(allTasks, "security", { enableFuzzy: true })
+      expect(fuzzyMatch.kind).toBe("FOUND")
+      if (fuzzyMatch.kind === "FOUND") {
+        expect(fuzzyMatch.task.filename).toBe("26-002-auth-security.md")
+      }
+
+      // 5. Ambiguity detection
+      // Add another card with suffix "001" (e.g. from 2025: "25-001")
+      fs.writeFileSync(
+        path.join(tasksDir, "01-todo/25-001-legacy.md"),
+        `---
+okf_version: "1.0"
+id: "task.25-001"
+title: "Legacy Task"
+type: "task"
+status: "01-todo"
+priority: "p2"
+owner: "developer"
+assigned_to: "unassigned"
+created_date: "2025-10-10"
+last_updated: "2025-10-10"
+tags: []
+relationships:
+  depends_on: []
+  blocks: []
+  related_to: []
+---
+# Legacy Task
+`,
+      )
+
+      const reloadedBoard = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const reloadedTasks = getAllBoardTasks(reloadedBoard)
+
+      const ambiguousRes = findTaskByQuery(reloadedTasks, "001")
+      expect(ambiguousRes.kind).toBe("AMBIGUOUS")
+      if (ambiguousRes.kind === "AMBIGUOUS") {
+        const ids = ambiguousRes.matches.map((m) => m.document.id)
+        expect(ids).toContain("task.26-001")
+        expect(ids).toContain("task.25-001")
+      }
+
+      // 6. findTaskByIdOrName transparently resolves short ID across board
+      const foundViaHelper = findTaskByIdOrName(reloadedBoard, "2")
+      expect(foundViaHelper != null).toBe(true)
+      expect(foundViaHelper?.document.id).toBe("task.26-002")
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }

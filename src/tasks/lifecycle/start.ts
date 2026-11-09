@@ -1,6 +1,6 @@
 import { ok, err, type Result } from "neverthrow"
 import type { Board, BoardTask } from "../../board/types.ts"
-import { findTaskExact } from "../../board/discovery.ts"
+import { findTaskByIdOrName } from "../../board/discovery.ts"
 import { resolveFocusColumn } from "../../config/config.ts"
 import type { DirbanConfig } from "../../config/types.ts"
 import { moveTask } from "../mutation/move.ts"
@@ -44,7 +44,7 @@ export const startTask = (
 ): Result<StartTaskSuccess, StartTaskError> => {
   const cwd = options?.cwd ?? process.cwd()
   const vcs = options?.vcsProvider ?? getVcsProvider(cwd)
-  const task = findTaskExact(board, taskId)
+  const task = findTaskByIdOrName(board, taskId)
   if (task == null) {
     return err({
       kind: "TASK_NOT_FOUND",

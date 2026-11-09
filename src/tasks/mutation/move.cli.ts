@@ -1,18 +1,32 @@
 import { discoverBoard } from "../../board/discovery.ts"
-import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
+import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
+import { err, ok } from "neverthrow"
 import pc from "picocolors"
 import { moveTask } from "./move.ts"
 
-export const handleMove: CommandHandler = (ctx) => {
-  const taskId = ctx.positionals[1]
-  const targetCol = ctx.positionals[2]
+export interface MoveCommandParams {
+  readonly taskId: string
+  readonly targetColumn: string
+}
 
-  if (taskId == null || targetCol == null) {
-    console.error(
-      pc.red("Error: Usage: dirban move <id> <target-column>"),
-    )
+export const parseMove: CommandParser<MoveCommandParams> = (ctx) => {
+  const taskId = ctx.positionals[1]?.trim()
+  const targetColumn = ctx.positionals[2]?.trim()
+
+  if (taskId == null || taskId === "" || targetColumn == null || targetColumn === "") {
+    return err({ message: "Usage: dirban move <id> <target-column>" })
+  }
+
+  return ok({ taskId, targetColumn })
+}
+
+export const handleMove: CommandHandler = (ctx) => {
+  const parseRes = parseMove(ctx)
+  if (parseRes.isErr()) {
+    console.error(pc.red(`Error: ${parseRes.error.message}`))
     return 1
   }
+  const { taskId, targetColumn } = parseRes.value
 
   const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
@@ -20,7 +34,7 @@ export const handleMove: CommandHandler = (ctx) => {
     return 1
   }
 
-  const moveRes = moveTask(boardRes.value, taskId, targetCol)
+  const moveRes = moveTask(boardRes.value, taskId, targetColumn)
   if (moveRes.isErr()) {
     console.error(pc.red(`Move Error: ${moveRes.error.message}`))
     return 1
@@ -44,5 +58,6 @@ export const moveCommand: CommandDefinition = {
     "dirban move 26-001 03-done",
   ],
   requiresTasksDir: true,
+  parse: parseMove,
   execute: handleMove,
 }

@@ -1,12 +1,12 @@
 import { err, ok, type Result } from "neverthrow"
 import type { Board, BoardTask } from "../../board/types.ts"
 import { evaluateTaskBlockers, type TaskBlockerEvaluation } from "../../board/dependencies.ts"
+import { findTaskByQuery } from "../../board/discovery.ts"
 import { moveTask } from "../mutation/move.ts"
 import type { OperationError } from "../types.ts"
 import type { DirbanConfig } from "../../config/types.ts"
 
 const BACKLOG_COLUMN = "backlog" as const
-const TASK_SUFFIX_REGEX = /(?:^|[\.-])(\d{1,4})(?:\.md)?$/
 
 export interface PlannedTask {
   readonly task: BoardTask
@@ -27,76 +27,27 @@ export const resolveBacklogTaskId = (
   backlogTasks: readonly BoardTask[],
   query: string,
 ): Result<BoardTask, OperationError> => {
-  const trimmed = query.trim()
-  if (trimmed === "") {
-    return err({
-      kind: "TASK_NOT_FOUND",
-      message: "Task query cannot be empty",
-      id: query,
-    })
+  const matchResult = findTaskByQuery(backlogTasks, query)
+  if (matchResult.kind === "FOUND") {
+    return ok(matchResult.task)
   }
 
-  // 1. Exact match (ID, frontmatter ID, filename, or file stem)
-  const exactMatch = backlogTasks.find((t) => {
-    const canonicalId = t.document.id ?? t.document.frontmatter.id
-    const fileStem = t.filename.replace(/\.md$/, "")
-    return (
-      canonicalId === trimmed ||
-      t.filename === trimmed ||
-      fileStem === trimmed ||
-      t.filePath.endsWith(trimmed)
-    )
-  })
-
-  if (exactMatch != null) {
-    return ok(exactMatch)
-  }
-
-  // 2. Short numeric suffix match (e.g. "001" or "1")
-  const numericQuery = parseInt(trimmed, 10)
-  const isNumericQuery = !isNaN(numericQuery)
-
-  const suffixMatches = backlogTasks.filter((t) => {
-    const canonicalId = t.document.id ?? t.document.frontmatter.id ?? t.filename
-    const match = canonicalId.match(TASK_SUFFIX_REGEX)
-    if (match == null || match[1] == null) {
-      return false
-    }
-
-    const taskSuffix = match[1]
-    // Suffix string match (e.g. "001" matches "26-001")
-    if (taskSuffix === trimmed || taskSuffix.endsWith(trimmed)) {
-      return true
-    }
-
-    // Number value match (e.g. "1" matches 1 from "001")
-    if (isNumericQuery && parseInt(taskSuffix, 10) === numericQuery) {
-      return true
-    }
-
-    return false
-  })
-
-  if (suffixMatches.length === 1 && suffixMatches[0] != null) {
-    return ok(suffixMatches[0])
-  }
-
-  if (suffixMatches.length > 1) {
-    const matchedIds = suffixMatches.map(
+  if (matchResult.kind === "AMBIGUOUS") {
+    const matchedIds = matchResult.matches.map(
       (t) => t.document.id ?? t.document.frontmatter.id ?? t.filename,
     )
     return err({
       kind: "AMBIGUOUS_TASK_ID",
-      message: `Ambiguous short task ID '${trimmed}': matches multiple tasks [${matchedIds.join(", ")}]. Please specify full task ID.`,
-      id: trimmed,
+      message: `Ambiguous short task ID '${query}': matches multiple tasks [${matchedIds.join(", ")}]. Please specify full task ID.`,
+      id: query,
       matches: matchedIds,
     })
   }
 
   return err({
     kind: "TASK_NOT_FOUND",
-    message: `Task not found in backlog: ${trimmed}`,
-    id: trimmed,
+    message: `Task not found in backlog: ${query}`,
+    id: query,
   })
 }
 

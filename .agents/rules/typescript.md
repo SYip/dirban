@@ -11,11 +11,18 @@ description: "TypeScript standards: strict typing, no semicolons, pure functions
 * If handling untyped external inputs or heterogenous collections, use `unknown` with runtime type narrowing or explicit type guards.
 * Never use `as any` to bypass typecheck errors or construct mock default objects. If a parameter is required, ensure it is provided or explicitly model it as optional in the interface.
 
-## 2. Form State & Boundary Input Typing (String at the Boundary)
-* **Form Inputs & Component Props**: User inputs bound to HTML inputs (`<input>`) and passed between UI components should be typed strictly as `string` (or `string | null` if optional), **never** `number | string`.
+## 2. Boundary Typing & "Parse, Don't Validate"
+* **Parse at the Boundary, Trust in the Domain**:
+  * External inputs (CLI flags, positional arguments, JSON/YAML files, HTTP/IPC payloads, user form strings) are untrusted and must be parsed at the presentation/adapter boundary.
+  * Do not merely "validate" (checking boolean conditions while leaving types loose). **Parse** untrusted input into strongly-typed parameter objects (e.g. `CommandParser<T>` returning `Result<T, CommandValidationError>`).
+  * Boundary parsers handle trimming, stripping empty strings, parsing numbers/dates, checking mutual exclusivity, resolving conflicts, and setting defaults.
+* **No Defensive Re-Validation in Domain Logic**:
+  * Pure domain operations (`createTask`, `moveTask`, `resolveBacklogTaskId`, `startTask`) must assume boundary inputs are already parsed, sanitized, and structurally valid.
+  * Prohibit redundant defensive checks inside domain functions (e.g. re-checking `if (query.trim() === "")` or re-checking required parameters that the boundary parser already guarantees).
+* **Form Inputs & Component Props (String at the Boundary)**:
+  * User inputs bound to HTML inputs (`<input>`) and passed between UI components should be typed strictly as `string` (or `string | null` if optional), **never** `number | string`.
   * Preserves incomplete user keystrokes (e.g., empty string `""` on backspace, intermediate punctuation entry).
   * Prevents premature coercion or loss of precision during component-to-component transfers.
-* **Domain Parsing**: Domain engines should accept string inputs at the boundary and parse/validate them into typed values explicitly, returning formatted string representations when communicating back to the presentation layer.
 
 ## 3. Formatting & Semicolons
 * **No semicolons (`semi: false`)**: Do not use semicolons at the end of statements unless syntactically required (e.g., before an IIFE or array destructuring statement starting on a new line).
