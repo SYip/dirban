@@ -119,7 +119,7 @@ describe("CLI Router and Modular Command Handlers", () => {
     }
   })
 
-  it("Vector 5: Dispatches plan promote with comma-separated IDs and positional syntax", async () => {
+  it("Vector 5: Dispatches ready command with task IDs and 'all'", async () => {
     let output = ""
     const origLog = console.log
     console.log = (...args: unknown[]) => {
@@ -130,24 +130,24 @@ describe("CLI Router and Modular Command Handlers", () => {
     try {
       initializeBoard(MOCK_CONFIG, tempDir)
 
-      // Positional: dirban plan promote non-existent
+      // Ready non-existent
       const ctxPositional: CliContext = {
         flags: {},
-        positionals: ["plan", "promote", "non-existent-task"],
+        positionals: ["ready", "non-existent-task"],
         config: MOCK_CONFIG,
         cwd: tempDir,
       }
-      const exitPositional = await dispatchCommand("plan", ctxPositional)
+      const exitPositional = await dispatchCommand("ready", ctxPositional)
       expect(exitPositional).toBe(1)
 
-      // Flag with all: dirban plan --promote=all in empty backlog
+      // Ready all in empty backlog
       const ctxAll: CliContext = {
-        flags: { promote: "all" },
-        positionals: ["plan"],
+        flags: {},
+        positionals: ["ready", "all"],
         config: MOCK_CONFIG,
         cwd: tempDir,
       }
-      const exitAll = await dispatchCommand("plan", ctxAll)
+      const exitAll = await dispatchCommand("ready", ctxAll)
       expect(exitAll).toBe(0)
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
@@ -173,7 +173,7 @@ describe("CLI Router and Modular Command Handlers", () => {
       const exitPlanHelp = await dispatchCommand("plan", ctxPlanHelp)
       expect(exitPlanHelp).toBe(0)
       expect(output).toContain("dirban plan")
-      expect(output).toContain("--promote=<ids|all>")
+      expect(output).toContain("--unblocked")
       expect(output).toContain("EXAMPLES:")
 
       output = ""

@@ -80,11 +80,11 @@ export const startTask = (
     if (task.column === "backlog") {
       return err({
         kind: "INVALID_COLUMN_TRANSITION",
-        message: `Cannot start task ${displayId}: task is in 'backlog'. Run 'dirban plan promote ${displayId}' first.`,
+        message: `Cannot start task ${displayId}: task is in 'backlog'. Run 'dirban ready ${displayId}' first.`,
         currentColumn: "backlog",
         expectedColumn: expectedPreFocusCol,
         id: taskId,
-        suggestion: `dirban plan promote ${displayId}`,
+        suggestion: `dirban ready ${displayId}`,
       })
     }
 

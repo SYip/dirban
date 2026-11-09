@@ -99,11 +99,11 @@ export const doneTask = (
       if (taskToDone.column === "backlog") {
         return err({
           kind: "INVALID_COLUMN_TRANSITION",
-          message: `Cannot mark task ${displayId} as done: task is in 'backlog'. Run 'dirban plan promote ${displayId}' first.`,
+          message: `Cannot mark task ${displayId} as done: task is in 'backlog'. Run 'dirban ready ${displayId}' first.`,
           currentColumn: "backlog",
           expectedColumn: focusColName,
           id: trimmedId,
-          suggestion: `dirban plan promote ${displayId}`,
+          suggestion: `dirban ready ${displayId}`,
         })
       }
 

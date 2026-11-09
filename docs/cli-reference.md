@@ -6,7 +6,16 @@ This document provides a comprehensive command reference for the **Dirban (`dirb
 
 ## 1. User CLI Reference (`dirban`)
 
-The `dirban` command provides deterministic, scriptable task and board operations.
+The `dirban` command provides deterministic, scriptable task and board operations driven by a cohesive 5-verb lifecycle:
+
+```mermaid
+flowchart LR
+    Idea(["Idea / Request"]) -->|dirban new| Backlog[("backlog/")]
+    Backlog -->|dirban ready| Todo["01-todo/"]
+    Todo -->|dirban start| Doing["02-doing/"]
+    Doing -->|dirban done| Done["03-done/"]
+    Done -->|dirban archive| Archive[("archive/")]
+```
 
 ### Synopsis
 
@@ -256,34 +265,39 @@ dirban archive 26-001
 dirban archive all
 ```
 
+#### `ready <id...> [options]`
+Moves unblocked task(s) from `backlog` into the active queue (`01-todo` or configured first active column). Completes the natural 5-verb lifecycle: `new` -> `ready` -> `start` -> `done` -> `archive`.
+
+```bash
+# Ready a single task by ID or short numeric suffix
+dirban ready 26-004
+dirban ready 004
+
+# Ready multiple tasks at once
+dirban ready 004 005 006
+
+# Ready all unblocked tasks currently in backlog
+dirban ready all
+
+# Ready to a specific target column
+dirban ready 004 --to=01-todo
+```
+
 #### `plan [options]`
-Displays backlog planning and triage view. Partitions unstarted tasks into **Ready to Promote** vs. **Blocked / In Limbo** based on dependency resolution against done columns and `archive/`.
+Displays backlog planning and triage view. Partitions unstarted tasks into **Ready to Schedule** vs. **Blocked / In Limbo** based on dependency resolution against done columns and `archive/`.
 
 ```bash
 # Formatted static terminal view
 dirban plan
 
-# Agent scriptable flag: list only unblocked tasks ready for scheduling
-dirban plan --ready
+# Agent scriptable flag: list only unblocked tasks ready for scheduling (alias: --no-blocked)
+dirban plan --unblocked
+dirban plan --no-blocked
 
 # Agent scriptable flag: list only blocked tasks and blocking sources
 dirban plan --blocked
 
-# Promote an unblocked task into the active workflow (defaults to config.columns[0])
-dirban plan --promote=26-004
-
-# Batch promote multiple tasks (comma-separated or positional)
-dirban plan --promote=26-004,26-005,26-006
-dirban plan promote 26-004 26-005 26-006
-
-# Promote all unblocked/ready tasks at once
-dirban plan --promote=all
-
-# Promote to a specific target column
-dirban plan --promote=26-004 --to=01-todo
-dirban plan promote 26-004 26-005 --to=01-todo
-
-# Launch interactive terminal planner (Space to toggle select, 'p' to promote batch)
+# Launch interactive terminal planner (Space to toggle select)
 dirban plan --interactive
 dirban plan -i
 ```

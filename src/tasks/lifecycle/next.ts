@@ -42,7 +42,7 @@ export const resolveNextTask = (
     return err({
       kind: "QUEUE_EMPTY",
       sourceColumn: todoColName,
-      message: `No scheduled tasks remain in ${todoColName}. Run "dirban plan" to promote unblocked tasks from backlog.`,
+      message: `No scheduled tasks remain in ${todoColName}. Run "dirban ready <id>" to ready unblocked tasks from backlog.`,
     })
   }
 

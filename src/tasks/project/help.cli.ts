@@ -15,6 +15,7 @@ ${pc.bold("COMMANDS (Filesystem / Core):")}
   board                 Display kanban board (Interactive TUI by default in TTY, or static table)
   next [options]        Show next recommended task from todo queue (supports --raw)
   current [id]          Show active task (alias: focus). Detects git branch/worktree or 02-doing
+  ready <id...>         Move unblocked backlog task(s) to todo queue
   new <title>           Create a new task with auto-assigned YY-001 ID (alias: create)
   next-id               Print the next available task ID for the current year
   priorities            List available task priority levels and highlight the default
@@ -23,7 +24,7 @@ ${pc.bold("COMMANDS (Filesystem / Core):")}
   check <id> <index>    Toggle acceptance criteria checkbox item (1-based index)
   set <id> [options]    Mutate task frontmatter (priority, assignee, owner, tags)
   archive [<id>|all]    Archive completed tasks directly to archive/
-  plan [options]        View backlog triage and planning (options: --ready, --blocked, --promote=<ids|all>, -i)
+  plan [options]        View backlog triage and planning (options: --unblocked, --blocked, -i)
   block <id> <reasons>  Record blocker reasons / task dependencies and demote to backlog
   unblock <id> [reason] Remove a resolved blocker from a task
   help                  Show this help message
@@ -54,11 +55,9 @@ ${pc.bold("BOARD OPTIONS:")}
   --sort=<mode>         Sort mode: priority (default), recency, id
 
 ${pc.bold("PLAN OPTIONS:")}
-  --ready               List only unblocked backlog tasks ready to be scheduled
-  --blocked             List only currently blocked backlog tasks and blocking sources
-  --promote=<ids|all>   Promote unblocked backlog tasks (single ID, comma-separated, or 'all')
-  --to=<column>         Target column for promotion (defaults to first active column)
-  --interactive, -i     Launch interactive terminal planner to triage, multi-select, and promote tasks
+  -u, --unblocked       List only unblocked backlog tasks ready to be scheduled (alias: --no-blocked)
+  -b, --blocked         List only currently blocked backlog tasks and blocking sources
+  -i, --interactive     Launch interactive terminal planner to triage tasks
 
 ${pc.bold("SET OPTIONS:")}
   --priority=<p0..p3>   Update task priority
