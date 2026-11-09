@@ -1,4 +1,6 @@
 import { parseArgs } from "node:util"
+import type { Result } from "neverthrow"
+import type { DirbanConfig } from "../../config/types.ts"
 
 export interface CliFlags {
   readonly help?: boolean
@@ -69,11 +71,17 @@ export const CLI_PARSE_OPTIONS: NonNullable<ParseArgsConfig["options"]> = {
 export interface CliContext {
   readonly flags: CliFlags
   readonly positionals: readonly string[]
-  readonly config: import("../../config/types.ts").DirbanConfig
+  readonly config: DirbanConfig
   readonly cwd: string
 }
 
+export interface CommandValidationError {
+  readonly message: string
+}
+
 export type CommandHandler = (ctx: CliContext) => Promise<number> | number
+
+export type CommandParser<T> = (ctx: CliContext) => Result<T, CommandValidationError>
 
 export interface CommandOption {
   readonly flag: string
@@ -88,5 +96,6 @@ export interface CommandDefinition {
   readonly options?: readonly CommandOption[]
   readonly examples?: readonly string[]
   readonly requiresTasksDir?: boolean
+  readonly parse?: (ctx: CliContext) => Result<unknown, CommandValidationError>
   readonly execute: CommandHandler
 }

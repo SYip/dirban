@@ -133,7 +133,7 @@ export const dispatchCommand = async (
 ): Promise<number> => {
   // Support 'worktree add' compound command as an alias to 'start'
   if (commandName === "worktree" && ctx.positionals[1] === "add") {
-    return handleStart(ctx)
+    return dispatchCommand("start", ctx)
   }
 
   // Handle 'dirban help <command>' or 'dirban help'
@@ -175,6 +175,15 @@ export const dispatchCommand = async (
   if (validationRes.isErr()) {
     console.error(pc.red(`Configuration Error: ${validationRes.error.message}`))
     return 1
+  }
+
+  // Pre-execution Command-level Parsing & Validation Pipeline
+  if (cmdDef.parse != null) {
+    const parseRes = cmdDef.parse(ctx)
+    if (parseRes.isErr()) {
+      console.error(pc.red(`Error: ${parseRes.error.message}`))
+      return 1
+    }
   }
 
   return cmdDef.execute(ctx)

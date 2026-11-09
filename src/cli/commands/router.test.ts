@@ -273,4 +273,67 @@ describe("CLI Router and Modular Command Handlers", () => {
       process.stdout.write = origWrite
     }
   })
+
+  it("Vector 9: Pre-execution Command Parser rejects conflicting and invalid parameters", async () => {
+    let errOutput = ""
+    const origErr = console.error
+    console.error = (...args: unknown[]) => {
+      errOutput += args.join(" ") + "\n"
+    }
+
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-router-validation-"))
+    try {
+      initializeBoard(MOCK_CONFIG, tempDir)
+
+      // 1. dirban done with conflicting --merge and --no-merge
+      const doneConflictCtx: CliContext = {
+        flags: { merge: true, "no-merge": true },
+        positionals: ["done", "26-001"],
+        config: MOCK_CONFIG,
+        cwd: tempDir,
+      }
+      const doneExit = await dispatchCommand("done", doneConflictCtx)
+      expect(doneExit).toBe(1)
+      expect(errOutput).toContain("Error: Cannot specify both --merge and --no-merge.")
+
+      // 2. dirban start with conflicting --worktree and --current
+      errOutput = ""
+      const startConflictCtx: CliContext = {
+        flags: { worktree: true, current: true },
+        positionals: ["start", "26-001"],
+        config: MOCK_CONFIG,
+        cwd: tempDir,
+      }
+      const startExit = await dispatchCommand("start", startConflictCtx)
+      expect(startExit).toBe(1)
+      expect(errOutput).toContain("Error: Cannot specify both --worktree and --current / --no-branch.")
+
+      // 3. dirban start missing task ID
+      errOutput = ""
+      const startMissingIdCtx: CliContext = {
+        flags: {},
+        positionals: ["start"],
+        config: MOCK_CONFIG,
+        cwd: tempDir,
+      }
+      const startMissingExit = await dispatchCommand("start", startMissingIdCtx)
+      expect(startMissingExit).toBe(1)
+      expect(errOutput).toContain("Error: Missing task ID. Usage: dirban start <id>")
+
+      // 4. dirban new missing task title
+      errOutput = ""
+      const newMissingTitleCtx: CliContext = {
+        flags: {},
+        positionals: ["new"],
+        config: MOCK_CONFIG,
+        cwd: tempDir,
+      }
+      const newMissingExit = await dispatchCommand("new", newMissingTitleCtx)
+      expect(newMissingExit).toBe(1)
+      expect(errOutput).toContain("Error: Missing task title. Usage: dirban new")
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+      console.error = origErr
+    }
+  })
 })
