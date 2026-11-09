@@ -346,3 +346,24 @@ export const formatNextTaskView = (
 
   return lines.join("\n")
 }
+
+/**
+ * Emits an actionable tip/suggestion to stderr with standard dim indentation.
+ */
+export const logTip = (tip: string): void => {
+  console.error(pc.dim(`  Tip: ${tip}`))
+}
+
+/**
+ * Emits a warning or notice to stderr with standard yellow styling.
+ */
+export const logWarning = (message: string): void => {
+  console.error(pc.yellow(message))
+}
+
+/**
+ * Emits a hard error to stderr with standard red styling and optional prefix.
+ */
+export const logError = (message: string, prefix = "Error"): void => {
+  console.error(pc.red(`${prefix}: ${message}`))
+}

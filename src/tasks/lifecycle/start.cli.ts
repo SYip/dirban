@@ -3,11 +3,14 @@ import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
 import {
   formatTerminalLink,
+  logError,
+  logTip,
+  logWarning,
   toRelativePath,
 } from "../../cli/formatters.ts"
 import type { LifecycleStrategyType } from "../../workspace/types.ts"
 import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
-import { startTask } from "./start.ts"
+import { startTask, type StartTaskError } from "./start.ts"
 
 export interface StartCommandParams {
   readonly taskId: string
@@ -55,17 +58,34 @@ export const parseStart: CommandParser<StartCommandParams> = (ctx) => {
   })
 }
 
+export const printStartError = (err: StartTaskError): void => {
+  switch (err.kind) {
+    case "INVALID_COLUMN_TRANSITION":
+      logWarning(`Cannot start task: ${err.message}`)
+      if (err.suggestion != null) {
+        logTip(err.suggestion)
+      }
+      break
+    case "ALREADY_STARTED":
+      logWarning(err.message)
+      break
+    default:
+      logError(err.message, "Start")
+      break
+  }
+}
+
 export const handleStart: CommandHandler = (ctx) => {
   const parseRes = parseStart(ctx)
   if (parseRes.isErr()) {
-    console.error(pc.red(`Error: ${parseRes.error.message}`))
+    logError(parseRes.error.message)
     return 1
   }
   const params = parseRes.value
 
   const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
-    console.error(pc.red(`Board Error: ${boardRes.error.message}`))
+    logError(boardRes.error.message, "Board")
     return 1
   }
 
@@ -75,7 +95,7 @@ export const handleStart: CommandHandler = (ctx) => {
     cwd: ctx.cwd,
   })
   if (startRes.isErr()) {
-    console.error(pc.red(`Start Error: ${startRes.error.message}`))
+    printStartError(startRes.error)
     return 1
   }
 

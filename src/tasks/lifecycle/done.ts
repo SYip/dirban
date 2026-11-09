@@ -1,8 +1,8 @@
 import { ok, err, type Result } from "neverthrow"
 import type { Board, BoardTask } from "../../board/types.ts"
-import { findTaskExact } from "../../board/discovery.ts"
+import { findTaskByIdOrName, findTaskExact } from "../../board/discovery.ts"
 import type { DirbanConfig } from "../../config/types.ts"
-import { resolveFocusColumn, resolveNextColumn } from "../../config/config.ts"
+import { resolveFocusColumn, resolveNextColumn, resolvePreviousColumn } from "../../config/config.ts"
 import { moveTask } from "../mutation/move.ts"
 import { archiveTasks } from "../mutation/archive.ts"
 import { resolveCurrentTask } from "./current.ts"
@@ -28,6 +28,15 @@ export interface DoneTaskSuccess {
 export type DoneTaskError =
   | { readonly kind: "NO_ACTIVE_TASK"; readonly message: string }
   | { readonly kind: "TASK_NOT_FOUND"; readonly id: string; readonly message: string }
+  | {
+      readonly kind: "INVALID_COLUMN_TRANSITION"
+      readonly message: string
+      readonly currentColumn: string
+      readonly expectedColumn: string
+      readonly id: string
+      readonly suggestion?: string
+    }
+  | { readonly kind: "ALREADY_COMPLETED"; readonly message: string }
   | { readonly kind: "MOVE_ERROR"; readonly message: string }
   | { readonly kind: "GIT_ERROR"; readonly message: string }
 
@@ -56,19 +65,68 @@ export const doneTask = (
 ): Result<DoneTaskSuccess, DoneTaskError> => {
   const cwd = options?.cwd ?? process.cwd()
   const vcs = options?.vcsProvider ?? getVcsProvider(cwd)
+  const focusColName = resolveFocusColumn(config)
 
   // 1. Resolve task
   let taskToDone: BoardTask
   if (taskId != null && taskId.trim() !== "") {
-    const found = findTaskExact(board, taskId.trim())
+    const trimmedId = taskId.trim()
+    const found = findTaskByIdOrName(board, trimmedId) ?? findTaskExact(board, trimmedId)
     if (found == null) {
       return err({
         kind: "TASK_NOT_FOUND",
-        id: taskId.trim(),
-        message: `Task not found: ${taskId.trim()}`,
+        id: trimmedId,
+        message: `Task not found: ${trimmedId}`,
       })
     }
     taskToDone = found
+
+    // Strict workflow guard: when board has columns and a focus column,
+    // explicit task must be in the focus column to be marked done.
+    if (focusColName != null && taskToDone.column !== focusColName) {
+      const displayId = taskToDone.document.id ?? taskToDone.filename
+      const isCompleted =
+        taskToDone.column === "archive" ||
+        (config.columns.length > 0 && taskToDone.column === config.columns[config.columns.length - 1])
+
+      if (isCompleted) {
+        return err({
+          kind: "ALREADY_COMPLETED",
+          message: `Task ${displayId} is already completed in '${taskToDone.column}'.`,
+        })
+      }
+
+      if (taskToDone.column === "backlog") {
+        return err({
+          kind: "INVALID_COLUMN_TRANSITION",
+          message: `Cannot mark task ${displayId} as done: task is in 'backlog'. Run 'dirban plan promote ${displayId}' first.`,
+          currentColumn: "backlog",
+          expectedColumn: focusColName,
+          id: trimmedId,
+          suggestion: `dirban plan promote ${displayId}`,
+        })
+      }
+
+      const preFocusCol = resolvePreviousColumn(config, focusColName) ?? config.columns[0]
+      if (taskToDone.column === preFocusCol) {
+        return err({
+          kind: "INVALID_COLUMN_TRANSITION",
+          message: `Cannot mark task ${displayId} as done: task is in '${taskToDone.column}'. Run 'dirban start ${displayId}' first.`,
+          currentColumn: taskToDone.column,
+          expectedColumn: focusColName,
+          id: trimmedId,
+          suggestion: `dirban start ${displayId}`,
+        })
+      }
+
+      return err({
+        kind: "INVALID_COLUMN_TRANSITION",
+        message: `Cannot mark task ${displayId} as done: task is in '${taskToDone.column}' (expected '${focusColName}').`,
+        currentColumn: taskToDone.column,
+        expectedColumn: focusColName,
+        id: trimmedId,
+      })
+    }
   } else {
     const currentResult = resolveCurrentTask(board, config, undefined, cwd, vcs)
     if (currentResult.isErr()) {
@@ -85,7 +143,6 @@ export const doneTask = (
 
   // 3. Transition completed task file:
   // If no columns are configured, transition directly to flat archive
-  const focusColName = resolveFocusColumn(config)
   let updatedTask: BoardTask = taskToDone
 
   if (focusColName == null) {

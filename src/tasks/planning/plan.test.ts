@@ -334,6 +334,18 @@ relationships:
       expect(batchAmbiguousRes.promoted.length).toBe(0)
       expect(batchAmbiguousRes.failed.length).toBe(1)
       expect(batchAmbiguousRes.failed[0]?.error.kind).toBe("AMBIGUOUS_TASK_ID")
+
+      // 3. Informative error when task is already in another column (cross-board awareness)
+      const inTodoTask = createTask(boardWithAmbiguity, {
+        title: "Already in Todo",
+        column: "01-todo",
+      })._unsafeUnwrap()
+
+      const boardWithTodo = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const promoteAlreadyInTodo = promoteTasks(boardWithTodo, DEFAULT_CONFIG, [inTodoTask.id])
+      expect(promoteAlreadyInTodo.promoted.length).toBe(0)
+      expect(promoteAlreadyInTodo.failed.length).toBe(1)
+      expect(promoteAlreadyInTodo.failed[0]?.error.message).toContain("already in '01-todo'")
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }

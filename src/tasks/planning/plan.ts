@@ -1,7 +1,7 @@
 import { err, ok, type Result } from "neverthrow"
 import type { Board, BoardTask } from "../../board/types.ts"
 import { evaluateTaskBlockers, type TaskBlockerEvaluation } from "../../board/dependencies.ts"
-import { findTaskByQuery } from "../../board/discovery.ts"
+import { findTaskByIdOrName, findTaskByQuery } from "../../board/discovery.ts"
 import { moveTask } from "../mutation/move.ts"
 import type { OperationError } from "../types.ts"
 import type { DirbanConfig } from "../../config/types.ts"
@@ -22,10 +22,12 @@ export interface PartitionedPlan {
 /**
  * Resolves a task ID from the backlog tasks by exact match or short numeric suffix.
  * Returns AMBIGUOUS_TASK_ID if multiple backlog tasks match the short ID.
+ * If not found in backlog, inspects the wider board to return an informative error.
  */
 export const resolveBacklogTaskId = (
   backlogTasks: readonly BoardTask[],
   query: string,
+  board?: Board,
 ): Result<BoardTask, OperationError> => {
   const matchResult = findTaskByQuery(backlogTasks, query)
   if (matchResult.kind === "FOUND") {
@@ -42,6 +44,18 @@ export const resolveBacklogTaskId = (
       id: query,
       matches: matchedIds,
     })
+  }
+
+  // Cross-board awareness: check if task exists elsewhere on the board
+  if (board != null) {
+    const elsewhere = findTaskByIdOrName(board, query)
+    if (elsewhere != null) {
+      const displayId = elsewhere.document.id ?? elsewhere.filename
+      return err({
+        kind: "INVALID_MUTATION",
+        message: `Cannot promote task ${displayId}: task is already in '${elsewhere.column}'.`,
+      })
+    }
   }
 
   return err({
@@ -132,7 +146,7 @@ export const promoteTasks = (
   const validationErrors: { taskId: string; error: OperationError }[] = []
 
   for (const query of trimmedIds) {
-    const resolveRes = resolveBacklogTaskId(backlogTasks, query)
+    const resolveRes = resolveBacklogTaskId(backlogTasks, query, board)
     if (resolveRes.isErr()) {
       validationErrors.push({ taskId: query, error: resolveRes.error })
       continue

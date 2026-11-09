@@ -227,6 +227,7 @@ export const isTaskNumericSuffixMatch = (
 
 export interface TaskQueryOptions {
   readonly enableFuzzy?: boolean
+  readonly column?: string | readonly string[]
 }
 
 /**
@@ -242,8 +243,14 @@ export const findTaskByQuery = (
   query: string,
   options?: TaskQueryOptions,
 ): LookupMatchResult => {
+  const scopedTasks = options?.column != null
+    ? Array.isArray(options.column)
+      ? tasks.filter((t) => (options.column as readonly string[]).includes(t.column))
+      : tasks.filter((t) => t.column === options.column)
+    : tasks
+
   // Tier 1: Exact Match
-  const exact = tasks.find((t) => isTaskExactMatch(t, query))
+  const exact = scopedTasks.find((t) => isTaskExactMatch(t, query))
   if (exact != null) {
     return { kind: "FOUND", task: exact }
   }
@@ -252,7 +259,7 @@ export const findTaskByQuery = (
   const parsedNum = parseInt(query, 10)
   const numericQuery = !Number.isNaN(parsedNum) ? parsedNum : null
 
-  const suffixMatches = tasks.filter((t) => isTaskNumericSuffixMatch(t, query, numericQuery))
+  const suffixMatches = scopedTasks.filter((t) => isTaskNumericSuffixMatch(t, query, numericQuery))
   if (suffixMatches.length === 1 && suffixMatches[0] != null) {
     return { kind: "FOUND", task: suffixMatches[0] }
   }
@@ -263,7 +270,7 @@ export const findTaskByQuery = (
   // Tier 3: Optional Fuzzy Match (for read-only operations like view)
   if (options?.enableFuzzy) {
     const normalizedQuery = query.toLowerCase()
-    const fuzzyMatches = tasks.filter((t) => {
+    const fuzzyMatches = scopedTasks.filter((t) => {
       const filename = t.filename.toLowerCase()
       const title = (t.document.title ?? "").toLowerCase()
       return filename.includes(normalizedQuery) || title.includes(normalizedQuery)
