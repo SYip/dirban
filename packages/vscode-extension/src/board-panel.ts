@@ -11,6 +11,7 @@ import { promoteTasks } from "@dirban/core/tasks/planning/plan.ts"
 import { startTask } from "@dirban/core/tasks/lifecycle/start.ts"
 import { doneTask } from "@dirban/core/tasks/lifecycle/done.ts"
 import { archiveTasks } from "@dirban/core/tasks/mutation/archive.ts"
+import { resolveCurrentTask } from "@dirban/core/tasks/lifecycle/current.ts"
 import type {
   ExtensionMessageToWebview,
   WebviewBoardState,
@@ -106,9 +107,20 @@ export class DirbanBoardWebviewPanel {
     const preFocusCol = focusCol ? (resolvePreviousColumn(config, focusCol) ?? config.columns[0]) : undefined
     const postFocusCol = focusCol ? resolveNextColumn(config, focusCol) : undefined
 
+    const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd()
+    const currentRes = resolveCurrentTask(board, config, undefined, root)
+    const currentTaskId = currentRes.isOk()
+      ? (currentRes.value.task.document.id ?? currentRes.value.task.filename)
+      : undefined
+
+    const doingCol = focusCol ? board.columns.find((c) => c.name.toLowerCase() === focusCol.toLowerCase()) : undefined
+    const activeTasksInDoingCount = doingCol ? doingCol.tasks.length : 0
+
     const state: WebviewBoardState = {
       workspaceRoot: board.rootDir,
       columns,
+      currentTaskId,
+      activeTasksInDoingCount,
       config: {
         focusColumn: focusCol,
         preFocusColumn: preFocusCol,

@@ -10,6 +10,8 @@ export interface WebviewColumn {
 export interface WebviewBoardState {
   readonly workspaceRoot: string
   readonly columns: readonly WebviewColumn[]
+  readonly currentTaskId?: string
+  readonly activeTasksInDoingCount?: number
   readonly config?: {
     readonly focusColumn?: string
     readonly preFocusColumn?: string
