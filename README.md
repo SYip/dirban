@@ -282,6 +282,7 @@ bun run build
 
 ## Documentation
 
+- **[Trunk-Based Development & Git Workflow](docs/concepts/git-workflow.md)**: Git lifecycle automation, trunk-based branching, and auto-merge strategies.
 - **[CLI & Developer Reference](docs/cli-reference.md)**: Full command manual, TUI keyboard shortcuts, flags, and contributor CLI workflows.
 - **[Why Dirban: Comparative Positioning & Philosophy](docs/concepts/why-dirban.md)**: Why Dirban exists, comparison matrix (Linear, Jira, Obsidian Kanban, Bash), and design trade-offs.
 - **[Full Technical Specification](spec.md)**: Engine invariants, state transition rules, directory conventions, and OKF schema integration.

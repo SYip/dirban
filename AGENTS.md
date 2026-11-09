@@ -9,7 +9,10 @@
 - **Explicit Pinned Dependencies**: All tools, linters, compilers, and bundlers must be explicitly declared and pinned in `package.json` (`dependencies` or `devDependencies`) with a committed lockfile (`bun.lock`).
 - **Approved Execution**: Use `bun run <script>`, `bun run <bin>`, or `./node_modules/.bin/<bin>`.
 
-## 3. Standards & Architecture References
+## 3. Git & Branching Axiom
+- **Trunk-Based Development**: The single source of truth is `main`. All work uses short-lived task branches (`task/<id>-<slug>`) originating from `main` and integrating directly back into `main`. Long-lived staging/release branches are forbidden. See [docs/concepts/git-workflow.md](file:///docs/concepts/git-workflow.md).
+
+## 4. Standards & Architecture References
 - **UI Iconography Standards**: [.agents/rules/ui-icons.md](file:///.agents/rules/ui-icons.md)
 - **Package Management Rule**: [.agents/rules/package-management.md](file:///.agents/rules/package-management.md)
 - **TypeScript Standards**: [.agents/rules/typescript.md](file:///.agents/rules/typescript.md)
