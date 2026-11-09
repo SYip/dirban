@@ -1,6 +1,8 @@
 import * as vscode from "vscode"
 import * as path from "node:path"
 import * as fs from "node:fs"
+import { DEFAULT_CONFIG } from "@dirban/core/config/config.ts"
+import { discoverBoard } from "@dirban/core/board/discovery.ts"
 
 class DirbanWebviewViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "dirban.kanbanView"
@@ -57,6 +59,13 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("dirban.openBoard", () => {
+      const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd()
+      const boardRes = discoverBoard(DEFAULT_CONFIG, workspaceFolder)
+      if (boardRes.isOk()) {
+        vscode.window.showInformationMessage(
+          `Dirban: loaded ${boardRes.value.columns.length} columns`,
+        )
+      }
       vscode.commands.executeCommand("dirban.kanbanView.focus")
     })
   )

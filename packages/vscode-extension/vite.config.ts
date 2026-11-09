@@ -17,6 +17,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": resolve(__dirname, "src/webview"),
+      "@dirban/core": resolve(__dirname, "../../src"),
     },
   },
   build: {

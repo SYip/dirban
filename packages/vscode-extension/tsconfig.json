@@ -13,9 +13,11 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/webview/*"]
+      "@/*": ["src/webview/*"],
+      "@dirban/core/*": ["../../src/*"]
     }
   },
   "include": [
