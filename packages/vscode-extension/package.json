@@ -31,9 +31,8 @@
     "views": {
       "dirban-view-container": [
         {
-          "type": "webview",
-          "id": "dirban.kanbanView",
-          "name": "Task Board"
+          "id": "dirban.treeView",
+          "name": "Dirban Board"
         }
       ]
     },
@@ -41,8 +40,60 @@
       {
         "command": "dirban.openBoard",
         "title": "Dirban: Open Kanban Board"
+      },
+      {
+        "command": "dirban.refreshBoard",
+        "title": "Dirban: Refresh Board"
+      },
+      {
+        "command": "dirban.createTask",
+        "title": "Dirban: Create Task"
+      },
+      {
+        "command": "dirban.focusCurrentTask",
+        "title": "Dirban: Focus Current Task"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Dirban",
+      "properties": {
+        "dirban.tasksDir": {
+          "type": "string",
+          "default": "docs/tasks",
+          "description": "Directory where tasks and columns are stored."
+        },
+        "dirban.columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "01-todo",
+            "02-doing",
+            "03-done"
+          ],
+          "description": "Ordered active flow columns on the Kanban board."
+        },
+        "dirban.priorities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "p0",
+            "p1",
+            "p2",
+            "p3"
+          ],
+          "description": "Allowed priority levels in descending order of urgency."
+        },
+        "dirban.defaultPriority": {
+          "type": "string",
+          "default": "p2",
+          "description": "Default priority assigned when creating new tasks."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "bun run build",
@@ -57,11 +108,14 @@
   },
   "dependencies": {
     "@vscode/webview-ui-toolkit": "^1.4.0",
-    "vue": "^3.5.0"
+    "@vueuse/core": "^12.8.2",
+    "vue": "^3.5.0",
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.0",
     "@types/vscode": "^1.90.0",
+    "@types/vuedraggable": "^2.24.0",
     "@vitejs/plugin-vue": "^5.2.0",
     "@vscode/vsce": "^3.2.1",
     "concurrently": "^10.0.7",
