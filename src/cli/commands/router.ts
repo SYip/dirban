@@ -42,16 +42,22 @@ import {
 } from "../../tasks/mutation/set.cli.ts"
 import { boardCommand, handleBoard, handleView, viewCommand } from "./board.ts"
 import {
-  handleHelp,
-  handleInit,
   handleNextId,
-  handlePriorities,
-  helpCommand,
-  initCommand,
   nextIdCommand,
+} from "../../tasks/mutation/next-id.cli.ts"
+import {
+  handleHelp,
+  helpCommand,
   printHelp,
+} from "../../tasks/project/help.cli.ts"
+import {
+  handleInit,
+  initCommand,
+} from "../../tasks/project/init.cli.ts"
+import {
+  handlePriorities,
   prioritiesCommand,
-} from "./system.ts"
+} from "../../tasks/project/priorities.cli.ts"
 import {
   blockCommand,
   handleBlock,

@@ -1,8 +1,5 @@
 import pc from "picocolors"
-import { discoverBoard } from "../../board/discovery.ts"
-import { calculateNextTaskId } from "../../tasks/mutation/create.ts"
-import { initializeBoard } from "../../tasks/project/init.ts"
-import type { CommandDefinition, CommandHandler } from "./types.ts"
+import type { CommandDefinition, CommandHandler } from "../../cli/commands/types.ts"
 
 export const printHelp = (): void => {
   console.log(`
@@ -87,114 +84,6 @@ export const handleHelp: CommandHandler = () => {
   return 0
 }
 
-export const handleInit: CommandHandler = (ctx) => {
-  const configTarget = ctx.flags.config === "vscode" || ctx.flags.config === "dirban"
-    ? ctx.flags.config
-    : "auto"
-
-  const initRes = initializeBoard(ctx.config, ctx.cwd, { configTarget })
-  if (initRes.isErr()) {
-    console.error(pc.red(`Init Error: ${initRes.error.message}`))
-    return 1
-  }
-
-  console.log(
-    pc.bold(
-      pc.green(
-        `✔ Initialized Dirban board in ${pc.cyan(initRes.value.tasksDir)}:`,
-      ),
-    ),
-  )
-  for (const col of ctx.config.columns) {
-    console.log(`  ├── ${pc.yellow(col)}/`)
-  }
-  console.log(`  └── ${pc.gray("archive/")}`)
-
-  if (initRes.value.configFileCreated != null) {
-    console.log(
-      pc.green(
-        `\n✔ Created configuration in ${pc.cyan(initRes.value.configFileCreated)}`,
-      ),
-    )
-  } else if (initRes.value.configFileUpdated != null) {
-    console.log(
-      pc.green(
-        `\n✔ Added dirban settings to ${pc.cyan(initRes.value.configFileUpdated)}`,
-      ),
-    )
-  }
-
-  console.log(`\nRun "${pc.cyan("dirban board")}" to view your board.`)
-  return 0
-}
-
-export const handleNextId: CommandHandler = (ctx) => {
-  const boardRes = discoverBoard(ctx.config, ctx.cwd)
-  if (boardRes.isErr()) {
-    console.error(pc.red(`Board Error: ${boardRes.error.message}`))
-    return 1
-  }
-
-  const nextId = calculateNextTaskId(boardRes.value)
-  console.log(nextId)
-  return 0
-}
-
-export const handlePriorities: CommandHandler = (ctx) => {
-  const listFormatted = ctx.config.priorities
-    .map((p) =>
-      p === ctx.config.defaultPriority
-        ? `${pc.bold(pc.green(p))} ${pc.gray("(default)")}`
-        : pc.cyan(p)
-    )
-    .join(", ")
-
-  console.log(`${pc.bold("Available priorities:")} ${listFormatted}`)
-  return 0
-}
-
-export const initCommand: CommandDefinition = {
-  name: "init",
-  summary: "Initialize board directory structure and settings (.dirban.json or .vscode)",
-  usage: "dirban init [options]",
-  options: [
-    { flag: "--config=<vscode|dirban>", description: "Target configuration file format" },
-    { flag: "-y, --yes", description: "Accept all defaults non-interactively" },
-  ],
-  examples: [
-    "dirban init",
-    "dirban init --config=dirban",
-    "dirban init -y",
-  ],
-  requiresTasksDir: false,
-  execute: handleInit,
-}
-
-export const nextIdCommand: CommandDefinition = {
-  name: "next-id",
-  summary: "Print the next available task ID for the current year",
-  usage: "dirban next-id",
-  options: [],
-  examples: [
-    "dirban next-id",
-    "export ID=$(dirban next-id)",
-  ],
-  requiresTasksDir: true,
-  execute: handleNextId,
-}
-
-export const prioritiesCommand: CommandDefinition = {
-  name: "priorities",
-  summary: "List available task priority levels and highlight the default",
-  usage: "dirban priorities",
-  options: [],
-  examples: [
-    "dirban priorities",
-  ],
-  requiresTasksDir: false,
-  execute: handlePriorities,
-}
-
 export const helpCommand: CommandDefinition = {
   name: "help",
   aliases: ["--help", "-h"],
@@ -209,4 +98,3 @@ export const helpCommand: CommandDefinition = {
   requiresTasksDir: false,
   execute: handleHelp,
 }
-

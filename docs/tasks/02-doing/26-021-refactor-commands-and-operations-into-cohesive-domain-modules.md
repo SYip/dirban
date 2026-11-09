@@ -53,7 +53,7 @@ Domain modules adhere to a clean separation between pure domain operations and p
 - [x] **Phase 3: Task Execution Lifecycle Domain (`src/tasks/lifecycle/`)**
   - Relocate `start.ts`, `done.ts`, `next.ts`, `current.ts` and their dedicated unit tests (`start.test.ts`, `done.test.ts`, `next.test.ts`, `current.test.ts`) to `src/tasks/lifecycle/`.
   - Separate pure operations from CLI adapters (`start.cli.ts`, `done.cli.ts`, `next.cli.ts`, `current.cli.ts`, `path.cli.ts`).
-- [ ] **Phase 4: Project Scaffolding & Setup (`src/tasks/project/`)**
+- [x] **Phase 4: Project Scaffolding & Setup (`src/tasks/project/`)**
   - Relocate `init.ts`, `project.test.ts` to `src/tasks/project/`.
   - Separate pure operations from CLI adapters (`init.cli.ts`, `next-id.cli.ts`, `priorities.cli.ts`, `help.cli.ts`).
 - [ ] **Phase 5: Board Views & CLI Presentation Harness**
