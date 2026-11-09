@@ -2,12 +2,12 @@
 id: "26-011"
 title: "Scaffold VS Code Extension Project Structure and Build Pipeline"
 type: "task"
-status: "backlog"
+status: "doing"
 priority: "p2"
 owner: "developer"
-assigned_to: "unassigned"
+assigned_to: "agent"
 created_date: "2026-11-08"
-last_updated: "2026-11-08"
+last_updated: "2026-11-09"
 tags:
   - vscode
   - extension
@@ -57,13 +57,13 @@ Because the VS Code Extension Host executes in a Node.js runtime, the extension 
 
 ## Acceptance Criteria
 
-- [ ] Create `packages/vscode-extension/` directory structure with its own `package.json` and TypeScript configuration (`tsconfig.json`).
-- [ ] Install and configure required packages:
+- [x] Create `packages/vscode-extension/` directory structure with its own `package.json` and TypeScript configuration (`tsconfig.json`).
+- [x] Install and configure required packages:
   - Backend/Extension Host: `@types/vscode`, `esbuild`, `@vscode/vsce`.
   - Frontend/Webview: `vue`, `@vitejs/plugin-vue`, `vite`, `@vscode/webview-ui-toolkit`.
-- [ ] Configure manifest declarations for the VS Code extension runtime (`engines.vscode: "^1.90.0"`, entrypoint `dist/extension.js`).
-- [ ] Establish dual bundler pipeline (`esbuild` for extension host, Vite for Vue 3 webview) outputting `dist/extension.js` and `dist/webview/`.
-- [ ] Create `.vscode/launch.json` and `.vscode/tasks.json` enabling one-click `F5` debugging in the VS Code Extension Development Host.
-- [ ] Implement a minimal entrypoint `extension.ts` with a placeholder Vue 3 Webview panel verifying component rendering in the debug host.
-- [ ] Document build and run instructions in `packages/vscode-extension/README.md`.
-- [ ] Verify existing root test suite and typechecks continue passing (`bun test && bun run typecheck`).
+- [x] Configure manifest declarations for the VS Code extension runtime (`engines.vscode: "^1.90.0"`, entrypoint `dist/extension.js`).
+- [x] Establish dual bundler pipeline (`esbuild` for extension host, Vite for Vue 3 webview) outputting `dist/extension.js` and `dist/webview/`.
+- [x] Create `.vscode/launch.json` and `.vscode/tasks.json` enabling one-click `F5` debugging in the VS Code Extension Development Host.
+- [x] Implement a minimal entrypoint `extension.ts` with a placeholder Vue 3 Webview panel verifying component rendering in the debug host.
+- [x] Document build and run instructions in `packages/vscode-extension/README.md`.
+- [x] Verify existing root test suite and typechecks continue passing (`bun test && bun run typecheck`).
