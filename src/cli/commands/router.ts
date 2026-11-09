@@ -14,16 +14,24 @@ import {
 } from "./lifecycle.ts"
 import {
   archiveCommand,
-  checkCommand,
   handleArchive,
+} from "../../tasks/mutation/archive.cli.ts"
+import {
+  checkCommand,
   handleCheck,
-  handleMove,
+} from "../../tasks/mutation/check.cli.ts"
+import {
   handleNew,
-  handleSet,
-  moveCommand,
   newCommand,
+} from "../../tasks/mutation/create.cli.ts"
+import {
+  handleMove,
+  moveCommand,
+} from "../../tasks/mutation/move.cli.ts"
+import {
+  handleSet,
   setCommand,
-} from "./task-mutation.ts"
+} from "../../tasks/mutation/set.cli.ts"
 import { boardCommand, handleBoard, handleView, viewCommand } from "./board.ts"
 import {
   handleHelp,
@@ -41,11 +49,11 @@ import {
   handleBlock,
   handleUnblock,
   unblockCommand,
-} from "../../tasks/planning/block.ts"
+} from "../../tasks/planning/block.cli.ts"
 import {
   handlePlan,
   planCommand,
-} from "../../tasks/planning/plan.ts"
+} from "../../tasks/planning/plan.cli.ts"
 import { validateConfig } from "../../config/config.ts"
 
 export const ALL_COMMANDS: readonly CommandDefinition[] = Object.freeze([
