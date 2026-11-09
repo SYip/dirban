@@ -40,6 +40,7 @@ The catalyst for Dirban came directly from day-to-day experience running modern 
   The core philosophy shares roots with in-repo specification workflows like SpecKit, which kept implementation details versioned inside the project. However, as LLM capabilities have progressed, **generating exhaustive upfront specification documents before implementation has become unnecessary overhead**:
   1. *Specs become too long to review*: Generated design documents and multi-page specs are often bloated. It is exhausting and inefficient for human developers to read pages of prose to hunt down subtle architectural flaws or edge cases.
   2. *Code and tests are the clearest specification*: Code is unambiguous; natural language is not. Writing the implementation or concrete test cases and checking whether the actual behavior matches expectations provides far faster, clearer, and more reliable validation than parsing prose documents.
+  *(See the complete architectural decision record on [Outcome-Driven Acceptance Criteria Over Prescriptive Specifications](../decisions/2026-11-09-acceptance-criteria-over-prescriptive-specs.md).)*
 - **AI is Powerful, but Good Software is Iterated, Not Built in One Shot**:  
   If the goal is merely copying established software with static requirements, an AI agent might deliver in a single prompt. But when building something genuinely new—or when product requirements are still emerging—software cannot be built all at once; it must be iterated upon.
 - **The 5-to-30 Minute Autonomous Loop**:  
