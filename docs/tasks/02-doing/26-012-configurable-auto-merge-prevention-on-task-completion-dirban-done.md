@@ -2,7 +2,7 @@
 id: "26-012"
 title: "Configurable auto-merge prevention on task completion (dirban done)"
 type: "task"
-status: "backlog"
+status: "doing"
 priority: "p2"
 owner: "developer"
 assigned_to: "unassigned"
@@ -46,9 +46,9 @@ In PR-based team workflows, CI-gated environments, or code-review setups, develo
 
 ## Acceptance Criteria
 
-- [ ] Add `autoMerge?: boolean` to `DirbanConfig` schema in `src/config/types.ts` and default loading in `src/config/config.ts`.
-- [ ] Add `--no-merge` and `--merge` flag support to `CLI_PARSE_OPTIONS` and pass resolved preference into `doneTask`.
-- [ ] Update `doneTask` in `src/operations/done.ts` to respect `autoMerge` option, committing the card completion to the task branch without merging into `baseBranch` or removing the worktree.
-- [ ] Preserve existing auto-merge behavior when `autoMerge` is true / not explicitly disabled.
-- [ ] Add unit test vectors in `src/operations/operations.test.ts` verifying `autoMerge: false` skips Git merge while successfully transitioning the card to the configured completed column.
-- [ ] Verify test suite and typechecks pass (`bun test && bun run typecheck`).
+- [x] Add `autoMerge?: boolean` to `DirbanConfig` schema in `src/config/types.ts` and default loading in `src/config/config.ts`.
+- [x] Add `--no-merge` and `--merge` flag support to `CLI_PARSE_OPTIONS` and pass resolved preference into `doneTask`.
+- [x] Update `doneTask` in `src/operations/done.ts` to respect `autoMerge` option, committing the card completion to the task branch without merging into `baseBranch` or removing the worktree.
+- [x] Preserve existing auto-merge behavior when `autoMerge` is true / not explicitly disabled.
+- [x] Add unit test vectors in `src/operations/operations.test.ts` verifying `autoMerge: false` skips Git merge while successfully transitioning the card to the configured completed column.
+- [x] Verify test suite and typechecks pass (`bun test && bun run typecheck`).

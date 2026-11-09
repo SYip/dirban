@@ -105,7 +105,9 @@ export class GitWorktreeStrategy implements WorkspaceLifecycleStrategy {
     }
 
     const shouldSkipMerge =
-      options?.noMerge === true || ctx.config.autoMerge === false
+      options?.noMerge !== undefined
+        ? options.noMerge === true
+        : ctx.config.autoMerge === false
 
     if (shouldSkipMerge) {
       return ok({

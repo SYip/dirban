@@ -288,6 +288,19 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
       if (doneWithConfigRes.isOk()) {
         expect(doneWithConfigRes.value.gitSkipped).toBe(true)
       }
+
+      // 3. Explicit noMerge: false overrides autoMerge: false
+      const doneOverrideRes = strategy.onDone(
+        MOCK_TASK,
+        { ...ctx, config: { ...DEFAULT_CONFIG, autoMerge: false } },
+        { noMerge: false },
+      )
+      expect(doneOverrideRes.isOk()).toBe(true)
+      expect(mergeAttempted).toBe(true)
+      if (doneOverrideRes.isOk()) {
+        expect(doneOverrideRes.value.gitSkipped).toBe(false)
+        expect(doneOverrideRes.value.mergedBranch).toBe("task/26-001-sample-feature")
+      }
     })
   })
 
@@ -420,6 +433,19 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
       if (doneRes.isOk()) {
         expect(doneRes.value.gitSkipped).toBe(true)
         expect(doneRes.value.message).toContain("--no-merge")
+      }
+
+      // Explicit noMerge: false overrides autoMerge: false on worktree strategy
+      const doneOverrideRes = strategy.onDone(
+        MOCK_TASK,
+        { ...ctx, config: { ...DEFAULT_CONFIG, autoMerge: false } },
+        { noMerge: false },
+      )
+      expect(doneOverrideRes.isOk()).toBe(true)
+      expect(mergeAttempted).toBe(true)
+      if (doneOverrideRes.isOk()) {
+        expect(doneOverrideRes.value.gitSkipped).toBe(false)
+        expect(doneOverrideRes.value.mergedBranch).toBe("task/26-001-sample-feature")
       }
     })
   })
