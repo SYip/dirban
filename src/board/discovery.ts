@@ -178,90 +178,151 @@ export type LookupMatchResult =
   | { readonly kind: "NOT_FOUND" }
   | { readonly kind: "AMBIGUOUS"; readonly matches: readonly BoardTask[] }
 
+const TASK_SUFFIX_REGEX = /(?:^|[\.-])(\d{1,4})(?:\.md)?$/
+
 /**
- * Resolves a task by exact identifier:
- * - Exact task ID (e.g., "task.dirban.core.26-001" or "26-001")
- * - Exact filename (e.g., "26-001-fix-auth.md")
- * - Exact file stem without extension (e.g., "26-001-fix-auth")
- * - Exact relative or absolute file path
- *
- * Strictly used for mutating operations (move, check, set, archive) to avoid
- * unintended modifications.
+ * Checks if a task matches an exact identifier (ID, frontmatter ID, filename, or filepath).
  */
-export const findTaskExact = (
-  board: Board,
-  idOrPath: string,
-): BoardTask | null => {
-  const normalizedQuery = idOrPath.trim().toLowerCase()
+export const isTaskExactMatch = (task: BoardTask, query: string): boolean => {
+  const normalizedQuery = query.toLowerCase()
+  const taskId = (task.document.id ?? task.document.frontmatter.id ?? "").toLowerCase()
+  const filename = task.filename.toLowerCase()
+  const fileStem = filename.replace(/\.md$/, "")
+  const filePath = task.filePath.toLowerCase()
 
-  for (const col of board.columns) {
-    for (const task of col.tasks) {
-      const taskId = (task.document.id ?? task.document.frontmatter.id ?? "").toLowerCase()
-      const filename = task.filename.toLowerCase()
-      const fileStem = filename.replace(/\.md$/, "")
-      const filePath = task.filePath.toLowerCase()
-
-      if (
-        taskId === normalizedQuery ||
-        filename === normalizedQuery ||
-        fileStem === normalizedQuery ||
-        (taskId !== "" && taskId.endsWith(normalizedQuery)) ||
-        filePath.endsWith(normalizedQuery)
-      ) {
-        return task
-      }
-    }
-  }
-
-  return null
+  return (
+    taskId === normalizedQuery ||
+    filename === normalizedQuery ||
+    fileStem === normalizedQuery ||
+    filePath.endsWith(`/${normalizedQuery}`) ||
+    filePath.endsWith(`/${normalizedQuery}.md`)
+  )
 }
 
 /**
- * Resolves a task for read-only operations (e.g., `view`).
- * First checks for an exact match. If none found, performs a fuzzy search
- * across filenames and titles, detecting and reporting ambiguity if multiple match.
+ * Checks if a task matches a short numeric suffix (e.g. "001" or numeric 1).
  */
-export const findTaskWithFuzzy = (
-  board: Board,
+export const isTaskNumericSuffixMatch = (
+  task: BoardTask,
   query: string,
+  numericQuery: number | null,
+): boolean => {
+  const canonicalId = task.document.id ?? task.document.frontmatter.id ?? task.filename
+  const match = canonicalId.match(TASK_SUFFIX_REGEX)
+  if (match == null || match[1] == null) {
+    return false
+  }
+
+  const suffix = match[1]
+  if (suffix === query || suffix.endsWith(query)) {
+    return true
+  }
+
+  if (numericQuery != null && parseInt(suffix, 10) === numericQuery) {
+    return true
+  }
+
+  return false
+}
+
+export interface TaskQueryOptions {
+  readonly enableFuzzy?: boolean
+}
+
+/**
+ * Standardized multi-tier query resolution across a collection of tasks:
+ * - Tier 1: Exact canonical ID, frontmatter ID, filename stem, or relative path.
+ * - Tier 2: Numeric suffix match (e.g., "001" or "1").
+ * - Tier 3 (optional): Fuzzy match across filename and title.
+ *
+ * Query is assumed to be normalized / non-empty by boundary parsers.
+ */
+export const findTaskByQuery = (
+  tasks: readonly BoardTask[],
+  query: string,
+  options?: TaskQueryOptions,
 ): LookupMatchResult => {
-  const exact = findTaskExact(board, query)
+  // Tier 1: Exact Match
+  const exact = tasks.find((t) => isTaskExactMatch(t, query))
   if (exact != null) {
     return { kind: "FOUND", task: exact }
   }
 
-  const normalizedQuery = query.trim().toLowerCase()
-  if (normalizedQuery === "") {
-    return { kind: "NOT_FOUND" }
+  // Tier 2: Numeric Suffix Match
+  const parsedNum = parseInt(query, 10)
+  const numericQuery = !Number.isNaN(parsedNum) ? parsedNum : null
+
+  const suffixMatches = tasks.filter((t) => isTaskNumericSuffixMatch(t, query, numericQuery))
+  if (suffixMatches.length === 1 && suffixMatches[0] != null) {
+    return { kind: "FOUND", task: suffixMatches[0] }
+  }
+  if (suffixMatches.length > 1) {
+    return { kind: "AMBIGUOUS", matches: Object.freeze(suffixMatches) }
   }
 
-  const matches: BoardTask[] = []
-  for (const col of board.columns) {
-    for (const task of col.tasks) {
-      const filename = task.filename.toLowerCase()
-      const title = (task.document.title ?? "").toLowerCase()
+  // Tier 3: Optional Fuzzy Match (for read-only operations like view)
+  if (options?.enableFuzzy) {
+    const normalizedQuery = query.toLowerCase()
+    const fuzzyMatches = tasks.filter((t) => {
+      const filename = t.filename.toLowerCase()
+      const title = (t.document.title ?? "").toLowerCase()
+      return filename.includes(normalizedQuery) || title.includes(normalizedQuery)
+    })
 
-      if (filename.includes(normalizedQuery) || title.includes(normalizedQuery)) {
-        matches.push(task)
-      }
+    if (fuzzyMatches.length === 1 && fuzzyMatches[0] != null) {
+      return { kind: "FOUND", task: fuzzyMatches[0] }
     }
-  }
-
-  if (matches.length === 1 && matches[0] != null) {
-    return { kind: "FOUND", task: matches[0] }
-  }
-
-  if (matches.length > 1) {
-    return { kind: "AMBIGUOUS", matches: Object.freeze(matches) }
+    if (fuzzyMatches.length > 1) {
+      return { kind: "AMBIGUOUS", matches: Object.freeze(fuzzyMatches) }
+    }
   }
 
   return { kind: "NOT_FOUND" }
 }
 
 /**
- * Backward-compatible exact task lookup. Alias to findTaskExact.
+ * Flattens all tasks across board columns into a single array.
+ */
+export const getAllBoardTasks = (board: Board): readonly BoardTask[] =>
+  board.columns.flatMap((col) => col.tasks)
+
+/**
+ * Resolves a task by exact identifier:
+ * - Exact task ID (e.g., "task.dirban.core.26-001" or "26-001")
+ * - Exact filename (e.g., "26-001-fix-auth.md")
+ * - Exact file stem without extension (e.g., "26-001-fix-auth")
+ * - Exact relative or absolute file path
+ */
+export const findTaskExact = (
+  board: Board,
+  idOrPath: string,
+): BoardTask | null => {
+  const allTasks = getAllBoardTasks(board)
+  const match = allTasks.find((t) => isTaskExactMatch(t, idOrPath))
+  return match ?? null
+}
+
+/**
+ * Resolves a task for read-only operations (e.g., `view`).
+ * Uses findTaskByQuery with fuzzy matching enabled across the entire board.
+ */
+export const findTaskWithFuzzy = (
+  board: Board,
+  query: string,
+): LookupMatchResult => {
+  const allTasks = getAllBoardTasks(board)
+  return findTaskByQuery(allTasks, query, { enableFuzzy: true })
+}
+
+/**
+ * Backward-compatible exact task lookup. Supports Tier 1 and Tier 2 resolution
+ * across all board columns.
  */
 export const findTaskByIdOrName = (
   board: Board,
   idOrPath: string,
-): BoardTask | null => findTaskExact(board, idOrPath)
+): BoardTask | null => {
+  const allTasks = getAllBoardTasks(board)
+  const res = findTaskByQuery(allTasks, idOrPath)
+  return res.kind === "FOUND" ? res.task : null
+}

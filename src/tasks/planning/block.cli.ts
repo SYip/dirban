@@ -1,17 +1,32 @@
 import { discoverBoard } from "../../board/discovery.ts"
-import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
+import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
+import { err, ok } from "neverthrow"
 import pc from "picocolors"
 import { blockTask, unblockTask } from "./block.ts"
 
-export const handleBlock: CommandHandler = (ctx) => {
-  const taskId = ctx.positionals[1]
-  const reasons = ctx.positionals.slice(2)
+export interface BlockCommandParams {
+  readonly taskId: string
+  readonly reasons: readonly string[]
+}
 
-  if (taskId == null || taskId.trim() === "" || reasons.length === 0) {
-    console.error(pc.red("Error: Task ID and at least one blocker reason required."))
-    console.error(pc.gray("Usage: dirban block <id-or-path> <reason...>"))
+export const parseBlock: CommandParser<BlockCommandParams> = (ctx) => {
+  const taskId = ctx.positionals[1]?.trim()
+  const reasons = ctx.positionals.slice(2).map((r) => r.trim()).filter((r) => r !== "")
+
+  if (taskId == null || taskId === "" || reasons.length === 0) {
+    return err({ message: "Task ID and at least one blocker reason required. Usage: dirban block <id-or-path> <reason...>" })
+  }
+
+  return ok({ taskId, reasons })
+}
+
+export const handleBlock: CommandHandler = (ctx) => {
+  const parseRes = parseBlock(ctx)
+  if (parseRes.isErr()) {
+    console.error(pc.red(`Error: ${parseRes.error.message}`))
     return 1
   }
+  const { taskId, reasons } = parseRes.value
 
   const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
@@ -48,18 +63,36 @@ export const blockCommand: CommandDefinition = {
     "dirban block 26-002 'Waiting on API key' 'PR #42 review'",
   ],
   requiresTasksDir: true,
+  parse: parseBlock,
   execute: handleBlock,
 }
 
-export const handleUnblock: CommandHandler = (ctx) => {
-  const taskId = ctx.positionals[1]
-  const reasonToClear = ctx.positionals[2]
+export interface UnblockCommandParams {
+  readonly taskId: string
+  readonly reason?: string
+}
 
-  if (taskId == null || taskId.trim() === "") {
-    console.error(pc.red("Error: Task ID required."))
-    console.error(pc.gray("Usage: dirban unblock <id-or-path> [reason]"))
+export const parseUnblock: CommandParser<UnblockCommandParams> = (ctx) => {
+  const taskId = ctx.positionals[1]?.trim()
+  const reason = ctx.positionals[2]?.trim()
+
+  if (taskId == null || taskId === "") {
+    return err({ message: "Task ID required. Usage: dirban unblock <id-or-path> [reason]" })
+  }
+
+  return ok({
+    taskId,
+    reason: reason !== "" ? reason : undefined,
+  })
+}
+
+export const handleUnblock: CommandHandler = (ctx) => {
+  const parseRes = parseUnblock(ctx)
+  if (parseRes.isErr()) {
+    console.error(pc.red(`Error: ${parseRes.error.message}`))
     return 1
   }
+  const { taskId, reason } = parseRes.value
 
   const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
@@ -67,7 +100,7 @@ export const handleUnblock: CommandHandler = (ctx) => {
     return 1
   }
 
-  const unblockRes = unblockTask(boardRes.value, taskId, reasonToClear)
+  const unblockRes = unblockTask(boardRes.value, taskId, reason)
   if (unblockRes.isErr()) {
     console.error(pc.red(`Unblock Error: ${unblockRes.error.message}`))
     return 1
@@ -100,5 +133,6 @@ export const unblockCommand: CommandDefinition = {
     "dirban unblock 26-002 'Waiting on API key'",
   ],
   requiresTasksDir: true,
+  parse: parseUnblock,
   execute: handleUnblock,
 }

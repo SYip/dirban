@@ -1,22 +1,37 @@
 import { discoverBoard } from "../../board/discovery.ts"
-import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
+import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
+import { err, ok } from "neverthrow"
 import pc from "picocolors"
 import { checkTaskItem } from "./check.ts"
 
-export const handleCheck: CommandHandler = (ctx) => {
-  const taskId = ctx.positionals[1]
-  const indexStr = ctx.positionals[2]
+export interface CheckCommandParams {
+  readonly taskId: string
+  readonly index: number
+}
 
-  if (taskId == null || indexStr == null) {
-    console.error(pc.red("Error: Usage: dirban check <id> <index>"))
-    return 1
+export const parseCheck: CommandParser<CheckCommandParams> = (ctx) => {
+  const taskId = ctx.positionals[1]?.trim()
+  const indexStr = ctx.positionals[2]?.trim()
+
+  if (taskId == null || taskId === "" || indexStr == null || indexStr === "") {
+    return err({ message: "Usage: dirban check <id> <index>" })
   }
 
   const index = parseInt(indexStr, 10)
-  if (isNaN(index)) {
-    console.error(pc.red("Error: Index must be a valid number"))
+  if (isNaN(index) || index < 1) {
+    return err({ message: "Index must be a positive number" })
+  }
+
+  return ok({ taskId, index })
+}
+
+export const handleCheck: CommandHandler = (ctx) => {
+  const parseRes = parseCheck(ctx)
+  if (parseRes.isErr()) {
+    console.error(pc.red(`Error: ${parseRes.error.message}`))
     return 1
   }
+  const { taskId, index } = parseRes.value
 
   const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
@@ -52,5 +67,6 @@ export const checkCommand: CommandDefinition = {
     "dirban check 26-001 2",
   ],
   requiresTasksDir: true,
+  parse: parseCheck,
   execute: handleCheck,
 }

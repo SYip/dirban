@@ -2,10 +2,10 @@
 id: "26-022"
 title: "Standardize unified task ID resolution and query parser across all commands"
 type: "task"
-status: "todo"
+status: "done"
 priority: "p2"
 owner: "developer"
-assigned_to: "unassigned"
+assigned_to: "developer"
 created_date: "2026-11-09"
 last_updated: "2026-11-09"
 tags:
@@ -43,14 +43,14 @@ This task unifies task resolution into a standardized, reusable lookup engine in
 
 ## Acceptance Criteria
 
-- [ ] Create a unified query resolution function `findTaskByQuery(tasks, query, options?)` in `src/board/discovery.ts` returning `Result<BoardTask, LookupError>`.
-- [ ] Support Tier 1 (exact ID/filename) and Tier 2 (numeric suffix like `001` or `1`), with explicit `AMBIGUOUS` error containing all matched candidates.
-- [ ] Move query sanitization and empty-string validation into command parsers (`parsePlan`, `parseStart`, `parseMove`, etc.), removing defensive empty checks from pure domain operations.
-- [ ] Refactor `resolveBacklogTaskId` in `src/tasks/planning/plan.ts` to delegate directly to `findTaskByQuery`.
-- [ ] Update other commands (`start`, `move`, `check`, `set`, `block`, `view`) to leverage the unified lookup so short task IDs work consistently everywhere.
-- [ ] Add unit test vectors verifying:
+- [x] Create a unified query resolution function `findTaskByQuery(tasks, query, options?)` in `src/board/discovery.ts` returning `Result<BoardTask, LookupError>`.
+- [x] Support Tier 1 (exact ID/filename) and Tier 2 (numeric suffix like `001` or `1`), with explicit `AMBIGUOUS` error containing all matched candidates.
+- [x] Move query sanitization and empty-string validation into command parsers (`parsePlan`, `parseStart`, `parseMove`, etc.), removing defensive empty checks from pure domain operations.
+- [x] Refactor `resolveBacklogTaskId` in `src/tasks/planning/plan.ts` to delegate directly to `findTaskByQuery`.
+- [x] Update other commands (`start`, `move`, `check`, `set`, `block`, `view`) to leverage the unified lookup so short task IDs work consistently everywhere.
+- [x] Add unit test vectors verifying:
   1. Exact ID resolution across board tasks.
   2. Short numeric suffix resolution (`001` -> `26-001`, `1` -> `26-001`).
   3. Ambiguity detection when multiple tasks share the same numeric suffix.
   4. Scope filtering (e.g., scoping search to backlog vs all board tasks).
-- [ ] Ensure all tests pass (`bun test`) and TypeScript strict check passes (`bun run typecheck`).
+- [x] Ensure all tests pass (`bun test`) and TypeScript strict check passes (`bun run typecheck`).
