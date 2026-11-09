@@ -125,9 +125,9 @@ Need fast title and tag filtering in the interactive TUI.
 
 ## Quick Start
 
-### For Users (Zero Dependencies)
+### Standalone Binary (Git Recommended)
 
-Once compiled into a standalone binary (prebuilt binaries via GitHub Releases coming soon), **no Bun or Node runtime is required to run `dirban`**:
+The compiled binary is self-contained (no Node or Bun required). While Dirban works on a plain filesystem, it works best with Git for branch and worktree automation.
 
 ```bash
 # Move the compiled binary to your PATH
