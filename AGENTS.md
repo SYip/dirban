@@ -10,6 +10,7 @@
 - **Approved Execution**: Use `bun run <script>`, `bun run <bin>`, or `./node_modules/.bin/<bin>`.
 
 ## 3. Standards & Architecture References
+- **UI Iconography Standards**: [.agents/rules/ui-icons.md](file:///.agents/rules/ui-icons.md)
 - **Package Management Rule**: [.agents/rules/package-management.md](file:///.agents/rules/package-management.md)
 - **TypeScript Standards**: [.agents/rules/typescript.md](file:///.agents/rules/typescript.md)
 - **Testing Standards**: [.agents/rules/tests.md](file:///.agents/rules/tests.md)

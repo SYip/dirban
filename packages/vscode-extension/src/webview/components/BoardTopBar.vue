@@ -1,22 +1,24 @@
 <template>
   <header class="topbar">
     <div class="brand">
-      <span class="logo">⚡</span>
+      <span class="codicon codicon-zap logo"></span>
       <h1>Dirban Kanban</h1>
       <span class="badge">Directory-Only Drag & Drop</span>
     </div>
 
     <div class="topbar-center-notice">
-      <span class="notice-icon">ℹ</span>
+      <span class="codicon codicon-info notice-icon"></span>
       <span>Drag & drop moves files on disk. Use task drawer buttons for Git branch & lifecycle workflows.</span>
     </div>
 
     <div class="actions">
       <button class="btn btn-secondary" @click="$emit('refresh')" title="Refresh Board">
-        ↻ Refresh
+        <span class="codicon codicon-refresh"></span>
+        Refresh
       </button>
       <button class="btn btn-primary" @click="$emit('newTask')" title="Create New Task">
-        + New Task
+        <span class="codicon codicon-add"></span>
+        New Task
       </button>
     </div>
   </header>
