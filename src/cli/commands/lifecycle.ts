@@ -175,7 +175,7 @@ export const handleDone: CommandHandler = (ctx) => {
     : undefined
 
   const noGit = ctx.flags["no-git"]
-  const noMerge = ctx.flags["no-merge"]
+  const noMerge = ctx.flags.merge === true ? false : ctx.flags["no-merge"]
 
   const doneRes = doneTask(boardRes.value, ctx.config, taskId, {
     cwd: ctx.cwd,
