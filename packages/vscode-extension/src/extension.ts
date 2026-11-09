@@ -1,74 +1,156 @@
 import * as vscode from "vscode"
-import * as path from "node:path"
-import * as fs from "node:fs"
-import { DEFAULT_CONFIG } from "@dirban/core/config/config.ts"
+import { loadConfig } from "@dirban/core/config/config.ts"
 import { discoverBoard } from "@dirban/core/board/discovery.ts"
+import { resolveCurrentTask } from "@dirban/core/tasks/lifecycle/current.ts"
+import { createTask } from "@dirban/core/tasks/mutation/create.ts"
+import type { Board } from "@dirban/core/board/types.ts"
+import type { DirbanConfig } from "@dirban/core/config/types.ts"
+import { DirbanTreeDataProvider } from "./tree-provider.ts"
+import { DirbanBoardWebviewPanel } from "./board-panel.ts"
 
-class DirbanWebviewViewProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = "dirban.kanbanView"
+let currentBoard: Board | null = null
+let currentConfig: DirbanConfig
 
-  constructor(private readonly extensionUri: vscode.Uri) {}
+function getWorkspaceRoot(): string {
+  return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd()
+}
 
-  public resolveWebviewView(
-    webviewView: vscode.WebviewView,
-    _context: vscode.WebviewViewResolveContext,
-    _token: vscode.CancellationToken
-  ): void {
-    webviewView.webview.options = {
-      enableScripts: true,
-      localResourceRoots: [this.extensionUri],
+function refreshBoardState(treeProvider: DirbanTreeDataProvider): void {
+  const root = getWorkspaceRoot()
+  const configRes = loadConfig(root)
+  currentConfig = configRes.isOk() ? configRes.value : currentConfig
+
+  const boardRes = discoverBoard(currentConfig, root)
+  if (boardRes.isOk()) {
+    currentBoard = boardRes.value
+    treeProvider.updateBoard(
+      boardRes.value.columns.map((c) => ({
+        name: c.name,
+        tasks: c.tasks,
+      })),
+      currentConfig
+    )
+
+    if (DirbanBoardWebviewPanel.currentPanel) {
+      DirbanBoardWebviewPanel.currentPanel.sendState()
     }
-
-    webviewView.webview.html = this.getHtmlForWebview(webviewView.webview)
-  }
-
-  private getHtmlForWebview(webview: vscode.Webview): string {
-    const webviewDistPath = path.join(this.extensionUri.fsPath, "dist", "webview")
-    const indexPath = path.join(webviewDistPath, "index.html")
-
-    if (!fs.existsSync(indexPath)) {
-      return `<!DOCTYPE html>
-<html lang="en">
-<body>
-  <p>Webview assets not built yet. Run <code>bun run build:webview</code>.</p>
-</body>
-</html>`
-    }
-
-    let html = fs.readFileSync(indexPath, "utf-8")
-
-    // Rewrite relative assets (./assets/...) to VS Code Webview URIs
-    html = html.replace(/(href|src)="(?:\.\/|\/)?(assets\/[^"]+)"/g, (_, attr, assetPath) => {
-      const uri = webview.asWebviewUri(vscode.Uri.file(path.join(webviewDistPath, assetPath)))
-      return `${attr}="${uri.toString()}"`
-    })
-
-    return html
   }
 }
 
 export function activate(context: vscode.ExtensionContext): void {
-  const provider = new DirbanWebviewViewProvider(context.extensionUri)
+  const root = getWorkspaceRoot()
+  const configRes = loadConfig(root)
+  currentConfig = configRes.isOk() ? configRes.value : ({} as DirbanConfig)
 
+  // 1. Sidebar TreeView Provider
+  const treeDataProvider = new DirbanTreeDataProvider()
+  const treeView = vscode.window.createTreeView("dirban.treeView", {
+    treeDataProvider,
+    showCollapseAll: true,
+  })
+  context.subscriptions.push(treeView)
+
+  // Initial load
+  refreshBoardState(treeDataProvider)
+
+  // 2. Watcher for live reactivity
+  const tasksGlob = `${currentConfig.tasksDir || "docs/tasks"}/**/*.md`
+  const watcher = vscode.workspace.createFileSystemWatcher(tasksGlob)
+  watcher.onDidCreate(() => refreshBoardState(treeDataProvider))
+  watcher.onDidChange(() => refreshBoardState(treeDataProvider))
+  watcher.onDidDelete(() => refreshBoardState(treeDataProvider))
+  context.subscriptions.push(watcher)
+
+  // Also watch .dirban.json and settings.json
+  const configWatcher = vscode.workspace.createFileSystemWatcher("**/{.dirban.json,settings.json}")
+  configWatcher.onDidChange(() => refreshBoardState(treeDataProvider))
+  context.subscriptions.push(configWatcher)
+
+  // 3. Register Commands
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(
-      DirbanWebviewViewProvider.viewType,
-      provider
-    )
+    vscode.commands.registerCommand("dirban.openBoard", () => {
+      DirbanBoardWebviewPanel.createOrShow(
+        context.extensionUri,
+        () => currentBoard,
+        () => currentConfig,
+        () => refreshBoardState(treeDataProvider)
+      )
+    })
   )
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dirban.openBoard", () => {
-      const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd()
-      const boardRes = discoverBoard(DEFAULT_CONFIG, workspaceFolder)
-      if (boardRes.isOk()) {
-        vscode.window.showInformationMessage(
-          `Dirban: loaded ${boardRes.value.columns.length} columns`,
-        )
+    vscode.commands.registerCommand("dirban.refreshBoard", () => {
+      refreshBoardState(treeDataProvider)
+      vscode.window.showInformationMessage("Dirban board refreshed.")
+    })
+  )
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("dirban.createTask", async () => {
+      if (!currentBoard) {
+        refreshBoardState(treeDataProvider)
       }
-      vscode.commands.executeCommand("dirban.kanbanView.focus")
+      if (!currentBoard) {
+        vscode.window.showErrorMessage("Dirban: Board not available. Please initialize board first.")
+        return
+      }
+
+      const title = await vscode.window.showInputBox({
+        prompt: "Enter task title",
+        placeHolder: "e.g. Implement user authentication",
+      })
+
+      if (!title || title.trim() === "") return
+
+      const priorityPick = await vscode.window.showQuickPick(
+        (currentConfig.priorities || ["p0", "p1", "p2", "p3"]).map((p) => ({
+          label: p,
+          description: p === currentConfig.defaultPriority ? "(Default)" : "",
+        })),
+        { placeHolder: "Select task priority" }
+      )
+
+      const selectedPriority = priorityPick ? priorityPick.label : currentConfig.defaultPriority
+
+      const createRes = createTask(currentBoard, {
+        title: title.trim(),
+        priority: selectedPriority as any,
+        column: "backlog",
+      })
+
+      if (createRes.isErr()) {
+        vscode.window.showErrorMessage(`Failed to create task: ${createRes.error.message}`)
+      } else {
+        refreshBoardState(treeDataProvider)
+        vscode.window.showInformationMessage(`Created task ${createRes.value.id}: ${createRes.value.filename}`)
+        const doc = await vscode.workspace.openTextDocument(createRes.value.filePath)
+        await vscode.window.showTextDocument(doc)
+      }
+    })
+  )
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("dirban.focusCurrentTask", async () => {
+      if (!currentBoard) {
+        refreshBoardState(treeDataProvider)
+      }
+      if (!currentBoard) return
+
+      const currentRes = resolveCurrentTask(currentBoard, currentConfig, undefined, root)
+      if (currentRes.isErr()) {
+        vscode.window.showInformationMessage(`Dirban Current: ${currentRes.error.message}`)
+        return
+      }
+
+      const task = currentRes.value.task
+      const doc = await vscode.workspace.openTextDocument(task.filePath)
+      await vscode.window.showTextDocument(doc)
     })
   )
 }
 
-export function deactivate(): void {}
+export function deactivate(): void {
+  if (DirbanBoardWebviewPanel.currentPanel) {
+    DirbanBoardWebviewPanel.currentPanel.dispose()
+  }
+}

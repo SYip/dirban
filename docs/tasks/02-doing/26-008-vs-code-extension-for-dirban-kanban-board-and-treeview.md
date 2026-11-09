@@ -2,7 +2,7 @@
 id: "26-008"
 title: "VS Code Extension for Dirban Kanban Board and TreeView"
 type: "task"
-status: "backlog"
+status: "doing"
 priority: "p2"
 owner: "developer"
 assigned_to: "unassigned"
@@ -57,13 +57,13 @@ The extension leverages the existing zero-database TypeScript core (`src/board`,
 
 ## Acceptance Criteria
 
-- [ ] Implement `DirbanTreeDataProvider` registering a lightweight TreeView in the VS Code Activity Bar showing columns and tasks.
-- [ ] Implement full-width `WebviewPanel` in the main editor tab (`vscode.window.createWebviewPanel`) for the Vue 3 multi-column Kanban board with drag-and-drop.
-- [ ] Connect reactive file system watcher (`vscode.workspace.createFileSystemWatcher`) to live-sync UI when files are moved or edited by CLI/git.
-- [ ] Provide commands in command palette:
+- [x] Implement `DirbanTreeDataProvider` registering a lightweight TreeView in the VS Code Activity Bar showing columns and tasks.
+- [x] Implement full-width `WebviewPanel` in the main editor tab (`vscode.window.createWebviewPanel`) for the Vue 3 multi-column Kanban board with drag-and-drop.
+- [x] Connect reactive file system watcher (`vscode.workspace.createFileSystemWatcher`) to live-sync UI when files are moved or edited by CLI/git.
+- [x] Provide commands in command palette:
   - `Dirban: Open Kanban Board` (opens full-width editor tab)
   - `Dirban: Create Task`
   - `Dirban: Focus Current Task`
   - `Dirban: Refresh Board`
-- [ ] Integrate workspace configuration reading from `.vscode/settings.json` (`dirban.*`) and `.dirban.json`.
-- [ ] Verify TreeView and full-width Kanban Webview inside the VS Code Extension Development Host.
+- [x] Integrate workspace configuration reading from `.vscode/settings.json` (`dirban.*`) and `.dirban.json`.
+- [x] Verify TreeView and full-width Kanban Webview inside the VS Code Extension Development Host.

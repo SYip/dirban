@@ -2,7 +2,21 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run Dirban Extension",
+      "name": "Run Dirban Extension (Playground)",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "${workspaceFolder}/playground",
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/vscode-extension"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/packages/vscode-extension/dist/**/*.js"
+      ],
+      "preLaunchTask": "dirban: build extension"
+    },
+    {
+      "name": "Run Dirban Extension (Current Workspace)",
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
