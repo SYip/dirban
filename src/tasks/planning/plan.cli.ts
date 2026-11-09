@@ -1,4 +1,4 @@
-import type { CliContext, CommandDefinition, CommandHandler } from "../../cli/commands/types.ts"
+import type { CliContext, CommandDefinition, CommandHandler } from "../../cli/types.ts"
 import { discoverBoard } from "../../board/discovery.ts"
 import pc from "picocolors"
 import { formatPlanView } from "../../cli/formatters.ts"

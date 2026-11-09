@@ -1,6 +1,6 @@
 import pc from "picocolors"
 import { getVcsProvider } from "../../vcs/index.ts"
-import type { CommandDefinition, CommandHandler } from "../../cli/commands/types.ts"
+import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
 
 export const handlePath: CommandHandler = (ctx) => {
   const target = ctx.positionals[1]

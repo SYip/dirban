@@ -2,7 +2,7 @@
 id: "26-021"
 title: "Refactor commands and operations into cohesive business domain modules"
 type: "task"
-status: "doing"
+status: "done"
 priority: "p2"
 owner: "developer"
 assigned_to: "developer"
@@ -56,10 +56,10 @@ Domain modules adhere to a clean separation between pure domain operations and p
 - [x] **Phase 4: Project Scaffolding & Setup (`src/tasks/project/`)**
   - Relocate `init.ts`, `project.test.ts` to `src/tasks/project/`.
   - Separate pure operations from CLI adapters (`init.cli.ts`, `next-id.cli.ts`, `priorities.cli.ts`, `help.cli.ts`).
-- [ ] **Phase 5: Board Views & CLI Presentation Harness**
+- [x] **Phase 5: Board Views & CLI Presentation Harness**
   - Add CLI adapters `board.cli.ts` in `src/board/`.
   - Flatten and simplify `src/cli/` to only contain presentation harness files (`router.ts`, `types.ts`, `formatters.ts`, `tui.ts`, `plan-tui.ts`).
   - Remove obsolete `src/operations/` and `src/cli/commands/` folders.
-- [ ] **Phase 6: Verification & Test Suite**
+- [x] **Phase 6: Verification & Test Suite**
   - Run `bun test` ensuring all tests pass across the new domain structure.
   - Run `bun run typecheck` (`tsc --noEmit`) to verify 0 import or type errors.

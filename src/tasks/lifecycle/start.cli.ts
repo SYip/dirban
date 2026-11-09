@@ -6,7 +6,7 @@ import {
   toRelativePath,
 } from "../../cli/formatters.ts"
 import type { LifecycleStrategyType } from "../../workspace/types.ts"
-import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/commands/types.ts"
+import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { startTask } from "./start.ts"
 
 export interface StartCommandParams {

@@ -1,6 +1,6 @@
 import { discoverBoard } from "../../board/discovery.ts"
 import type { Priority } from "../../okf/types.ts"
-import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/commands/types.ts"
+import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { err, ok } from "neverthrow"
 import pc from "picocolors"
 import { createTask } from "./create.ts"

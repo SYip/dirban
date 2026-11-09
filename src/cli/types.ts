@@ -1,6 +1,6 @@
 import { parseArgs } from "node:util"
 import type { Result } from "neverthrow"
-import type { DirbanConfig } from "../../config/types.ts"
+import type { DirbanConfig } from "../config/types.ts"
 
 export interface CliFlags {
   readonly help?: boolean

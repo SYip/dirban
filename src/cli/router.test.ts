@@ -3,10 +3,10 @@ import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
 import { dispatchCommand, printHelp } from "./router.ts"
-import { runCli } from "../../../main.ts"
+import { runCli } from "../../main.ts"
 import type { CliContext } from "./types.ts"
-import type { DirbanConfig } from "../../config/types.ts"
-import { initializeBoard } from "../../tasks/project/init.ts"
+import type { DirbanConfig } from "../config/types.ts"
+import { initializeBoard } from "../tasks/project/init.ts"
 
 const MOCK_CONFIG: DirbanConfig = {
   tasksDir: "docs/tasks",

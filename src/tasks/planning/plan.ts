@@ -107,12 +107,6 @@ export const promoteTasks = (
   }
 }
 
-import pc from "picocolors"
-import { discoverBoard } from "../../board/discovery.ts"
-import { formatPlanView } from "../../cli/formatters.ts"
-import { startInteractivePlanTui } from "../../cli/plan-tui.ts"
-import type { CommandDefinition, CommandHandler } from "../../cli/commands/types.ts"
-
 export const promoteTask = (
   board: Board,
   config: DirbanConfig,

@@ -1,5 +1,5 @@
 import pc from "picocolors"
-import type { CommandDefinition, CommandHandler } from "../../cli/commands/types.ts"
+import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
 
 export const printHelp = (): void => {
   console.log(`

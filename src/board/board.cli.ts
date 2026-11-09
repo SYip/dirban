@@ -1,10 +1,10 @@
 import * as process from "node:process"
 import { spawn } from "node:child_process"
 import pc from "picocolors"
-import { discoverBoard, findTaskWithFuzzy } from "../../board/discovery.ts"
-import { formatBoardStatic, formatTaskDetail } from "../formatters.ts"
-import { startInteractiveTui } from "../tui.ts"
-import type { CommandDefinition, CommandHandler } from "./types.ts"
+import { discoverBoard, findTaskWithFuzzy } from "./discovery.ts"
+import { formatBoardStatic, formatTaskDetail } from "../cli/formatters.ts"
+import { startInteractiveTui } from "../cli/tui.ts"
+import type { CommandDefinition, CommandHandler } from "../cli/types.ts"
 
 export const handleBoard: CommandHandler = async (ctx) => {
   if (!ctx.flags.static && process.stdin.isTTY) {

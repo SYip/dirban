@@ -1,9 +1,9 @@
 import pc from "picocolors"
-import type { CommandDefinition, CommandHandler } from "../../cli/commands/types.ts"
+import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
 
 export const handlePriorities: CommandHandler = (ctx) => {
   const listFormatted = ctx.config.priorities
-    .map((p) =>
+    .map((p: string) =>
       p === ctx.config.defaultPriority
         ? `${pc.bold(pc.green(p))} ${pc.gray("(default)")}`
         : pc.cyan(p)

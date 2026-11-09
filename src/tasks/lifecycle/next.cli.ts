@@ -2,7 +2,7 @@ import * as process from "node:process"
 import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
 import { formatNextTaskView } from "../../cli/formatters.ts"
-import type { CommandDefinition, CommandHandler } from "../../cli/commands/types.ts"
+import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
 import { resolveNextTask } from "./next.ts"
 
 export const handleNext: CommandHandler = (ctx) => {

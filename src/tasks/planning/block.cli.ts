@@ -1,5 +1,5 @@
 import { discoverBoard } from "../../board/discovery.ts"
-import type { CommandDefinition, CommandHandler } from "../../cli/commands/types.ts"
+import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
 import pc from "picocolors"
 import { blockTask, unblockTask } from "./block.ts"
 

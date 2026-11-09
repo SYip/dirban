@@ -1,6 +1,6 @@
 import { discoverBoard } from "../../board/discovery.ts"
 import { calculateNextTaskId } from "../mutation/create.ts"
-import type { CommandDefinition, CommandHandler } from "../../cli/commands/types.ts"
+import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
 import pc from "picocolors"
 
 export const handleNextId: CommandHandler = (ctx) => {

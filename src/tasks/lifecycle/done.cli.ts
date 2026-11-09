@@ -2,7 +2,7 @@ import { err, ok } from "neverthrow"
 import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
 import type { LifecycleStrategyType } from "../../workspace/types.ts"
-import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/commands/types.ts"
+import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { doneTask } from "./done.ts"
 
 export interface DoneCommandParams {
