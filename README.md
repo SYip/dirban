@@ -1,4 +1,4 @@
-# Dirban (`dirban`)
+# Dirban
 
 > **Zero-database, agent-native Kanban engine & TUI backed by the filesystem and flexible Markdown.**
 
