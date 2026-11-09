@@ -1,9 +1,10 @@
 import { err, ok } from "neverthrow"
 import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
+import { logError, logTip, logWarning } from "../../cli/formatters.ts"
 import type { LifecycleStrategyType } from "../../workspace/types.ts"
 import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
-import { doneTask } from "./done.ts"
+import { doneTask, type DoneTaskError } from "./done.ts"
 
 export interface DoneCommandParams {
   readonly taskId?: string
@@ -43,17 +44,34 @@ export const parseDone: CommandParser<DoneCommandParams> = (ctx) => {
   })
 }
 
+export const printDoneError = (err: DoneTaskError): void => {
+  switch (err.kind) {
+    case "INVALID_COLUMN_TRANSITION":
+      logWarning(`Cannot complete task: ${err.message}`)
+      if (err.suggestion != null) {
+        logTip(err.suggestion)
+      }
+      break
+    case "ALREADY_COMPLETED":
+      logWarning(err.message)
+      break
+    default:
+      logError(err.message, "Done")
+      break
+  }
+}
+
 export const handleDone: CommandHandler = (ctx) => {
   const parseRes = parseDone(ctx)
   if (parseRes.isErr()) {
-    console.error(pc.red(`Error: ${parseRes.error.message}`))
+    logError(parseRes.error.message)
     return 1
   }
   const params = parseRes.value
 
   const boardRes = discoverBoard(ctx.config, ctx.cwd)
   if (boardRes.isErr()) {
-    console.error(pc.red(`Board Error: ${boardRes.error.message}`))
+    logError(boardRes.error.message, "Board")
     return 1
   }
 
@@ -64,7 +82,7 @@ export const handleDone: CommandHandler = (ctx) => {
     noMerge: params.noMerge,
   })
   if (doneRes.isErr()) {
-    console.error(pc.red(`Done Error: ${doneRes.error.message}`))
+    printDoneError(doneRes.error)
     return 1
   }
 

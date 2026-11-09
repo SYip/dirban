@@ -220,15 +220,15 @@ describe("Board Discovery and Sorting Tests", () => {
       }
 
       // 5. Ambiguity detection
-      // Add another card with suffix "001" (e.g. from 2025: "25-001")
+      // Add another card with suffix "001" in 02-doing (e.g. from 2025: "25-001")
       fs.writeFileSync(
-        path.join(tasksDir, "01-todo/25-001-legacy.md"),
+        path.join(tasksDir, "02-doing/25-001-legacy.md"),
         `---
 okf_version: "1.0"
 id: "task.25-001"
 title: "Legacy Task"
 type: "task"
-status: "01-todo"
+status: "02-doing"
 priority: "p2"
 owner: "developer"
 assigned_to: "unassigned"
@@ -259,6 +259,16 @@ relationships:
       const foundViaHelper = findTaskByIdOrName(reloadedBoard, "2")
       expect(foundViaHelper != null).toBe(true)
       expect(foundViaHelper?.document.id).toBe("task.26-002")
+
+      // 7. Column scoping in findTaskByQuery
+      const todoTasksOnly = findTaskByQuery(reloadedTasks, "001", { column: "01-todo" })
+      expect(todoTasksOnly.kind).toBe("FOUND")
+      if (todoTasksOnly.kind === "FOUND") {
+        expect(todoTasksOnly.task.document.id).toBe("task.26-001")
+      }
+
+      const multiColScoped = findTaskByQuery(reloadedTasks, "001", { column: ["01-todo", "02-doing"] })
+      expect(multiColScoped.kind).toBe("AMBIGUOUS")
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }

@@ -1,7 +1,7 @@
 import { ok, err, type Result } from "neverthrow"
 import type { Board, BoardTask } from "../../board/types.ts"
 import { findTaskByIdOrName } from "../../board/discovery.ts"
-import { resolveFocusColumn } from "../../config/config.ts"
+import { resolveFocusColumn, resolvePreviousColumn } from "../../config/config.ts"
 import type { DirbanConfig } from "../../config/types.ts"
 import { moveTask } from "../mutation/move.ts"
 import { getVcsProvider, type VersionControlProvider } from "../../vcs/index.ts"
@@ -25,6 +25,14 @@ export interface StartTaskSuccess {
 export type StartTaskError =
   | { readonly kind: "TASK_NOT_FOUND"; readonly id: string; readonly message: string }
   | { readonly kind: "ALREADY_STARTED"; readonly message: string }
+  | {
+      readonly kind: "INVALID_COLUMN_TRANSITION"
+      readonly message: string
+      readonly currentColumn: string
+      readonly expectedColumn: string
+      readonly id: string
+      readonly suggestion?: string
+    }
   | { readonly kind: "GIT_CONFLICT"; readonly message: string }
   | { readonly kind: "MOVE_ERROR"; readonly message: string }
 
@@ -53,6 +61,47 @@ export const startTask = (
     })
   }
 
+  const focusColName = resolveFocusColumn(config)
+  const expectedPreFocusCol = focusColName != null
+    ? resolvePreviousColumn(config, focusColName) ?? config.columns[0]
+    : config.columns[0]
+
+  const displayId = task.document.id ?? task.filename
+
+  // Strict workflow sequence guard: tasks can only be started from the pre-focus queue
+  if (focusColName != null && task.column === focusColName) {
+    return err({
+      kind: "ALREADY_STARTED",
+      message: `Task ${displayId} is already in '${focusColName}'.`,
+    })
+  }
+
+  if (expectedPreFocusCol != null && task.column !== expectedPreFocusCol) {
+    if (task.column === "backlog") {
+      return err({
+        kind: "INVALID_COLUMN_TRANSITION",
+        message: `Cannot start task ${displayId}: task is in 'backlog'. Run 'dirban plan promote ${displayId}' first.`,
+        currentColumn: "backlog",
+        expectedColumn: expectedPreFocusCol,
+        id: taskId,
+        suggestion: `dirban plan promote ${displayId}`,
+      })
+    }
+
+    const isCompleted = task.column === "archive" || (config.columns.length > 0 && task.column === config.columns[config.columns.length - 1])
+    const message = isCompleted
+      ? `Cannot start task ${displayId}: task is already completed in '${task.column}'.`
+      : `Cannot start task ${displayId}: task is in '${task.column}' (expected '${expectedPreFocusCol}').`
+
+    return err({
+      kind: "INVALID_COLUMN_TRANSITION",
+      message,
+      currentColumn: task.column,
+      expectedColumn: expectedPreFocusCol,
+      id: taskId,
+    })
+  }
+
   const vcsCtx = vcs.getContext(cwd)
   const strategy = options?.workspaceStrategy ?? resolveWorkspaceStrategy(options, vcsCtx, config)
 
@@ -64,7 +113,6 @@ export const startTask = (
   }
 
   // 2. Move task to focus column on filesystem (if a focus column exists)
-  const focusColName = resolveFocusColumn(config)
   let updatedTask: BoardTask = task
 
   if (focusColName != null && task.column !== focusColName) {

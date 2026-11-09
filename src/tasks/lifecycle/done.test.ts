@@ -199,4 +199,66 @@ describe("Done Task Operations (doneTask)", () => {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }
   })
+
+  it("Vector 7: Strict workflow transition guards: rejects done for tasks in backlog or todo", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-done-"))
+    try {
+      initializeBoard(DEFAULT_CONFIG, tempDir)
+      const board = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+
+      // 1. Task in backlog
+      const backlogTask = createTask(board, {
+        title: "Backlog Item",
+        column: "backlog",
+      })._unsafeUnwrap()
+
+      const boardWithBacklog = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const doneBacklogRes = doneTask(boardWithBacklog, DEFAULT_CONFIG, backlogTask.id, { cwd: tempDir })
+      expect(doneBacklogRes.isErr()).toBe(true)
+      if (doneBacklogRes.isErr()) {
+        expect(doneBacklogRes.error.kind).toBe("INVALID_COLUMN_TRANSITION")
+        expect(doneBacklogRes.error.message).toContain("Run 'dirban plan promote")
+        if (doneBacklogRes.error.kind === "INVALID_COLUMN_TRANSITION") {
+          expect(doneBacklogRes.error.currentColumn).toBe("backlog")
+          expect(doneBacklogRes.error.expectedColumn).toBe("02-doing")
+          expect(doneBacklogRes.error.suggestion).toBe(`dirban plan promote ${backlogTask.id}`)
+        }
+      }
+
+      // 2. Task in 01-todo
+      const todoTask = createTask(boardWithBacklog, {
+        title: "Todo Item",
+        column: "01-todo",
+      })._unsafeUnwrap()
+
+      const boardWithTodo = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const doneTodoRes = doneTask(boardWithTodo, DEFAULT_CONFIG, todoTask.id, { cwd: tempDir })
+      expect(doneTodoRes.isErr()).toBe(true)
+      if (doneTodoRes.isErr()) {
+        expect(doneTodoRes.error.kind).toBe("INVALID_COLUMN_TRANSITION")
+        expect(doneTodoRes.error.message).toContain("Run 'dirban start")
+        if (doneTodoRes.error.kind === "INVALID_COLUMN_TRANSITION") {
+          expect(doneTodoRes.error.currentColumn).toBe("01-todo")
+          expect(doneTodoRes.error.expectedColumn).toBe("02-doing")
+          expect(doneTodoRes.error.suggestion).toBe(`dirban start ${todoTask.id}`)
+        }
+      }
+
+      // 3. Task already in 03-done
+      const doneTaskItem = createTask(boardWithTodo, {
+        title: "Completed Item",
+        column: "03-done",
+      })._unsafeUnwrap()
+
+      const boardWithDone = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const reDoneRes = doneTask(boardWithDone, DEFAULT_CONFIG, doneTaskItem.id, { cwd: tempDir })
+      expect(reDoneRes.isErr()).toBe(true)
+      if (reDoneRes.isErr()) {
+        expect(reDoneRes.error.kind).toBe("ALREADY_COMPLETED")
+        expect(reDoneRes.error.message).toContain("already completed in '03-done'")
+      }
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
 })

@@ -198,4 +198,61 @@ describe("Start Task Operations (startTask)", () => {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }
   })
+
+  it("Vector 7: Strict workflow transition guards: rejects start from backlog or completed", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-start-"))
+    try {
+      initializeBoard(DEFAULT_CONFIG, tempDir)
+      const board = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+
+      // 1. Task in backlog
+      const backlogTask = createTask(board, {
+        title: "Backlog Item",
+        column: "backlog",
+      })._unsafeUnwrap()
+
+      const boardWithBacklog = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const startBacklogRes = startTask(boardWithBacklog, DEFAULT_CONFIG, backlogTask.id, { cwd: tempDir })
+      expect(startBacklogRes.isErr()).toBe(true)
+      if (startBacklogRes.isErr()) {
+        expect(startBacklogRes.error.kind).toBe("INVALID_COLUMN_TRANSITION")
+        expect(startBacklogRes.error.message).toContain("Run 'dirban plan promote")
+        if (startBacklogRes.error.kind === "INVALID_COLUMN_TRANSITION") {
+          expect(startBacklogRes.error.currentColumn).toBe("backlog")
+          expect(startBacklogRes.error.expectedColumn).toBe("01-todo")
+          expect(startBacklogRes.error.suggestion).toBe(`dirban plan promote ${backlogTask.id}`)
+        }
+      }
+
+      // 2. Task already in 02-doing
+      const doingTask = createTask(boardWithBacklog, {
+        title: "Doing Item",
+        column: "02-doing",
+      })._unsafeUnwrap()
+
+      const boardWithDoing = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const startDoingRes = startTask(boardWithDoing, DEFAULT_CONFIG, doingTask.id, { cwd: tempDir })
+      expect(startDoingRes.isErr()).toBe(true)
+      if (startDoingRes.isErr()) {
+        expect(startDoingRes.error.kind).toBe("ALREADY_STARTED")
+        expect(startDoingRes.error.message).toBe(`Task ${doingTask.id} is already in '02-doing'.`)
+      }
+
+      // 3. Task in 03-done (completed)
+      const doneTask = createTask(boardWithDoing, {
+        title: "Done Item",
+        column: "03-done",
+      })._unsafeUnwrap()
+
+      const boardWithDone = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const startDoneRes = startTask(boardWithDone, DEFAULT_CONFIG, doneTask.id, { cwd: tempDir })
+      expect(startDoneRes.isErr()).toBe(true)
+      if (startDoneRes.isErr()) {
+        expect(startDoneRes.error.kind).toBe("INVALID_COLUMN_TRANSITION")
+        expect(startDoneRes.error.message).toContain("already completed in '03-done'")
+      }
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
 })
