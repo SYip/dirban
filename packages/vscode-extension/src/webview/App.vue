@@ -5,7 +5,12 @@
       <div class="brand">
         <span class="logo">⚡</span>
         <h1>Dirban Kanban</h1>
-        <span class="badge">Monorepo Ready</span>
+        <span class="badge">Directory-Only Drag & Drop</span>
+      </div>
+
+      <div class="topbar-center-notice">
+        <span class="notice-icon">ℹ</span>
+        <span>Drag & drop moves files on disk. Use task drawer buttons for Git branch & lifecycle workflows.</span>
       </div>
 
       <div class="actions">
@@ -147,6 +152,26 @@
           <p v-else class="text-muted">No acceptance criteria defined for this task.</p>
         </section>
       </div>
+
+      <!-- Pinned Bottom Action Footer -->
+      <footer class="drawer-footer" v-if="getLifecycleAction(selectedTask)">
+        <div class="footer-strategy-info">
+          <span class="strategy-badge">
+            <span class="strategy-icon">⚙</span>
+            Strategy: <strong>{{ getStrategyLabel() }}</strong>
+          </span>
+          <span class="strategy-desc">{{ getLifecycleAction(selectedTask)!.description }}</span>
+        </div>
+
+        <button
+          class="btn btn-lifecycle-action"
+          :class="getLifecycleAction(selectedTask)!.buttonClass"
+          @click="triggerLifecycleAction(getLifecycleAction(selectedTask)!.action, selectedTask)"
+        >
+          <span class="btn-icon">{{ getLifecycleAction(selectedTask)!.icon }}</span>
+          <span>{{ getLifecycleAction(selectedTask)!.btnText }}</span>
+        </button>
+      </footer>
     </aside>
   </div>
 </template>
@@ -186,6 +211,7 @@ onMounted(() => {
     if (message.type === "boardState") {
       boardState.workspaceRoot = message.state.workspaceRoot
       boardState.columns = message.state.columns as any
+      boardState.config = message.state.config
       // Sync selected task with latest instance
       if (selectedTask.value) {
         for (const col of boardState.columns) {
@@ -249,6 +275,107 @@ function handleDragChange(event: any, targetColumnName: string) {
   }
 }
 
+function triggerLifecycleAction(action: "ready" | "start" | "done" | "archive", task: BoardTask) {
+  const taskId = task.document?.id || task.filename
+  vscode.postMessage({
+    type: "lifecycleAction",
+    action,
+    taskId,
+  })
+}
+
+function getStrategyLabel(): string {
+  const strategy = boardState.config?.branchStrategy ?? "checkout"
+  if (strategy === "worktree") return "Git Worktree"
+  if (strategy === "none") return "Directory Only (No Git)"
+  return "Git Branch (Checkout)"
+}
+
+interface LifecycleActionInfo {
+  readonly action: "ready" | "start" | "done" | "archive"
+  readonly icon: string
+  readonly label: string
+  readonly description: string
+  readonly btnText: string
+  readonly buttonClass: string
+}
+
+function getLifecycleAction(task: BoardTask): LifecycleActionInfo | null {
+  const col = task.column.toLowerCase()
+  const focusCol = boardState.config?.focusColumn?.toLowerCase()
+  const preFocusCol = boardState.config?.preFocusColumn?.toLowerCase()
+  const postFocusCol = boardState.config?.postFocusColumn?.toLowerCase()
+  const strategy = boardState.config?.branchStrategy ?? "checkout"
+
+  if (col === "backlog") {
+    return {
+      action: "ready",
+      icon: "🚀",
+      label: "Ready Task",
+      description: "Evaluates dependencies and unblocks card into todo queue.",
+      btnText: "Ready Task (Move to Queue)",
+      buttonClass: "btn-ready",
+    }
+  }
+
+  if (preFocusCol && col === preFocusCol) {
+    const startDesc = strategy === "worktree"
+      ? "Creates dedicated git worktree and checks out branch."
+      : strategy === "none"
+      ? "Transitions task into doing (pure directory move, no Git)."
+      : "Creates and checks out local task branch in git."
+
+    const startBtn = strategy === "worktree"
+      ? "Start Task (Git Worktree)"
+      : strategy === "none"
+      ? "Start Task (Directory Only)"
+      : "Start Task (Checkout Branch)"
+
+    return {
+      action: "start",
+      icon: "▶",
+      label: "Start Task",
+      description: startDesc,
+      btnText: startBtn,
+      buttonClass: "btn-start",
+    }
+  }
+
+  if (focusCol && col === focusCol) {
+    const doneDesc = strategy === "worktree"
+      ? "Squash/merges branch, deletes worktree, and marks done."
+      : strategy === "none"
+      ? "Marks done without modifying Git branches."
+      : "Squash/merges task branch into base branch."
+
+    const doneBtn = strategy === "none"
+      ? "Complete Task (Mark Done)"
+      : "Complete & Merge Task"
+
+    return {
+      action: "done",
+      icon: "✓",
+      label: "Complete Task",
+      description: doneDesc,
+      btnText: doneBtn,
+      buttonClass: "btn-done",
+    }
+  }
+
+  if ((postFocusCol && col === postFocusCol) || col.includes("done")) {
+    return {
+      action: "archive",
+      icon: "📦",
+      label: "Archive Task",
+      description: "Permanently moves completed card into flat archive storage.",
+      btnText: "Archive Task",
+      buttonClass: "btn-archive",
+    }
+  }
+
+  return null
+}
+
 function formatColumnTitle(name: string): string {
   if (name === "backlog") return "Backlog"
   if (name === "archive") return "Archive"
@@ -295,12 +422,14 @@ function getCriteriaPercent(task: BoardTask): number {
   padding: 10px 20px;
   background: var(--vscode-sideBar-background);
   border-bottom: 1px solid var(--vscode-widget-border, #333);
+  gap: 16px;
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .brand h1 {
@@ -323,9 +452,27 @@ function getCriteriaPercent(task: BoardTask): number {
   font-weight: 500;
 }
 
+.topbar-center-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--vscode-descriptionForeground);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px dashed var(--vscode-widget-border, #444);
+}
+
+.notice-icon {
+  font-weight: bold;
+  color: var(--vscode-textLink-foreground, #3794ff);
+}
+
 .actions {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .btn {
@@ -533,7 +680,9 @@ function getCriteriaPercent(task: BoardTask): number {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 380px;
+  height: 100%;
+  max-height: 100%;
+  width: 420px;
   background: var(--vscode-sideBar-background);
   border-left: 1px solid var(--vscode-widget-border, #333);
   box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3);
@@ -553,6 +702,7 @@ function getCriteriaPercent(task: BoardTask): number {
 }
 
 .drawer-header {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -593,8 +743,9 @@ function getCriteriaPercent(task: BoardTask): number {
 }
 
 .drawer-content {
-  flex: 1;
+  flex: 1 1 auto;
   overflow-y: auto;
+  min-height: 0;
   padding: 16px;
 }
 
@@ -682,5 +833,93 @@ function getCriteriaPercent(task: BoardTask): number {
   color: var(--vscode-descriptionForeground);
   font-size: 0.85rem;
   font-style: italic;
+}
+
+/* Pinned Bottom Action Footer */
+.drawer-footer {
+  flex-shrink: 0;
+  margin-top: auto;
+  border-top: 1px solid var(--vscode-widget-border, #333);
+  background: rgba(0, 0, 0, 0.25);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer-strategy-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.strategy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--vscode-foreground);
+}
+
+.strategy-icon {
+  font-size: 0.85rem;
+  color: var(--vscode-textLink-foreground, #3794ff);
+}
+
+.strategy-desc {
+  font-size: 0.74rem;
+  color: var(--vscode-descriptionForeground);
+  line-height: 1.25;
+}
+
+.btn-lifecycle-action {
+  width: 100%;
+  justify-content: center;
+  padding: 9px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.btn-icon {
+  font-size: 1rem;
+}
+
+.btn-ready {
+  background: #0288d1;
+  color: #fff;
+}
+
+.btn-ready:hover {
+  background: #0277bd;
+}
+
+.btn-start {
+  background: #2e7d32;
+  color: #fff;
+}
+
+.btn-start:hover {
+  background: #256b29;
+}
+
+.btn-done {
+  background: #388e3c;
+  color: #fff;
+}
+
+.btn-done:hover {
+  background: #2e7d32;
+}
+
+.btn-archive {
+  background: #5c6bc0;
+  color: #fff;
+}
+
+.btn-archive:hover {
+  background: #4e5ba6;
 }
 </style>

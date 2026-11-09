@@ -3,9 +3,14 @@ import * as path from "node:path"
 import * as fs from "node:fs"
 import type { Board, BoardTask } from "@dirban/core/board/types.ts"
 import type { DirbanConfig } from "@dirban/core/config/types.ts"
+import { resolveFocusColumn, resolvePreviousColumn, resolveNextColumn } from "@dirban/core/config/config.ts"
 import { moveTask } from "@dirban/core/tasks/mutation/move.ts"
 import { checkTaskItem } from "@dirban/core/tasks/mutation/check.ts"
 import { createTask } from "@dirban/core/tasks/mutation/create.ts"
+import { promoteTasks } from "@dirban/core/tasks/planning/plan.ts"
+import { startTask } from "@dirban/core/tasks/lifecycle/start.ts"
+import { doneTask } from "@dirban/core/tasks/lifecycle/done.ts"
+import { archiveTasks } from "@dirban/core/tasks/mutation/archive.ts"
 import type {
   ExtensionMessageToWebview,
   WebviewBoardState,
@@ -88,6 +93,7 @@ export class DirbanBoardWebviewPanel {
 
   public sendState(): void {
     const board = this._getBoard()
+    const config = this._getConfig()
     if (!board) return
 
     const columns: WebviewColumn[] = board.columns.map((c) => ({
@@ -96,9 +102,19 @@ export class DirbanBoardWebviewPanel {
       tasks: c.tasks,
     }))
 
+    const focusCol = resolveFocusColumn(config) ?? undefined
+    const preFocusCol = focusCol ? (resolvePreviousColumn(config, focusCol) ?? config.columns[0]) : undefined
+    const postFocusCol = focusCol ? resolveNextColumn(config, focusCol) : undefined
+
     const state: WebviewBoardState = {
       workspaceRoot: board.rootDir,
       columns,
+      config: {
+        focusColumn: focusCol,
+        preFocusColumn: preFocusCol,
+        postFocusColumn: postFocusCol,
+        branchStrategy: config.branchStrategy,
+      },
     }
 
     const message: ExtensionMessageToWebview = {
@@ -111,6 +127,7 @@ export class DirbanBoardWebviewPanel {
 
   private _handleWebviewMessage(message: WebviewMessageToExtension): void {
     const board = this._getBoard()
+    const config = this._getConfig()
     if (!board) return
 
     switch (message.type) {
@@ -126,6 +143,11 @@ export class DirbanBoardWebviewPanel {
         } else {
           this._onBoardMutation()
         }
+        break
+      }
+
+      case "lifecycleAction": {
+        this._handleLifecycleAction(board, config, message.action, message.taskId)
         break
       }
 
@@ -157,6 +179,67 @@ export class DirbanBoardWebviewPanel {
           vscode.window.showErrorMessage(`Dirban task creation failed: ${createRes.error.message}`)
         } else {
           vscode.window.showInformationMessage(`Dirban: Created task ${createRes.value.id}`)
+          this._onBoardMutation()
+        }
+        break
+      }
+    }
+  }
+
+  private _handleLifecycleAction(
+    board: Board,
+    config: DirbanConfig,
+    action: "ready" | "start" | "done" | "archive",
+    taskId: string
+  ): void {
+    const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd()
+
+    switch (action) {
+      case "ready": {
+        const result = promoteTasks(board, config, [taskId])
+        if (result.failed.length > 0) {
+          const firstFail = result.failed[0]!
+          vscode.window.showErrorMessage(`Dirban Ready Failed: ${firstFail.error.message}`)
+        } else {
+          const promoted = result.promoted[0]
+          vscode.window.showInformationMessage(`Dirban: Task ${taskId} readied to ${promoted?.targetColumn ?? "todo"}`)
+          this._onBoardMutation()
+        }
+        break
+      }
+
+      case "start": {
+        const startRes = startTask(board, config, taskId, { cwd: root })
+        if (startRes.isErr()) {
+          vscode.window.showErrorMessage(`Dirban Start Failed: ${startRes.error.message}`)
+        } else {
+          const val = startRes.value
+          const branchMsg = val.branchName ? ` (branch: ${val.branchName})` : ""
+          vscode.window.showInformationMessage(`Dirban: Started task ${taskId}${branchMsg}`)
+          this._onBoardMutation()
+        }
+        break
+      }
+
+      case "done": {
+        const doneRes = doneTask(board, config, taskId, { cwd: root })
+        if (doneRes.isErr()) {
+          vscode.window.showErrorMessage(`Dirban Done Failed: ${doneRes.error.message}`)
+        } else {
+          const val = doneRes.value
+          const mergeMsg = val.mergedBranch ? ` (merged ${val.mergedBranch})` : ""
+          vscode.window.showInformationMessage(`Dirban: Completed task ${taskId}${mergeMsg}`)
+          this._onBoardMutation()
+        }
+        break
+      }
+
+      case "archive": {
+        const archiveRes = archiveTasks(board, config, taskId, root)
+        if (archiveRes.isErr()) {
+          vscode.window.showErrorMessage(`Dirban Archive Failed: ${archiveRes.error.message}`)
+        } else {
+          vscode.window.showInformationMessage(`Dirban: Archived task ${taskId}`)
           this._onBoardMutation()
         }
         break

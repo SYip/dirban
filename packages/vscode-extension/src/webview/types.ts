@@ -1,4 +1,5 @@
 import type { BoardTask } from "@dirban/core/board/types.ts"
+import type { DirbanConfig } from "@dirban/core/config/types.ts"
 
 export interface WebviewColumn {
   readonly name: string
@@ -9,7 +10,12 @@ export interface WebviewColumn {
 export interface WebviewBoardState {
   readonly workspaceRoot: string
   readonly columns: readonly WebviewColumn[]
-  readonly activeTaskId?: string
+  readonly config?: {
+    readonly focusColumn?: string
+    readonly preFocusColumn?: string
+    readonly postFocusColumn?: string
+    readonly branchStrategy?: string
+  }
 }
 
 export type WebviewMessageToExtension =
@@ -18,6 +24,7 @@ export type WebviewMessageToExtension =
   | { readonly type: "toggleCriterion"; readonly taskId: string; readonly itemIndex: number; readonly checked: boolean }
   | { readonly type: "openFile"; readonly filePath: string }
   | { readonly type: "createTask"; readonly title: string; readonly priority?: string; readonly column?: string }
+  | { readonly type: "lifecycleAction"; readonly action: "ready" | "start" | "done" | "archive"; readonly taskId: string }
 
 export type ExtensionMessageToWebview =
   | { readonly type: "boardState"; readonly state: WebviewBoardState }
