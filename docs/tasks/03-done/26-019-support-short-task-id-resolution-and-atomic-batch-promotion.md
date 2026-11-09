@@ -2,12 +2,12 @@
 id: "26-019"
 title: "Support Short Task ID Resolution and Atomic All-or-Nothing Batch Validation in Plan Promotion"
 type: "task"
-status: "todo"
+status: "done"
 priority: "p2"
 owner: "developer"
-assigned_to: "unassigned"
+assigned_to: "developer"
 created_date: "2026-11-08"
-last_updated: "2026-11-08"
+last_updated: "2026-11-09"
 tags:
   - planning
   - cli
@@ -63,13 +63,13 @@ This task introduces:
 
 ## Acceptance Criteria
 
-- [ ] Implement `resolveBacklogTaskId(backlogTasks, query)` supporting exact IDs and short numeric suffixes (`001`, `1`).
-- [ ] Return an explicit `AMBIGUOUS_TASK_ID` error when a short ID matches multiple tasks in the backlog, listing all matching IDs.
-- [ ] Refactor `promoteTasks` in `src/operations/plan.ts` into a two-phase atomic execution (validate all tasks before moving any).
-- [ ] Ensure that if any task in a multi-task promotion fails validation (not found, ambiguous, or blocked), **0 tasks are moved**.
-- [ ] Update `handlePlan` in `src/cli/commands/plan.ts` to output clear error details and exit with non-zero code on failure.
-- [ ] Add unit test vectors in `src/operations/operations.test.ts` (or `src/operations/plan.test.ts`):
+- [x] Implement `resolveBacklogTaskId(backlogTasks, query)` supporting exact IDs and short numeric suffixes (`001`, `1`).
+- [x] Return an explicit `AMBIGUOUS_TASK_ID` error when a short ID matches multiple tasks in the backlog, listing all matching IDs.
+- [x] Refactor `promoteTasks` in `src/tasks/planning/plan.ts` into a two-phase atomic execution (validate all tasks before moving any).
+- [x] Ensure that if any task in a multi-task promotion fails validation (not found, ambiguous, or blocked), **0 tasks are moved**.
+- [x] Update `handlePlan` in `src/tasks/planning/plan.cli.ts` to output clear error details and exit with non-zero code on failure.
+- [x] Add unit test vectors in `src/tasks/planning/plan.test.ts`:
   1. Promoting with short ID `001` resolves to `26-001` cleanly.
   2. Duplicate short ID in backlog fails with `AMBIGUOUS_TASK_ID` and does not move the card.
   3. Batch promotion with one invalid/blocked ID aborts the entire batch without moving any valid task.
-- [ ] Ensure all existing tests pass and TypeScript check passes (`bun test && bun x tsc --noEmit`).
+- [x] Ensure all existing tests pass and TypeScript check passes (`bun test && bun run typecheck`).

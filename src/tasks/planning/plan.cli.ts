@@ -52,13 +52,18 @@ export const handlePlan: CommandHandler = async (ctx) => {
       )
     }
 
-    for (const fail of result.failed) {
-      console.error(pc.red(`✖ Failed to promote ${fail.taskId}: ${fail.error.message}`))
+    if (result.failed.length > 0) {
+      for (const fail of result.failed) {
+        console.error(pc.red(`✖ Failed to promote ${fail.taskId}: ${fail.error.message}`))
+      }
+      if (result.promoted.length === 0) {
+        const errorCount = result.failed.length
+        const countMsg = errorCount === 1 ? "1 error found" : `${errorCount} errors found`
+        console.error(pc.yellow(`✖ Promotion aborted: ${countMsg}. No tasks were moved.`))
+        return 1
+      }
     }
 
-    if (result.failed.length > 0 && result.promoted.length === 0) {
-      return 1
-    }
     return 0
   }
 

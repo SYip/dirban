@@ -6,6 +6,7 @@ import type { OperationError } from "../types.ts"
 import type { DirbanConfig } from "../../config/types.ts"
 
 const BACKLOG_COLUMN = "backlog" as const
+const TASK_SUFFIX_REGEX = /(?:^|[\.-])(\d{1,4})(?:\.md)?$/
 
 export interface PlannedTask {
   readonly task: BoardTask
@@ -16,6 +17,87 @@ export interface PartitionedPlan {
   readonly ready: readonly PlannedTask[]
   readonly blocked: readonly PlannedTask[]
   readonly totalBacklog: number
+}
+
+/**
+ * Resolves a task ID from the backlog tasks by exact match or short numeric suffix.
+ * Returns AMBIGUOUS_TASK_ID if multiple backlog tasks match the short ID.
+ */
+export const resolveBacklogTaskId = (
+  backlogTasks: readonly BoardTask[],
+  query: string,
+): Result<BoardTask, OperationError> => {
+  const trimmed = query.trim()
+  if (trimmed === "") {
+    return err({
+      kind: "TASK_NOT_FOUND",
+      message: "Task query cannot be empty",
+      id: query,
+    })
+  }
+
+  // 1. Exact match (ID, frontmatter ID, filename, or file stem)
+  const exactMatch = backlogTasks.find((t) => {
+    const canonicalId = t.document.id ?? t.document.frontmatter.id
+    const fileStem = t.filename.replace(/\.md$/, "")
+    return (
+      canonicalId === trimmed ||
+      t.filename === trimmed ||
+      fileStem === trimmed ||
+      t.filePath.endsWith(trimmed)
+    )
+  })
+
+  if (exactMatch != null) {
+    return ok(exactMatch)
+  }
+
+  // 2. Short numeric suffix match (e.g. "001" or "1")
+  const numericQuery = parseInt(trimmed, 10)
+  const isNumericQuery = !isNaN(numericQuery)
+
+  const suffixMatches = backlogTasks.filter((t) => {
+    const canonicalId = t.document.id ?? t.document.frontmatter.id ?? t.filename
+    const match = canonicalId.match(TASK_SUFFIX_REGEX)
+    if (match == null || match[1] == null) {
+      return false
+    }
+
+    const taskSuffix = match[1]
+    // Suffix string match (e.g. "001" matches "26-001")
+    if (taskSuffix === trimmed || taskSuffix.endsWith(trimmed)) {
+      return true
+    }
+
+    // Number value match (e.g. "1" matches 1 from "001")
+    if (isNumericQuery && parseInt(taskSuffix, 10) === numericQuery) {
+      return true
+    }
+
+    return false
+  })
+
+  if (suffixMatches.length === 1 && suffixMatches[0] != null) {
+    return ok(suffixMatches[0])
+  }
+
+  if (suffixMatches.length > 1) {
+    const matchedIds = suffixMatches.map(
+      (t) => t.document.id ?? t.document.frontmatter.id ?? t.filename,
+    )
+    return err({
+      kind: "AMBIGUOUS_TASK_ID",
+      message: `Ambiguous short task ID '${trimmed}': matches multiple tasks [${matchedIds.join(", ")}]. Please specify full task ID.`,
+      id: trimmed,
+      matches: matchedIds,
+    })
+  }
+
+  return err({
+    kind: "TASK_NOT_FOUND",
+    message: `Task not found in backlog: ${trimmed}`,
+    id: trimmed,
+  })
 }
 
 export const partitionBacklog = (board: Board): PartitionedPlan => {
@@ -69,41 +151,90 @@ export const promoteTasks = (
   taskIdsOrPaths: readonly string[],
   targetColumnOverride?: string,
 ): BatchPromoteResult => {
-  const promoted: PromoteTaskResult[] = []
-  const failed: { taskId: string; error: OperationError }[] = []
+  const targetColumn = targetColumnOverride ?? config.columns[0]
+  if (targetColumn == null || targetColumn.trim() === "") {
+    return {
+      promoted: [],
+      failed: taskIdsOrPaths.map((id) => ({
+        taskId: id,
+        error: {
+          kind: "COLUMN_NOT_FOUND",
+          message: "No active workflow columns configured for promotion target",
+          column: targetColumnOverride ?? "columns[0]",
+        },
+      })),
+    }
+  }
 
-  let currentBoard = board
-  for (const taskId of taskIdsOrPaths) {
-    const trimmed = taskId.trim()
-    if (trimmed === "") continue
+  const backlogCol = board.columns.find(
+    (c) => c.name.toLowerCase() === BACKLOG_COLUMN,
+  )
+  const backlogTasks = backlogCol?.tasks ?? []
 
-    const res = promoteTask(currentBoard, config, trimmed, targetColumnOverride)
-    if (res.isOk()) {
-      promoted.push(res.value)
-      // Update local board state so subsequent promotions and dependency evaluations reflect the move
-      const updatedBacklogTasks = currentBoard.columns
-        .find((c) => c.name.toLowerCase() === BACKLOG_COLUMN)
-        ?.tasks.filter((t) => (t.document.id ?? t.filename) !== (res.value.task.document.id ?? res.value.task.filename)) ?? []
+  const trimmedIds = taskIdsOrPaths
+    .map((id) => id.trim())
+    .filter((id) => id !== "")
 
-      const targetColName = res.value.targetColumn
-      const updatedColumns = currentBoard.columns.map((c) => {
-        if (c.name.toLowerCase() === BACKLOG_COLUMN) {
-          return { ...c, tasks: updatedBacklogTasks }
-        }
-        if (c.name.toLowerCase() === targetColName.toLowerCase()) {
-          return { ...c, tasks: [...c.tasks, res.value.task] }
-        }
-        return c
+  // Phase 1: Pre-validation (all-or-nothing check)
+  // Resolve every task and verify it is not blocked.
+  const resolvedTasks: BoardTask[] = []
+  const validationErrors: { taskId: string; error: OperationError }[] = []
+
+  for (const query of trimmedIds) {
+    const resolveRes = resolveBacklogTaskId(backlogTasks, query)
+    if (resolveRes.isErr()) {
+      validationErrors.push({ taskId: query, error: resolveRes.error })
+      continue
+    }
+
+    const task = resolveRes.value
+    const evaluation = evaluateTaskBlockers(task, board)
+    if (evaluation.isBlocked) {
+      const blockerList = evaluation.unresolved.join(", ")
+      validationErrors.push({
+        taskId: query,
+        error: {
+          kind: "INVALID_MUTATION",
+          message: `Cannot promote task ${task.document.id}: it is currently blocked by [${blockerList}]`,
+        },
       })
-      currentBoard = { ...currentBoard, columns: updatedColumns }
+      continue
+    }
+
+    resolvedTasks.push(task)
+  }
+
+  // If any task failed validation, abort entire batch: 0 tasks moved
+  if (validationErrors.length > 0) {
+    return {
+      promoted: [],
+      failed: validationErrors,
+    }
+  }
+
+  // Phase 2: Atomic Execution (all pre-validated tasks are moved)
+  const promoted: PromoteTaskResult[] = []
+  const executionErrors: { taskId: string; error: OperationError }[] = []
+
+  for (const task of resolvedTasks) {
+    const taskIdOrName = task.document.id ?? task.filename
+    const moveRes = moveTask(board, taskIdOrName, targetColumn)
+    if (moveRes.isOk()) {
+      promoted.push({
+        task: moveRes.value,
+        targetColumn,
+      })
     } else {
-      failed.push({ taskId: trimmed, error: res.error })
+      executionErrors.push({
+        taskId: taskIdOrName,
+        error: moveRes.error,
+      })
     }
   }
 
   return {
     promoted,
-    failed,
+    failed: executionErrors,
   }
 }
 
@@ -125,20 +256,14 @@ export const promoteTask = (
   const backlogCol = board.columns.find(
     (c) => c.name.toLowerCase() === BACKLOG_COLUMN,
   )
+  const backlogTasks = backlogCol?.tasks ?? []
 
-  const task = backlogCol?.tasks.find((t) => {
-    const id = t.document.id ?? t.document.frontmatter.id ?? t.filename
-    return id === taskIdOrPath || t.filename === taskIdOrPath || t.filePath.endsWith(taskIdOrPath)
-  })
-
-  if (task == null) {
-    return err({
-      kind: "TASK_NOT_FOUND",
-      message: `Task not found in backlog: ${taskIdOrPath}`,
-      id: taskIdOrPath,
-    })
+  const resolveRes = resolveBacklogTaskId(backlogTasks, taskIdOrPath)
+  if (resolveRes.isErr()) {
+    return err(resolveRes.error)
   }
 
+  const task = resolveRes.value
   const evaluation = evaluateTaskBlockers(task, board)
   if (evaluation.isBlocked) {
     const blockerList = evaluation.unresolved.join(", ")

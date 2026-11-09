@@ -9,7 +9,7 @@ import { blockTask, unblockTask } from "./block.ts"
 import { createTask } from "../mutation/create.ts"
 import { initializeBoard } from "../project/init.ts"
 import { moveTask } from "../mutation/move.ts"
-import { partitionBacklog, promoteTask, promoteTasks } from "./plan.ts"
+import { partitionBacklog, promoteTask, promoteTasks, resolveBacklogTaskId } from "./plan.ts"
 
 describe("Planning and Dependency Operations Tests", () => {
   it("Vector 12 (Block & Demotion): Appends blockers, normalizes IDs/paths/strings, and demotes to backlog", () => {
@@ -220,20 +220,120 @@ describe("Planning and Dependency Operations Tests", () => {
 
       const boardWithBothBatch = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
 
-      // Batch promote both unblocked tasks + the still-blocked task
+      // Atomic batch promotion: if any task is blocked, 0 tasks are moved
       const batchRes = promoteTasks(
         boardWithBothBatch,
         DEFAULT_CONFIG,
         [batchTask1.id, blockedTask.id, batchTask2.id],
       )
 
-      expect(batchRes.promoted.length).toBe(2)
+      expect(batchRes.promoted.length).toBe(0)
       expect(batchRes.failed.length).toBe(1)
       expect(batchRes.failed[0]?.taskId).toBe(blockedTask.id)
-      expect(batchRes.promoted.map((p) => p.task.document.id)).toEqual([
+
+      // When all tasks are valid, all are promoted
+      const validBatchRes = promoteTasks(
+        boardWithBothBatch,
+        DEFAULT_CONFIG,
+        [batchTask1.id, batchTask2.id],
+      )
+
+      expect(validBatchRes.promoted.length).toBe(2)
+      expect(validBatchRes.failed.length).toBe(0)
+      expect(validBatchRes.promoted.map((p) => p.task.document.id)).toEqual([
         batchTask1.id,
         batchTask2.id,
       ])
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  it("Vector 15 (Short Task ID & Ambiguity Resolution): Resolves numeric suffix and detects ambiguities", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-short-id-"))
+    try {
+      initializeBoard(DEFAULT_CONFIG, tempDir)
+      const board = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+
+      // Create task 26-001 in backlog
+      const task1 = createTask(board, {
+        title: "Unique Suffix Task",
+        column: "backlog",
+      })._unsafeUnwrap()
+
+      const boardWithTask1 = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const backlogCol = boardWithTask1.columns.find((c) => c.name === "backlog")
+      expect(backlogCol != null).toBe(true)
+      if (backlogCol == null) return
+
+      // 1. Short ID "001" and "1" resolves to 26-001
+      const res001 = resolveBacklogTaskId(backlogCol.tasks, "001")
+      expect(res001.isOk()).toBe(true)
+      expect(res001._unsafeUnwrap().document.id).toBe(task1.id)
+
+      const res1 = resolveBacklogTaskId(backlogCol.tasks, "1")
+      expect(res1.isOk()).toBe(true)
+      expect(res1._unsafeUnwrap().document.id).toBe(task1.id)
+
+      // Promote using short ID "001"
+      const promoteRes = promoteTask(boardWithTask1, DEFAULT_CONFIG, "001")
+      expect(promoteRes.isOk()).toBe(true)
+      expect(promoteRes._unsafeUnwrap().task.document.id).toBe(task1.id)
+
+      // Move task back to backlog to test ambiguity
+      const boardMoved = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      moveTask(boardMoved, task1.id, "backlog")._unsafeUnwrap()
+
+      // Manually create another task in backlog with the same numeric suffix: "25-001"
+      const taskPath25 = path.join(tempDir, "docs/tasks/backlog/25-001-legacy-task.md")
+      fs.writeFileSync(
+        taskPath25,
+        `---
+okf_version: "1.0"
+id: "25-001"
+title: "Legacy Task"
+type: "task"
+status: "backlog"
+priority: "p2"
+owner: "developer"
+assigned_to: "unassigned"
+created_date: "2025-10-10"
+last_updated: "2025-10-10"
+tags: []
+relationships:
+  depends_on: []
+  blocks: []
+  related_to: []
+---
+
+# Legacy Task
+`,
+        "utf-8",
+      )
+
+      const boardWithAmbiguity = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const backlogAmbiguous = boardWithAmbiguity.columns.find((c) => c.name === "backlog")?.tasks ?? []
+
+      // 2. Querying "001" or "1" now returns AMBIGUOUS_TASK_ID
+      const ambiguousRes = resolveBacklogTaskId(backlogAmbiguous, "001")
+      expect(ambiguousRes.isErr()).toBe(true)
+      if (ambiguousRes.isErr()) {
+        expect(ambiguousRes.error.kind).toBe("AMBIGUOUS_TASK_ID")
+        if (ambiguousRes.error.kind === "AMBIGUOUS_TASK_ID") {
+          expect(ambiguousRes.error.matches).toContain("25-001")
+          expect(ambiguousRes.error.matches).toContain(task1.id)
+        }
+      }
+
+      // Batch promotion with ambiguous ID aborts without moving anything
+      const batchAmbiguousRes = promoteTasks(
+        boardWithAmbiguity,
+        DEFAULT_CONFIG,
+        ["001"],
+      )
+      expect(batchAmbiguousRes.promoted.length).toBe(0)
+      expect(batchAmbiguousRes.failed.length).toBe(1)
+      expect(batchAmbiguousRes.failed[0]?.error.kind).toBe("AMBIGUOUS_TASK_ID")
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }

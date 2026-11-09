@@ -5,6 +5,12 @@ export type OperationError =
     readonly id: string
   }
   | {
+    readonly kind: "AMBIGUOUS_TASK_ID"
+    readonly message: string
+    readonly id: string
+    readonly matches: readonly string[]
+  }
+  | {
     readonly kind: "COLUMN_NOT_FOUND"
     readonly message: string
     readonly column: string
