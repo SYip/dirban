@@ -1,0 +1,8 @@
+.vscode/**
+src/**
+node_modules/**
+build.extension.ts
+vite.config.ts
+tsconfig.json
+bun.lock
+*.vsix

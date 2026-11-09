@@ -1,0 +1,72 @@
+{
+  "name": "dirban-vscode",
+  "displayName": "Dirban",
+  "description": "Zero-Database, Agent-Native Kanban Engine Backed by the File System and Google OKF",
+  "version": "0.1.0",
+  "publisher": "dirban",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dirban/dirban.git"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "dirban-view-container",
+          "title": "Dirban",
+          "icon": "resources/dirban-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "dirban-view-container": [
+        {
+          "type": "webview",
+          "id": "dirban.kanbanView",
+          "name": "Task Board"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "dirban.openBoard",
+        "title": "Dirban: Open Kanban Board"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "bun run build",
+    "build:extension": "bun run build.extension.ts",
+    "build:webview": "vite build",
+    "build": "bun run build:extension && bun run build:webview",
+    "watch:extension": "bun run build.extension.ts --watch",
+    "watch:webview": "vite build --watch",
+    "watch": "concurrently \"bun run watch:extension\" \"bun run watch:webview\"",
+    "package": "vsce package --no-git-tag-version --allow-missing-repository",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vscode/webview-ui-toolkit": "^1.4.0",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "@types/vscode": "^1.90.0",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "@vscode/vsce": "^3.2.1",
+    "concurrently": "^10.0.7",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.2",
+    "vite": "^6.0.0"
+  }
+}
