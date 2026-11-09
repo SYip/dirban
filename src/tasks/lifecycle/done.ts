@@ -1,0 +1,144 @@
+import { ok, err, type Result } from "neverthrow"
+import type { Board, BoardTask } from "../../board/types.ts"
+import { findTaskExact } from "../../board/discovery.ts"
+import type { DirbanConfig } from "../../config/types.ts"
+import { resolveFocusColumn, resolveNextColumn } from "../../config/config.ts"
+import { moveTask } from "../mutation/move.ts"
+import { archiveTasks } from "../mutation/archive.ts"
+import { resolveCurrentTask } from "./current.ts"
+import { getVcsProvider, type VersionControlProvider } from "../../vcs/index.ts"
+import {
+  detectWorkspaceDoneStrategy,
+  type LifecycleStrategyType,
+  type WorkspaceLifecycleStrategy,
+  type WorkspaceDoneResult,
+} from "../../workspace/index.ts"
+import type { OperationError } from "../types.ts"
+
+export interface DoneTaskSuccess {
+  readonly task: BoardTask
+  readonly uncheckedCount: number
+  readonly mergedBranch?: string
+  readonly baseBranch?: string
+  readonly worktreeRemoved?: boolean
+  readonly gitSkipped: boolean
+  readonly message?: string
+}
+
+export type DoneTaskError =
+  | { readonly kind: "NO_ACTIVE_TASK"; readonly message: string }
+  | { readonly kind: "TASK_NOT_FOUND"; readonly id: string; readonly message: string }
+  | { readonly kind: "MOVE_ERROR"; readonly message: string }
+  | { readonly kind: "GIT_ERROR"; readonly message: string }
+
+export interface DoneTaskOptions {
+  readonly cwd?: string
+  readonly baseBranch?: string
+  readonly vcsProvider?: VersionControlProvider
+  readonly strategy?: LifecycleStrategyType
+  readonly noGit?: boolean
+  readonly noMerge?: boolean
+  readonly workspaceStrategy?: WorkspaceLifecycleStrategy
+}
+
+/**
+ * Counts how many acceptance criteria items remain unchecked ([ ]).
+ */
+export const countUncheckedCriteria = (task: BoardTask): number => {
+  return task.document.acceptanceCriteria.filter((item) => !item.checked).length
+}
+
+export const doneTask = (
+  board: Board,
+  config: DirbanConfig,
+  taskId?: string,
+  options?: DoneTaskOptions,
+): Result<DoneTaskSuccess, DoneTaskError> => {
+  const cwd = options?.cwd ?? process.cwd()
+  const vcs = options?.vcsProvider ?? getVcsProvider(cwd)
+
+  // 1. Resolve task
+  let taskToDone: BoardTask
+  if (taskId != null && taskId.trim() !== "") {
+    const found = findTaskExact(board, taskId.trim())
+    if (found == null) {
+      return err({
+        kind: "TASK_NOT_FOUND",
+        id: taskId.trim(),
+        message: `Task not found: ${taskId.trim()}`,
+      })
+    }
+    taskToDone = found
+  } else {
+    const currentResult = resolveCurrentTask(board, config, undefined, cwd, vcs)
+    if (currentResult.isErr()) {
+      return err({
+        kind: "NO_ACTIVE_TASK",
+        message: currentResult.error.message,
+      })
+    }
+    taskToDone = currentResult.value.task
+  }
+
+  // 2. Count unchecked acceptance criteria
+  const uncheckedCount = countUncheckedCriteria(taskToDone)
+
+  // 3. Transition completed task file:
+  // If no columns are configured, transition directly to flat archive
+  const focusColName = resolveFocusColumn(config)
+  let updatedTask: BoardTask = taskToDone
+
+  if (focusColName == null) {
+    const archiveResult = archiveTasks(board, config, taskToDone.document.id ?? taskToDone.filename, cwd)
+    if (archiveResult.isErr()) {
+      return err({
+        kind: "MOVE_ERROR",
+        message: archiveResult.error.message,
+      })
+    }
+    const archivedTask = archiveResult.value.archivedTasks[0]
+    if (archivedTask != null) {
+      updatedTask = archivedTask
+    }
+  } else {
+    // Transition to relative next column (focus + 1, e.g. 03-done or test)
+    const targetColName = resolveNextColumn(config, focusColName)
+    if (taskToDone.column !== targetColName) {
+      const moveResult = moveTask(
+        board,
+        taskToDone.document.id ?? taskToDone.filename,
+        targetColName,
+      )
+      if (moveResult.isErr()) {
+        return err({
+          kind: "MOVE_ERROR",
+          message: moveResult.error.message,
+        })
+      }
+      updatedTask = moveResult.value
+    }
+  }
+
+  // 4. VCS branch & worktree auto-merge delegated to lifecycle strategy (with automatic runtime detection)
+  const vcsCtx = vcs.getContext(cwd)
+  const strategy =
+    options?.workspaceStrategy ??
+    detectWorkspaceDoneStrategy(updatedTask, options, vcsCtx, vcs, config, cwd)
+  const workspaceCtx = { vcs, vcsCtx, config, cwd }
+
+  const doneResult = strategy.onDone(updatedTask, workspaceCtx, options)
+  if (doneResult.isErr()) {
+    return err(doneResult.error)
+  }
+
+  const doneValue: WorkspaceDoneResult = doneResult.value
+  return ok({
+    task: updatedTask,
+    uncheckedCount,
+    mergedBranch: doneValue.mergedBranch,
+    baseBranch: doneValue.baseBranch,
+    worktreeRemoved: doneValue.worktreeRemoved,
+    gitSkipped: doneValue.gitSkipped,
+    message: doneValue.message,
+  })
+}

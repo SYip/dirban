@@ -3,8 +3,8 @@ import { parseArgs } from "node:util"
 import * as process from "node:process"
 import pc from "picocolors"
 import { loadConfig } from "./src/config/config.ts"
-import { dispatchCommand, printHelp } from "./src/cli/commands/router.ts"
-import { CLI_PARSE_OPTIONS, type CliFlags } from "./src/cli/commands/types.ts"
+import { dispatchCommand, printHelp } from "./src/cli/router.ts"
+import { CLI_PARSE_OPTIONS, type CliFlags } from "./src/cli/types.ts"
 
 export const runCli = async (args: readonly string[]): Promise<number> => {
   const { values, positionals } = parseArgs({
