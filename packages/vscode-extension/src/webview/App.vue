@@ -6,8 +6,8 @@
       @newTask="promptNewTask"
     />
 
-    <!-- Main Kanban Lanes Viewport -->
-    <main class="board-viewport">
+    <!-- Main Kanban Lanes Viewport (click-outside closes drawer) -->
+    <main class="board-viewport" ref="viewportRef" @click="handleViewportClick">
       <div v-if="boardState.columns.length === 0" class="empty-board">
         <p>No columns discovered in workspace. Run <code>dirban init</code> or check tasks directory.</p>
       </div>
@@ -111,6 +111,17 @@ function promptNewTask() {
 
 function selectTask(task: BoardTask) {
   selectedTask.value = task
+}
+
+function handleViewportClick(event: MouseEvent) {
+  if (!selectedTask.value) return
+  // If clicking on an actual task card or its children, allow selectTask to handle it
+  const target = event.target as HTMLElement | null
+  if (target?.closest(".task-card")) {
+    return
+  }
+  // Otherwise, clicked on board background, lane background, or whitespace -> close drawer
+  selectedTask.value = null
 }
 
 function openTaskFile(filePath: string) {
