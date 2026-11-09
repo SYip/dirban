@@ -2,7 +2,7 @@
 id: "26-011"
 title: "Scaffold VS Code Extension Project Structure and Build Pipeline"
 type: "task"
-status: "doing"
+status: "03-done"
 priority: "p2"
 owner: "developer"
 assigned_to: "agent"

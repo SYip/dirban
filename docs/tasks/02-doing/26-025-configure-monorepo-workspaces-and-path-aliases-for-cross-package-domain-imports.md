@@ -2,10 +2,10 @@
 id: "26-025"
 title: "Configure Monorepo Workspaces and Path Aliases for Cross-Package Domain Imports"
 type: "task"
-status: "backlog"
+status: "doing"
 priority: "p2"
 owner: "developer"
-assigned_to: "unassigned"
+assigned_to: "agent"
 created_date: "2026-11-09"
 last_updated: "2026-11-09"
 tags:
@@ -47,11 +47,11 @@ Configures Bun monorepo workspaces and clean TypeScript path aliases across the 
 
 ## Acceptance Criteria
 
-- [ ] Add `"workspaces": ["packages/*"]` to root `package.json` and verify root `bun install` links workspace packages.
-- [ ] Add root package scripts delegating build and watch commands to `packages/vscode-extension` (`build:extension`, `watch:extension`).
-- [ ] Configure `@dirban/core/*` path alias in root `tsconfig.json` and `packages/vscode-extension/tsconfig.json`.
-- [ ] Configure `vite.config.ts` in `packages/vscode-extension` to resolve `@dirban/core/*` alias.
-- [ ] Verify `build.extension.ts` (esbuild) correctly resolves `@dirban/core/*` when compiling extension host code.
-- [ ] Add a verification test or sample import from `@dirban/core` in `packages/vscode-extension/src/extension.ts` ensuring clean bundle generation and zero type errors.
-- [ ] Normalize `docs/tasks/03-done/26-011-...md` frontmatter status to `03-done`.
-- [ ] Run test suite and typechecks across both root and extension workspaces (`mise exec -- bun test && mise exec -- bun run typecheck`).
+- [x] Add `"workspaces": ["packages/*"]` to root `package.json` and verify root `bun install` links workspace packages.
+- [x] Add root package scripts delegating build and watch commands to `packages/vscode-extension` (`build:extension`, `watch:extension`).
+- [x] Configure `@dirban/core/*` path alias in root `tsconfig.json` and `packages/vscode-extension/tsconfig.json`.
+- [x] Configure `vite.config.ts` in `packages/vscode-extension` to resolve `@dirban/core/*` alias.
+- [x] Verify `build.extension.ts` (esbuild) correctly resolves `@dirban/core/*` when compiling extension host code.
+- [x] Add a verification test or sample import from `@dirban/core` in `packages/vscode-extension/src/extension.ts` ensuring clean bundle generation and zero type errors.
+- [x] Normalize `docs/tasks/03-done/26-011-...md` frontmatter status to `03-done`.
+- [x] Run test suite and typechecks across both root and extension workspaces (`mise exec -- bun test && mise exec -- bun run typecheck`).

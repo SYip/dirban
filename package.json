@@ -11,9 +11,15 @@
     "dirban": "bun run main.ts",
     "build": "bun build ./main.ts --compile --outfile dirban && (command -v codesign > /dev/null 2>&1 && codesign --force --sign - dirban || true)",
     "install:local": "bun build ./main.ts --compile --outfile ~/.local/bin/dirban && (command -v codesign > /dev/null 2>&1 && codesign --force --sign - ~/.local/bin/dirban || true)",
+    "build:extension": "bun --filter dirban-vscode build",
+    "watch:extension": "bun --filter dirban-vscode watch",
+    "package:extension": "bun --filter dirban-vscode package",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && bun --filter dirban-vscode typecheck"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "dependencies": {
     "neverthrow": "^8.2.0",
     "picocolors": "^1.1.1",
