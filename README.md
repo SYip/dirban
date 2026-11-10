@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/SYip/dirban/actions/workflows/publish.yml/badge.svg)](https://github.com/SYip/dirban/actions)
 [![npm version](https://img.shields.io/npm/v/dirban.svg?color=cb3837)](https://www.npmjs.com/package/dirban)
-[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/dirban.dirban-vscode?color=blue&label=VS%20Code)](https://marketplace.visualstudio.com/items?itemName=dirban.dirban-vscode)
+[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/syip.dirban-vscode?color=blue&label=VS%20Code)](https://marketplace.visualstudio.com/items?itemName=syip.dirban-vscode)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
@@ -89,8 +89,8 @@ dirban board
 dirban board --static
 ```
 
-### 2. VS Code Extension ([Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=dirban.dirban-vscode))
-- Install directly from VS Code: Search for `Dirban` (`dirban.dirban-vscode`).
+### 2. VS Code Extension ([Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=syip.dirban-vscode))
+- Install directly from VS Code: Search for `Dirban` (`syip.dirban-vscode`).
 - **Focus View**: Pinned sidebar panel showing the currently active task, branch alignment, and interactive checklist.
 - **Status Bar Indicator**: Real-time status badge (`$(checklist) 26-001 [2/5]`) linking directly to the active task.
 - **Embedded Webview Kanban Board**: Visual drag-and-drop Kanban board running natively inside an editor tab.
@@ -123,6 +123,17 @@ Dirban maps directly to the questions developers and AI agents ask when executin
 - 💻 **[CLI & TUI Reference Manual](docs/cli-reference.md)**: Full command reference, options, and keyboard shortcuts.
 - 🌿 **[Trunk-Based Git Workflow](docs/concepts/git-workflow.md)**: Git branch automation, worktree isolation, and squash merging.
 - 🐚 **[Forget About Dirban](docs/concepts/forget-about-dirban.md)**: Complete mapping of every Dirban command to raw POSIX shell (`ls`, `mv`, `cat`).
+
+---
+
+## Status & What's Next
+
+Dirban is under active development. Current focus areas:
+
+- **Enhanced Planning Mode (`dirban plan`)**: Smarter dependency graph visualization, multi-task batch promotions, and automated unblocking rules.
+- **Archive & History Search (`dirban archive`)**: Full-text searching across historical tasks, completed date indexing, and archival export options.
+
+Feedback, bug reports, and suggestions are welcome on [GitHub Discussions](https://github.com/SYip/dirban/discussions) and [Issues](https://github.com/SYip/dirban/issues).
 
 ---
 

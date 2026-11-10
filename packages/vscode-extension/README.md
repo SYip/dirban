@@ -99,6 +99,17 @@ Configure your board in `.vscode/settings.json` (or `.dirban.json` in your repos
 
 ---
 
+## Status & What's Next
+
+Dirban for VS Code is under active development. Current focus areas:
+
+- **Planning View (`dirban.openBoard` & Plan mode)**: Dependency tree visualization, batch task promotions, and automated unblocking rules right in the editor.
+- **Archive Explorer**: Fast search and historical review of completed tasks directly from the VS Code sidebar.
+
+Feedback, bug reports, and feature requests are welcome on [GitHub Discussions](https://github.com/SYip/dirban/discussions) and [Issues](https://github.com/SYip/dirban/issues).
+
+---
+
 ## Contributing & Development
 
 For instructions on building from source, running tests, and debugging with F5, see **[DEVELOPMENT.md](https://github.com/SYip/dirban/blob/main/packages/vscode-extension/DEVELOPMENT.md)**.
