@@ -91,15 +91,20 @@ describe("VS Code Extension Focus and Tree Items", () => {
       id: "26-009",
       title: "Focus View Integration",
       priority: "p1",
-      status: "doing",
+      tags: [],
+      titleHeader: "Focus View Integration",
+      objectiveScope: "Scope",
+      verificationPlan: "Plan",
+      executionJournal: [],
+      otherSections: [],
       frontmatter: {
         id: "26-009",
         title: "Focus View Integration",
         priority: "p1",
       },
       acceptanceCriteria: [
-        { index: 0, text: "First criterion", checked: true },
-        { index: 1, text: "Second criterion", checked: false },
+        { index: 0, text: "First criterion", checked: true, rawLine: "- [x] First criterion" },
+        { index: 1, text: "Second criterion", checked: false, rawLine: "- [ ] Second criterion" },
       ],
       rawBody: "Body text",
     },
@@ -107,11 +112,11 @@ describe("VS Code Extension Focus and Tree Items", () => {
 
   const dummyConfig: DirbanConfig = {
     tasksDir: "docs/tasks",
+    archiveDir: "docs/tasks/archive",
     columns: ["01-todo", "02-doing", "03-done"],
     focusColumn: "02-doing",
     priorities: ["p0", "p1", "p2", "p3"],
     defaultPriority: "p2",
-    archiveCompleted: false,
     branchStrategy: "checkout",
   }
 
