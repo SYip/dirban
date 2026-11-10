@@ -4,6 +4,24 @@ This document provides a comprehensive command reference for the **Dirban (`dirb
 
 ---
 
+### Installation
+
+```bash
+# Option A: Build and link globally with Bun
+git clone https://github.com/andrew/dirban.git
+cd dirban && bun install
+bun link
+
+# Or compile into a standalone binary in ~/.local/bin:
+bun run install:local
+
+# Option B: Download standalone prebuilt binary from GitHub Releases
+curl -fsSL https://github.com/andrew/dirban/releases/latest/download/dirban-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m) -o ~/.local/bin/dirban
+chmod +x ~/.local/bin/dirban
+```
+
+---
+
 ## 1. User CLI Reference (`dirban`)
 
 The `dirban` command provides deterministic, scriptable task and board operations driven by a cohesive 5-verb lifecycle:

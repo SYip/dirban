@@ -35,6 +35,16 @@ Developers building software individually or in small teams ($\le 5$ people), es
 2. **Monolithic Markdown tools** force all tasks into a single file, creating frequent Git merge conflicts even when editing completely unrelated tasks, while heavily polluting token context windows.
 3. **Raw filesystem directories** lack Kanban mechanics, visual state transitions, priority-based sorting, and checklist progress indicators.
 
+### The Speed Mismatch: Weeks vs. Minutes
+
+Traditional cloud task management was designed around human estimation rituals: multi-week sprints, quarterly roadmaps, and ticket lifecycles measured in **weeks to months**.
+
+AI agent workflows run on a radically different tempo:
+- **Agent iterations happen in minutes to days.**
+- A developer defines acceptance criteria, dispatches an agent, and reviews the implementation 15 minutes later.
+- Logging into a browser, navigating workspaces, updating cloud issue statuses, and resolving webhook delays creates severe impedance mismatch.
+- A local task board that updates instantaneously on disk keeps pace with autonomous agent speed.
+
 ### The Real-World AI Agent Workflow: Iteration & Cross-Project Juggling
 
 The catalyst for Dirban came directly from day-to-day experience running modern AI agent workflows:

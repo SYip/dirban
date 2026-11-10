@@ -2,7 +2,7 @@
 id: "26-024"
 title: "Streamline and refine README documentation"
 type: "task"
-status: "backlog"
+status: "in-progress"
 priority: "p2"
 owner: "developer"
 assigned_to: "unassigned"
@@ -31,8 +31,8 @@ We need to restructure and refine `README.md` to be concise, punchy, and scannab
 4. **Refine Quickstart & Commands**: Keep CLI examples copy-paste ready and highlight the intent-driven workflow table.
 
 ## Acceptance Criteria
-- [ ] Audit `README.md` to identify redundant, over-long sections and extract offloadable deep-dive narrative.
-- [ ] Condense "Origin & The Agent-First Workflow" into a concise "Why Dirban?" overview while referencing `docs/concepts/why-dirban.md` for extended rationale.
-- [ ] Streamline the "Quick Start" and "Common Commands" sections for rapid onboarding without sacrificing essential flags.
-- [ ] Consolidate repetitive configuration examples under `.dirban.json` into a single, clean annotated reference.
-- [ ] Ensure formatting conforms to project documentation standards (links, headers, markdown tables, badges).
+- [x] Audit `README.md` to identify redundant, over-long sections and extract offloadable deep-dive narrative.
+- [x] Condense "Origin & The Agent-First Workflow" into a concise "Why Dirban?" overview while referencing `docs/concepts/why-dirban.md` for extended rationale.
+- [x] Streamline the "Quick Start" and "Common Commands" sections for rapid onboarding without sacrificing essential flags.
+- [x] Consolidate repetitive configuration examples under `.dirban.json` into a single, clean annotated reference.
+- [x] Ensure formatting conforms to project documentation standards (links, headers, markdown tables, badges).
