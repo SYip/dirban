@@ -4,6 +4,7 @@
   "description": "Zero-Database, Agent-Native Kanban Engine Backed by the File System and Google OKF",
   "version": "0.1.2",
   "publisher": "SYip",
+  "icon": "resources/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/SYip/dirban.git"
@@ -12,7 +13,19 @@
     "vscode": "^1.90.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Visualization"
+  ],
+  "keywords": [
+    "productivity",
+    "kanban",
+    "task-management",
+    "todo",
+    "tasks",
+    "agents",
+    "ai-agents",
+    "git",
+    "markdown"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
@@ -124,6 +137,31 @@
           ],
           "description": "Ordered active flow columns on the Kanban board."
         },
+        "dirban.focusColumn": {
+          "type": "string",
+          "default": "02-doing",
+          "description": "The active focus / doing column tracked by the Focus View and active task resolver."
+        },
+        "dirban.archiveDir": {
+          "type": "string",
+          "default": "docs/tasks/archive",
+          "description": "Destination folder where finished tasks are archived."
+        },
+        "dirban.branchStrategy": {
+          "type": "string",
+          "enum": [
+            "checkout",
+            "worktree",
+            "none"
+          ],
+          "default": "checkout",
+          "description": "Workspace strategy when starting a task: checkout branch, separate worktree, or none."
+        },
+        "dirban.autoMerge": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically squash and merge task branch upon task completion."
+        },
         "dirban.priorities": {
           "type": "array",
           "items": {
@@ -153,7 +191,7 @@
     "watch:extension": "bun run build.extension.ts --watch",
     "watch:webview": "vite build --watch",
     "watch": "concurrently \"bun run watch:extension\" \"bun run watch:webview\"",
-    "package": "vsce package --no-git-tag-version --allow-missing-repository",
+    "package": "vsce package --no-dependencies --no-git-tag-version --allow-missing-repository",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

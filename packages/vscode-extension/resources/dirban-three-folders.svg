@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <filter id="glowF" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3.5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="128" height="128" rx="20" fill="#0a0e14" />
+  <rect width="128" height="128" rx="20" fill="none" stroke="#1e293b" stroke-width="1.5" />
+
+  <!-- Folder 1: todo (without slash) -->
+  <g transform="translate(14, 28)">
+    <!-- Folder tab -->
+    <path d="M 0 4 C 0 1.8 1.8 0 4 0 L 14 0 C 16 0 17.5 1 18.5 2.5 L 21 6 L 28 6 C 30.2 6 32 7.8 32 10 L 32 70 C 32 72.2 30.2 74 28 74 L 4 74 C 1.8 74 0 72.2 0 70 Z" fill="#111827" stroke="#1e293b" stroke-width="1.2" />
+    <!-- Folder front flap -->
+    <path d="M 0 18 L 32 18 L 32 70 C 32 72.2 30.2 74 28 74 L 4 74 C 1.8 74 0 72.2 0 70 Z" fill="#161f2e" stroke="#334155" stroke-width="1" />
+    <!-- Markdown task sheets inside -->
+    <rect x="4" y="10" width="24" height="20" rx="2" fill="#1e293b" stroke="#475569" stroke-width="0.8" />
+    <rect x="7" y="14" width="12" height="2" rx="1" fill="#64748b" />
+    <rect x="7" y="18" width="8" height="2" rx="1" fill="#475569" />
+    <!-- Label: 'todo' without slash -->
+    <text x="16" y="68" fill="#64748b" font-family="monospace" font-size="5.5" font-weight="600" text-anchor="middle">todo</text>
+  </g>
+
+  <!-- Folder 2: doing (ACTIVE, elevated, glowing emerald tab and body) -->
+  <g transform="translate(48, 22)">
+    <!-- Glow aura -->
+    <rect x="-2" y="-2" width="36" height="84" rx="6" fill="#10b981" opacity="0.15" filter="url(#glowF)" />
+    <!-- Folder back & tab -->
+    <path d="M 0 4 C 0 1.8 1.8 0 4 0 L 16 0 C 18 0 19.5 1 20.5 2.5 L 23 6 L 28 6 C 30.2 6 32 7.8 32 10 L 32 76 C 32 78.2 30.2 80 28 80 L 4 80 C 1.8 80 0 78.2 0 76 Z" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+    <!-- Glowing markdown file popping out -->
+    <rect x="4" y="6" width="24" height="28" rx="3" fill="#065f46" stroke="#34d399" stroke-width="1.2" />
+    <rect x="7" y="11" width="14" height="2.5" rx="1" fill="#6ee7b7" />
+    <rect x="7" y="16" width="18" height="2" rx="1" fill="#34d399" />
+    <rect x="7" y="20.5" width="10" height="2" rx="1" fill="#10b981" />
+    <!-- Folder front flap -->
+    <path d="M 0 22 L 32 22 L 32 76 C 32 78.2 30.2 80 28 80 L 4 80 C 1.8 80 0 78.2 0 76 Z" fill="#042f2e" stroke="#10b981" stroke-width="1.2" />
+    <!-- Front folder accent line -->
+    <line x1="6" y1="30" x2="26" y2="30" stroke="#10b981" stroke-width="1" stroke-opacity="0.4" />
+    <!-- Label: 'doing' (without slash) -->
+    <text x="16" y="74" fill="#34d399" font-family="monospace" font-size="6" font-weight="700" text-anchor="middle">doing</text>
+  </g>
+
+  <!-- Folder 3: done (cyan accent, completed file) -->
+  <g transform="translate(82, 28)">
+    <!-- Folder tab -->
+    <path d="M 0 4 C 0 1.8 1.8 0 4 0 L 14 0 C 16 0 17.5 1 18.5 2.5 L 21 6 L 28 6 C 30.2 6 32 7.8 32 10 L 32 70 C 32 72.2 30.2 74 28 74 L 4 74 C 1.8 74 0 72.2 0 70 Z" fill="#0f172a" stroke="#0284c7" stroke-width="1.2" stroke-opacity="0.6" />
+    <!-- Completed sheet inside -->
+    <rect x="4" y="10" width="24" height="20" rx="2" fill="#0c4a6e" stroke="#38bdf8" stroke-width="0.8" opacity="0.9" />
+    <rect x="7" y="14" width="11" height="2" rx="1" fill="#7dd3fc" />
+    <path d="M 20 15 L 21.5 16.5 L 24 13.5" fill="none" stroke="#38bdf8" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Folder front flap -->
+    <path d="M 0 18 L 32 18 L 32 70 C 32 72.2 30.2 74 28 74 L 4 74 C 1.8 74 0 72.2 0 70 Z" fill="#082f49" stroke="#0ea5e9" stroke-width="1" />
+    <!-- Label: 'done' (without slash) -->
+    <text x="16" y="68" fill="#38bdf8" font-family="monospace" font-size="5.5" font-weight="600" text-anchor="middle">done</text>
+  </g>
+
+  <!-- Connecting Git Pipeline Spine -->
+  <path d="M 30 108 L 98 108" fill="none" stroke="#1e293b" stroke-width="2" stroke-dasharray="3 3" />
+  <circle cx="30" cy="108" r="3" fill="#1e293b" stroke="#475569" stroke-width="1" />
+  <circle cx="64" cy="108" r="4" fill="#10b981" />
+  <circle cx="98" cy="108" r="3" fill="#0284c7" stroke="#38bdf8" stroke-width="1" />
+</svg>
