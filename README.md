@@ -14,9 +14,11 @@ Dirban tracks task state using plain directories and Markdown files. It is desig
 **The physical directory is the task state.** Moving a task between stages is just moving a file (`mv`).
 
 - **Directories as Columns**: Workflow stages are plain folders (`01-todo/`, `02-doing/`, `03-done/`).
+- **Customizable Workflows**: Tailor column names, staging pipelines, and priority tiers to your exact workflow using [`.dirban.json`](docs/concepts/configuration.md).
 - **Isolated Task Files**: Each task is a self-contained Markdown file with an optional priority and checklist (`- [ ]`). Editing one task never collides with another in Git or file sync.
 - **Agent-Ready & Context-Efficient**: AI tools and scripts read only the active task file (`dirban current`), keeping token usage low and focus sharp.
-- **100% Local & Future-Proof**: Works anywhere files live—Git repositories, Obsidian vaults, Dropbox, or local drives. If you stop using Dirban, your tasks remain standard Markdown files readable in any text editor.
+- **Git is Completely Optional**: While Dirban automates Git branching and worktrees for developers, it works equally well on plain folders (`branchStrategy: "none"`) in Obsidian vaults, Dropbox, or local drives.
+- **100% Local & Future-Proof**: Cloud task managers expect iteration cycles in weeks to months. Agent workflows iterate in minutes. If you ever stop using Dirban, your tasks remain standard Markdown files readable in any text editor.
 
 ---
 
@@ -120,7 +122,8 @@ Dirban maps directly to the questions developers and AI agents ask when executin
 
 ## Deep-Dive Documentation
 
-- 📖 **[Why Dirban: Philosophy & Comparative Positioning](docs/concepts/why-dirban.md)**: Comparison with Linear, Jira, Obsidian Kanban, and raw bash scripts.
+- 📋 **[Technical Specification & Standards (`spec.md`)](spec.md)**: Google OKF schemas, trunk-based branching, state precedence, and engine invariants.
+- 📖 **[Why Dirban: Philosophy & Comparative Positioning](docs/concepts/why-dirban.md)**: Fast agent cycles (minutes) vs cloud tools (weeks), comparison matrix, and trade-offs.
 - ⚙️ **[Configuration Guide (`.dirban.json`)](docs/concepts/configuration.md)**: Custom columns, workflows, semantic priorities, and Git worktrees.
 - 💻 **[CLI & TUI Reference Manual](docs/cli-reference.md)**: Full command reference, options, and keyboard shortcuts.
 - 🌿 **[Trunk-Based Git Workflow](docs/concepts/git-workflow.md)**: Git branch automation, worktree isolation, and squash merging.
