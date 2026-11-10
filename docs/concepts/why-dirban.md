@@ -5,18 +5,20 @@ title: "Why Dirban: Comparative Positioning & Philosophy"
 type: "concept"
 status: "accepted"
 owner: "developer"
-last_updated: "2026-10-12"
+last_updated: "2026-11-10"
 tags:
   - concept
   - comparison
   - architecture
   - kanban
   - productivity
+  - trade-offs
 relationships:
   depends_on: []
   supersedes: []
   related_to:
     - "spec.md"
+    - "docs/concepts/git-workflow.md"
     - "docs/decisions/2026-10-12-plain-markdown-and-git-audit.md"
     - "docs/decisions/2026-11-07-omission-of-milestones.md"
     - "docs/decisions/2026-11-07-progressive-enhancement-optional-dependencies.md"
@@ -115,7 +117,50 @@ Using physical directories as columns is the native filesystem solution:
 
 ---
 
-## 6. Why Not Just the Raw File System?
+## 6. The Core Trade-Off: Giving Up Global Stage Consistency
+
+Adopting Dirban involves a clear, conscious architectural trade-off that every developer and team should understand:
+
+### What You Give Up: Strong Consistency of Board Stage Across Branches
+
+In a centralized cloud system (Linear, Jira) or a hosted server database:
+- There is **one single source of truth** stored in the cloud.
+- Moving a task in the UI immediately updates the remote database in the cloud, instantly reflecting on everyone else's screen regardless of their local machine state.
+- Task status is decoupled from Git branches: switching local branches or working offline never alters the cloud board stage.
+
+In Dirban:
+- **The filesystem directory IS the task state**, and tasks are committed to Git.
+- Git is a distributed, branchable system without real-time centralized synchronization.
+- **Task status branches with your code**:
+  - If you move a task to `02-doing` inside a short-lived branch `task/26-001`, someone else on `main` still sees that file in `01-todo` until your branch merges.
+  - If two developers concurrently move the *exact same* task file into different directories on separate branches, merging those branches triggers a Git `rename/rename` conflict.
+  - Switching between Git branches physically moves files on disk, changing what your board displays.
+
+Dirban consciously trades away **centralized, real-time board state consistency**.
+
+### What You Get in Exchange
+
+In exchange for giving up centralized stage consistency, you gain superpowers that cloud databases cannot provide:
+
+| Dimension | Centralized Cloud (Linear / Jira) | Dirban (Distributed Filesystem & Git) | What You Gain |
+| :--- | :--- | :--- | :--- |
+| **Agent Context & Autonomy** | Requires OAuth, MCP servers, API keys, network access, and broad JSON queries. | Plain local files (`cat`, `ls`, `mv`). Agent loads only the exact task file it executes. | **Zero-overhead agent ergonomics**: No MCP setup, zero token waste, zero network dependency. |
+| **Task State & Code Synchronization** | Tasks live out of sync with code history (e.g. ticket marked "Done" in Jira months before or after PR merges). | Task state transitions are part of the Git commit history. | **Time-travel consistency**: Checking out commit `v1.2.0` restores the exact board state and tasks as they were at that release. |
+| **Offline Independence** | Degrades or breaks without internet or during cloud downtime. | 100% offline; runs on plane, train, or isolated environment. | **Uninterrupted flow**: Your board never goes down, has no rate limits, and requires no login. |
+| **Zero Lock-In & 10-Year Longevity** | Proprietary schema; data held hostage by SaaS pricing or service termination. | Standard OS directories and human-readable Markdown files. | **Permanent ownership**: Readable in Finder, Vim, or VS Code even if Dirban is completely uninstalled. |
+| **Zero Context-Switching Tax** | Alt-tab to browser, authenticate, navigate workspaces, cross-reference tickets. | Active task is visible in terminal (`dirban current`), IDE status bar, and workspace tree. | **Frictionless focus**: Never leave the editor to know what you or an autonomous agent is working on. |
+| **Workflow Coupling** | Branch creation, PR linking, and status moving happen across disconnected apps via webhooks. | Lifecycle automation is tied to Git (`dirban start` checks out branch, `dirban done` auto-merges to `main`). | **Trunk-based velocity**: Execution, review, and task tracking collapse into a single unified loop. |
+
+### Why This Trade-Off Fits Small Teams & Agents
+
+This trade-off is deliberately optimized for **solo developers, micro-teams ($\le 5$), and AI coding agents**:
+- A small team or solo developer working with AI agents does not need multi-tenant concurrency locks or enterprise permission matrices.
+- The 5-to-30 minute autonomous agent loop relies heavily on fast, local, offline file access and trunk-based integration.
+- When teams scale to 20+ developers with dedicated project managers and cross-team dependencies, centralized state consistency becomes more important than local speed—at which point teams can seamlessly graduate to cloud tools.
+
+---
+
+## 7. Why Not Just the Raw File System?
 
 A common question is: *“If columns are folders and tasks are markdown files, why do I need a CLI tool or extension at all? Why not just use `mv` and Finder/VS Code Explorer?”*
 
@@ -147,7 +192,7 @@ Over months of work, `backlog/` and `archive/` accumulate hundreds of files. Ope
 
 ---
 
-## 7. The Dirban Sweet Spot
+## 8. The Dirban Sweet Spot
 
 ```text
                High Governance & Heavy DB
@@ -173,7 +218,7 @@ Dirban strikes the ideal balance:
 
 ---
 
-## 8. Why TypeScript (and Not Go / Rust / C++)?
+## 9. Why TypeScript (and Not Go / Rust / C++)?
 
 A natural question for a CLI tool is: *“Rust, Go, or Zig are faster and compile to single native binaries—why build Dirban in TypeScript?”*
 
@@ -193,7 +238,7 @@ The primary GUI for Dirban is a first-class **VS Code Extension** (TreeViews, in
 
 ---
 
-## 9. Progressive Enhancement: Filesystem as Foundation, Git & VS Code as Accelerators
+## 10. Progressive Enhancement: Filesystem as Foundation, Git & VS Code as Accelerators
 
 Dirban operates on a strict **tiered progressive enhancement** architecture:
 
