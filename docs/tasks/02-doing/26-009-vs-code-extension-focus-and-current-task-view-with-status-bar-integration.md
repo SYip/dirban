@@ -2,7 +2,7 @@
 id: "26-009"
 title: "VS Code Extension Focus and Current Task View with Status Bar Integration"
 type: "task"
-status: "01-todo"
+status: "doing"
 priority: "p2"
 owner: "developer"
 assigned_to: "unassigned"
@@ -67,11 +67,11 @@ Surfaces the developer's in-progress work directly in the editor chrome with liv
 
 ## Acceptance Criteria
 
-- [ ] Reorder sidebar container views so `dirban.focusView` (Current Task) is the top primary view, and `dirban.treeView` (All Tasks / Columns) sits below it at the bottom.
-- [ ] Update `ColumnTreeItem` in sidebar tree to default to collapsed for all columns except the focus column and pre-focus column (`focus - 1`).
-- [ ] Create VS Code Status Bar item powered by `resolveCurrentTask`, updating reactively on file changes or branch switches.
-- [ ] Implement `DirbanFocusViewProvider` sidebar pane styled like Source Control, displaying active task metadata, branch/worktree, and interactive criteria checkboxes.
-- [ ] Support both Preview Mode (`markdown.showPreviewToSide`) and Edit Mode (`vscode.open`) via title bar icon actions and command palette.
-- [ ] Implement direct acceptance criteria toggling (`checkTaskItem`) from the Focus sidebar with instantaneous UI update and disk sync.
-- [ ] Add command palette actions for `Dirban: Focus Current Task`, `Dirban: Preview Current Task`, `Dirban: Edit Current Task`, and `Dirban: Mark Current Task Done`.
-- [ ] Handle edge cases gracefully: empty active state ("No active task in progress"), multiple tasks in doing notice, and non-git worktree environments.
+- [x] Reorder sidebar container views so `dirban.focusView` (Current Task) is the top primary view, and `dirban.treeView` (All Tasks / Columns) sits below it at the bottom.
+- [x] Update `ColumnTreeItem` in sidebar tree to default to collapsed for all columns except the focus column and pre-focus column (`focus - 1`).
+- [x] Create VS Code Status Bar item powered by `resolveCurrentTask`, updating reactively on file changes or branch switches.
+- [x] Implement `DirbanFocusViewProvider` sidebar pane styled like Source Control, displaying active task metadata, branch/worktree, and interactive criteria checkboxes.
+- [x] Support both Preview Mode (`markdown.showPreviewToSide`) and Edit Mode (`vscode.open`) via title bar icon actions and command palette.
+- [x] Implement direct acceptance criteria toggling (`checkTaskItem`) from the Focus sidebar with instantaneous UI update and disk sync.
+- [x] Add command palette actions for `Dirban: Focus Current Task`, `Dirban: Preview Current Task`, `Dirban: Edit Current Task`, and `Dirban: Mark Current Task Done`.
+- [x] Handle edge cases gracefully: empty active state ("No active task in progress"), multiple tasks in doing notice, and non-git worktree environments.
