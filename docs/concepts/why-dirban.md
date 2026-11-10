@@ -19,6 +19,7 @@ relationships:
   related_to:
     - "spec.md"
     - "docs/concepts/git-workflow.md"
+    - "docs/concepts/forget-about-dirban.md"
     - "docs/decisions/2026-10-12-plain-markdown-and-git-audit.md"
     - "docs/decisions/2026-11-07-omission-of-milestones.md"
     - "docs/decisions/2026-11-07-progressive-enhancement-optional-dependencies.md"
@@ -150,13 +151,18 @@ In exchange for giving up centralized stage consistency, you gain superpowers th
 | **Zero Lock-In & 10-Year Longevity** | Proprietary schema; data held hostage by SaaS pricing or service termination. | Standard OS directories and human-readable Markdown files. | **Permanent ownership**: Readable in Finder, Vim, or VS Code even if Dirban is completely uninstalled. |
 | **Zero Context-Switching Tax** | Alt-tab to browser, authenticate, navigate workspaces, cross-reference tickets. | Active task is visible in terminal (`dirban current`), IDE status bar, and workspace tree. | **Frictionless focus**: Never leave the editor to know what you or an autonomous agent is working on. |
 | **Workflow Coupling** | Branch creation, PR linking, and status moving happen across disconnected apps via webhooks. | Lifecycle automation is tied to Git (`dirban start` checks out branch, `dirban done` auto-merges to `main`). | **Trunk-based velocity**: Execution, review, and task tracking collapse into a single unified loop. |
+| **Iteration Cadence** | Built around 1-to-2 week human sprint cycles, estimation ceremonies, and milestone planning. | Built around rapid iterations where human + AI agent cycles take hours or minutes. | **Hyper-velocity feedback**: No sprint overhead or ceremonial backlog grooms when turnaround is same-day. |
 
 ### Why This Trade-Off Fits Small Teams & Agents
 
 This trade-off is deliberately optimized for **solo developers, micro-teams ($\le 5$), and AI coding agents**:
-- A small team or solo developer working with AI agents does not need multi-tenant concurrency locks or enterprise permission matrices.
-- The 5-to-30 minute autonomous agent loop relies heavily on fast, local, offline file access and trunk-based integration.
-- When teams scale to 20+ developers with dedicated project managers and cross-team dependencies, centralized state consistency becomes more important than local speed—at which point teams can seamlessly graduate to cloud tools.
+- **From Multi-Week Sprints to Continuous Sub-Hour Iterations**:  
+  Traditional cloud platforms (Jira, Linear) were architected around the cadence of pure human development teams: 1-to-2 week sprints, backlog grooming sessions, sprint retrospectives, and multi-day code review cycles. In an agent-first paradigm, **iterations shrink from weeks into hours or even minutes**. A feature that once took a sprint cycle is decomposed into small, testable tasks and executed autonomously in 5-to-30 minute loops. Managing 15-minute iterations inside a heavy tool built for 2-week sprints creates immense bureaucratic drag.
+- **No Concurrency Bloat**:  
+  A small team or solo developer working with AI agents does not need multi-tenant concurrency locks, permission matrices, or centralized board synchronizers.
+- **Local Speed & Trunk Integration**:  
+  The rapid autonomous loop relies on fast, local, offline file access and trunk-based integration.
+- When teams scale to 20+ developers with dedicated project managers and cross-team dependencies, centralized state consistency and multi-week sprint governance become more important than local speed—at which point teams can seamlessly graduate to cloud tools.
 
 ---
 
@@ -212,7 +218,7 @@ Over months of work, `backlog/` and `archive/` accumulate hundreds of files. Ope
 
 Dirban strikes the ideal balance:
 - **Near-Zero Learning Curve**: There is practically nothing new to learn. You already know how to make a directory, write a Markdown file, and move a file.
-- **Forget About Dirban**: You can completely forget the tool exists whenever you want. You don't need to run commands or keep an app open; if you prefer, you can manage your entire project using standard Finder, VS Code Explorer, or terminal commands (`mv`, `ls`, `cat`, `git`). Dirban is an invisible lens, not a gatekeeper.
+- **Forget About Dirban**: You can completely forget the tool exists whenever you want. You can use only the features you want—there is no hidden state, secret metadata database, or magic in Dirban. If you prefer, you can manage your entire project using standard Finder, VS Code Explorer, or terminal commands (`mv`, `ls`, `cat`, `git`). Dirban is an invisible lens when you want visual powers, not a gatekeeper. (See the complete command-by-command guide: **[Forget About Dirban: Zero Lock-In & Plain Shell Equivalents](forget-about-dirban.md)**).
 - **As simple as the filesystem**: Standard OS directories and plain text files.
 - **As functional as a modern Kanban board**: Priority ranking, checklist synthesis, TUI/IDE visual board, and Git-native history when you want the visual superpowers.
 
