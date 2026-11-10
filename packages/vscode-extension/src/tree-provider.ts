@@ -14,10 +14,42 @@ export class ColumnTreeItem extends vscode.TreeItem {
     public readonly taskCount: number,
     config?: DirbanConfig,
   ) {
-    super(columnName, vscode.TreeItemCollapsibleState.Expanded)
+    const collapsibleState = ColumnTreeItem.resolveCollapsibleState(columnName, config)
+    super(columnName, collapsibleState)
     this.description = `(${taskCount})`
     this.tooltip = `Column: ${columnName} — ${taskCount} tasks`
     this.iconPath = new vscode.ThemeIcon(this.resolveIcon(columnName, config))
+  }
+
+  private static resolveCollapsibleState(
+    columnName: string,
+    config?: DirbanConfig,
+  ): vscode.TreeItemCollapsibleState {
+    if (!config) {
+      return vscode.TreeItemCollapsibleState.Expanded
+    }
+
+    const activeColumn = resolveFocusColumn(config)
+    if (!activeColumn) {
+      return vscode.TreeItemCollapsibleState.Expanded
+    }
+
+    const lowerCol = columnName.toLowerCase()
+    const lowerActive = activeColumn.toLowerCase()
+
+    // 1. Focus column (e.g. 02-doing) -> Expanded
+    if (lowerCol === lowerActive) {
+      return vscode.TreeItemCollapsibleState.Expanded
+    }
+
+    // 2. Pre-focus column (activeColumn - 1, e.g. 01-todo) -> Expanded
+    const prevCol = resolvePreviousColumn(config, activeColumn)
+    if (prevCol && lowerCol === prevCol.toLowerCase()) {
+      return vscode.TreeItemCollapsibleState.Expanded
+    }
+
+    // 3. All other columns (backlog, done, archive) -> Collapsed by default
+    return vscode.TreeItemCollapsibleState.Collapsed
   }
 
   private resolveIcon(columnName: string, config?: DirbanConfig): string {

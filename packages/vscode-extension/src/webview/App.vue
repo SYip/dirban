@@ -69,6 +69,7 @@ const boardState = reactive<WebviewBoardState>({
 })
 
 const selectedTask = ref<BoardTask | null>(null)
+let hasAppliedInitialFocus = false
 
 onMounted(() => {
   window.addEventListener("message", (event) => {
@@ -77,12 +78,26 @@ onMounted(() => {
       boardState.workspaceRoot = message.state.workspaceRoot
       boardState.columns = message.state.columns as any
       boardState.config = message.state.config
+
       // Sync selected task with latest state from extension
       if (selectedTask.value) {
         for (const col of boardState.columns) {
           const match = col.tasks.find((t) => t.filePath === selectedTask.value?.filePath)
           if (match) {
             selectedTask.value = match
+            break
+          }
+        }
+      } else if (!hasAppliedInitialFocus && message.state.currentTaskId) {
+        // On initial board load, automatically open the drawer for the active/focused task
+        for (const col of boardState.columns) {
+          const match = col.tasks.find((t) => {
+            const id = t.document?.id || t.filename
+            return id === message.state.currentTaskId
+          })
+          if (match) {
+            selectedTask.value = match
+            hasAppliedInitialFocus = true
             break
           }
         }
