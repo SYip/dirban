@@ -24,6 +24,33 @@ Modern software developers and autonomous AI coding agents (Claude Code, Cursor,
 
 ## 2. Core Philosophy & Invariants
 
+### 2.1 Schema Flexibility & Google OKF Integration
+- **Google OKF Frontmatter Supported**: Tasks may use standard [Google Open Knowledge Format (OKF)](docs/concepts/why-dirban.md) frontmatter:
+  ```markdown
+  ---
+  okf_version: "1.0"
+  id: "26-001"
+  title: "Implement fuzzy search"
+  type: "task"
+  priority: "p1"
+  tags: ["cli", "search"]
+  owner: "developer"
+  relationships:
+    depends_on: []
+    blocks: []
+  ---
+  ```
+- **Strict OKF is Never Enforced**: Missing frontmatter never causes a parsing error. Plain `# Heading` titles and body content parse cleanly.
+- **Physical Directory Always Overrides In-File Status**: If a file contains `status: "backlog"` but is placed inside `02-doing/`, the containing directory takes absolute precedence. Dirban automatically self-heals in-file status upon discovery.
+
+### 2.2 Trunk-Based Branching & Workspace Isolation
+- **Trunk-Based Development (`main`)**: The single trunk `main` is the sole source of truth. Feature branches (`task/<id>-<slug>`) are short-lived (minutes to hours).
+- **Workspace Strategies (`branchStrategy`)**:
+  1. `checkout` (default): In-place Git branch checkout on start, squash-merge on done.
+  2. `worktree`: Allocates a parallel Git worktree under `.worktrees/`, leaving the main repository untouched.
+  3. `none` (Git Optional): Pure filesystem operations (`mv`). Ideal for non-Git directories, Obsidian vaults, Dropbox, or CI scripts.
+
+### 2.3 General Invariants
 - **Zero-Database, Zero-Cloud**: The filesystem and Git *are* the database. Merge, branch, diff, and review tasks like code.
 - **Agent-Native by Design**: AI agents do not require special SDKs or credentials—they read, write, and move tasks using standard filesystem commands (`ls`, `mv`, `cat`).
 - **Markdown-First, OKF-Compatible**: Any valid `.md` file in a column folder is a recognized task. Strict OKF frontmatter is supported for structured teams, but never enforced—tasks will never fail to parse due to missing fields.

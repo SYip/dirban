@@ -23,17 +23,13 @@ relationships:
 
 # Forget About Dirban: The Native Shell Equivalent Guide
 
-## The Core Premise: Dirban is an Invisible Lens, Not a Gatekeeper
+## The Core Premise: Zero Lock-In
 
-One of the foundational tenets of Dirban is **true zero lock-in**:
+> **You can stop using Dirban at any moment without changing a single file.**
 
-> **"You can completely forget Dirban exists."**
+Dirban uses no databases, background daemons, or proprietary sync protocols. Tasks are standard Markdown files, and workflow columns are plain directories. Moving a task between stages is just moving a file (`mv`).
 
-You can use only the features you want. There is no hidden state, no background daemon, no proprietary SQLite database, no centralized API server, and no magic in Dirban. **The filesystem directory IS the task state**, and **the tasks are plain Markdown files**.
-
-If you only want to use `dirban board` for an interactive terminal view while creating and moving files by hand with `touch` and `mv`, you can. If you only want to use `dirban start` to automate Git branch checkout while editing task checklists in Vim, you can. 
-
-If Dirban was completely uninstalled today, or if a teammate or AI agent prefers raw shell operations, every single feature provided by the `dirban` CLI maps directly to standard POSIX shell commands (`ls`, `mkdir`, `mv`, `cat`, `grep`, `sed`) and standard `git` primitives.
+If you prefer managing work with standard shell commands (`mv`, `ls`, `cat`), Finder, or VS Code Explorer, every task operation maps directly to standard POSIX tools and Git primitives. If Dirban were uninstalled tomorrow, your board remains 100% intact, readable, and editable with standard Unix tools.
 
 ---
 
@@ -173,4 +169,4 @@ If standard shell commands can do everything, why use `dirban`?
 4. **Validation & Invariants**: Prevents invalid transitions (e.g. accidentally skipping execution columns or creating duplicate IDs).
 5. **IDE Integration**: Shared TypeScript engine powers the official VS Code Extension (Kanban Webview, TreeViews, and status bar integration).
 
-Dirban enhances your workflow when you want it, but never traps your workflow when you don't.
+Use `dirban` when you want interactive terminal boards, criteria badges, and Git lifecycle automation. Use standard Unix commands whenever you want to script or inspect raw files. The underlying data is identical either way.
