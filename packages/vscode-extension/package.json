@@ -2,7 +2,7 @@
   "name": "dirban-vscode",
   "displayName": "Dirban",
   "description": "Zero-Database, Agent-Native Kanban Engine Backed by the File System and Google OKF",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "dirban",
   "repository": {
     "type": "git",
