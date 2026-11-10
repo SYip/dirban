@@ -1,6 +1,6 @@
 # CLI & Developer Reference
 
-This document provides a comprehensive command reference for the **Dirban (`dirban`)** command-line interface, interactive Terminal UI (TUI), and development tooling.
+Command manual, interactive terminal shortcuts, and development workflows for Dirban.
 
 ---
 
@@ -108,7 +108,7 @@ Displays the active task currently being executed.
   - If 0 tasks in `02-doing`: cleanly prints `No task currently in progress.`
   - If 1 task in `02-doing`: displays that task.
   - If multiple tasks in `02-doing`: selects the highest-priority task (with deterministic recency/ID tie-breaker) and prints an informative notice.
-- **AI Agent Streaming (`--raw`)**: Pass `--raw` to output the exact Markdown file content directly to `stdout` for AI agent consumption and context piping.
+- **AI Agent Streaming (`--raw`)**: Pass `--raw` to output the unformatted Markdown file directly to `stdout` for scripts and AI prompt piping.
 
 ```bash
 # Show active task based on current Git branch or doing column
@@ -122,7 +122,7 @@ dirban focus 26-003
 ```
 
 #### `start <id>` (alias: `worktree add`)
-Begins execution of a task, guaranteeing directory-as-state transition on the filesystem first, and optionally provisioning a Git branch or isolated worktree.
+Moves the task to `02-doing` on disk, then checks out a task branch or provisions an isolated Git worktree.
 
 - **Filesystem Move First**: Moves task card into `02-doing`.
 - **Branch Derivation**: Deterministically derives the branch name: `task/<id>-<slug>`.
@@ -148,7 +148,7 @@ Completes execution of a task card and transitions it to `03-done`.
 
 - **Resolution**: Completes the specified `<id>` or auto-resolves the active task via `current`.
 - **Filesystem Move**: Atomically moves the card file to `03-done`.
-- **Criteria Awareness**: Does NOT auto-check unchecked items (acceptance verification remains the explicit responsibility of the engineer or agent). Prints an informative warning if criteria remain unchecked.
+- **Criteria Awareness**: Does not auto-check boxes. If incomplete criteria remain, Dirban prints an alert before completing.
 - **Git Auto-Merge**:
   - If on a task branch: auto-merges the task branch into the base branch (`main`) and switches back to `main`.
   - If inside a task worktree: auto-merges the task branch into `main` and cleans up the worktree directory via `git worktree remove`.
@@ -395,9 +395,11 @@ For contributors developing the Dirban engine:
 
 ---
 
-## 4. Configuration Schema (`.dirban.json`)
+## 4. Configuration Reference (`.dirban.json`)
 
-Dirban automatically resolves configuration from `.dirban.json` located in the workspace root:
+Dirban automatically resolves configuration from `.dirban.json` located in the workspace root.
+
+For detailed workflow recipes (Minimalist, Enterprise Multi-Stage, Direct Intake, and Git Worktrees), see the **[Configuration Guide](concepts/configuration.md)**.
 
 | Property | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
@@ -406,52 +408,7 @@ Dirban automatically resolves configuration from `.dirban.json` located in the w
 | `focusColumn` | `string` | `"02-doing"` | Name of the primary in-progress column (defaults to `columns[1]` or `columns[0]`). If `columns: []`, focus is `null` |
 | `priorities` | `string[]` | `["p0", "p1", "p2", "p3"]` | Ordered list of priority levels (index 0 is highest priority) |
 | `defaultPriority` | `string` | `"p2"` | Default priority assigned to newly created tasks (must be in `priorities`) |
+| `branchStrategy` | `"checkout" \| "worktree" \| "none"` | `"checkout"` | Workspace strategy when starting a task |
+| `branchPrefix` | `string` | `"task/"` | Prefix applied to Git task branches |
+| `autoMerge` | `boolean` | `true` | Automatically squash and merge the task branch upon `dirban done` |
 | `archiveDir` | `string` | `"docs/tasks/archive"` | Directory where archived tasks are moved |
-
-### Custom Workflow & Priority Example (`.dirban.json`)
-
-You can define custom workflow columns and semantic priority levels:
-
-#### Example 1: Classic Minimalist (`todo` $\rightarrow$ `doing` $\rightarrow$ `done`)
-```json
-{
-  "tasksDir": "docs/tasks",
-  "columns": ["01-todo", "02-doing", "03-done"],
-  "focusColumn": "02-doing",
-  "priorities": ["urgent", "high", "normal", "low"],
-  "defaultPriority": "normal"
-}
-```
-
-#### Example 2: Enterprise Software Delivery Pipeline
-```json
-{
-  "tasksDir": "docs/tasks",
-  "columns": ["ready", "develop", "test", "uat", "production"],
-  "focusColumn": "develop",
-  "branchPrefix": "feature/",
-  "priorities": ["p0", "p1", "p2", "p3"]
-}
-```
-*In this workflow:*
-- `dirban start <id>` moves task into `develop` (`focusColumn`) and provisions a git branch.
-- `dirban current` tracks active work in `develop`.
-- `dirban done` automatically transitions the task to the relative handoff stage `focus + 1` (`test`).
-
-#### Example 3: Zero-Column Direct Flow (`backlog` $\rightarrow$ `archive`)
-```json
-{
-  "tasksDir": "tasks",
-  "columns": []
-}
-```
-*When `columns` is empty, there are no intermediate staging columns; `dirban done` transitions completed cards directly from `backlog` into `archive/`.*
-
-Or inside `.vscode/settings.json`:
-```json
-{
-  "dirban.tasksDir": "docs/tasks",
-  "dirban.priorities": ["urgent", "high", "normal", "low"],
-  "dirban.defaultPriority": "normal"
-}
-```
