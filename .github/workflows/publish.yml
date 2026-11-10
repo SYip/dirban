@@ -46,10 +46,8 @@ jobs:
           node-version: 22
           registry-url: "https://registry.npmjs.org"
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+      - name: Setup Mise (pinned bun & npm)
+        uses: jdx/mise-action@v2
 
       - name: Install Dependencies
         run: bun install --frozen-lockfile
