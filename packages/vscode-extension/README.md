@@ -1,42 +1,74 @@
-# Dirban VS Code Extension
+# Dirban for VS Code
 
-Official Visual Studio Code extension for **Dirban** — the zero-database, agent-native Kanban engine backed by the file system and Google Open Knowledge Format (OKF).
+> **Zero-database, folder-based Kanban board and active task tracker right inside your editor.**
+
+Dirban tracks project tasks using plain Markdown files and directories (`01-todo/`, `02-doing/`, `03-done/`). It keeps you and your AI coding agents focused on the active task without context-switching to browser tabs.
+
+---
 
 ## Features
 
-- **Integrated Kanban Board**: Live visual representation of directory-as-state task workflows.
-- **Progressive Enhancement**: Direct integration with your workspace's `docs/tasks` directory and `.vscode/settings.json`.
-- **Zero Database**: State is driven entirely by plain Markdown files with YAML frontmatter.
+### 1. Pinned Task Focus View
+Modeled after VS Code Source Control, the **Dirban Focus View** stays pinned at the top of your sidebar:
+- **Active Task Header**: Shows what you or an autonomous agent are currently working on.
+- **Git Branch Alignment**: Displays a green indicator when your current branch or worktree matches the active task, or amber if mismatched.
+- **Interactive Acceptance Checklist**: Check off items (`- [ ]`) directly in the sidebar tree.
+- **Quick Action Bar**: One-click buttons to preview task markdown, open the Kanban board, edit the file, or mark it done.
 
-## Development & Build Pipeline
+### 2. Status Bar Progress Indicator
+A lightweight status bar item in the bottom tray shows real-time progress:
+`$(checklist) 26-001 Implement auth [2/5]`
+Clicking the status bar item jumps straight to the active task file or preview.
 
-The extension uses a dual bundler architecture:
-- **Extension Host**: Built with `esbuild` targeting Node.js CommonJS format.
-- **Webview UI**: Built with `Vite` + `Vue 3` outputting single-page webview assets to `dist/webview/`.
+### 3. Full Kanban Board Webview
+Open a visual, drag-and-drop Kanban board directly in an editor tab:
+- Drag tasks between workflow columns (`todo` -> `doing` -> `done`).
+- Filter cards by tag, priority (`p0`–`p3`), or search query.
+- Click any card to open the slide-out task drawer and view acceptance criteria.
 
-### Commands
+### 4. Smart Markdown Preview
+Clicking a task header opens a side-by-side Markdown preview that focuses existing tabs instead of opening duplicate preview editors.
 
-From `packages/vscode-extension`:
+---
 
-```bash
-# Install dependencies
-bun install
+## Getting Started
 
-# Run full build (extension host + webview)
-bun run build
+1. **Open a project with a task board**: If your repository already has a `docs/tasks/` or `tasks/` directory, Dirban detects it automatically.
+2. **Open the Kanban Board**: Press `Cmd+Shift+P` (or `Ctrl+Shift+P`) and run:
+   ```text
+   Dirban: Open Kanban Board
+   ```
+3. **Inspect the Focus View**: Open the Dirban icon in the primary Activity Bar to view active work and your project column tree.
 
-# Run build in watch mode
-bun run watch
+---
 
-# Typecheck extension and webview code
-bun run typecheck
+## Settings (`settings.json`)
 
-# Package VSIX extension package
-bun run package
+Configure your board in `.vscode/settings.json`:
+
+```json
+{
+  "dirban.tasksDir": "docs/tasks",
+  "dirban.branchStrategy": "checkout",
+  "dirban.priorities": ["p0", "p1", "p2", "p3"],
+  "dirban.defaultPriority": "p2"
+}
 ```
 
-### Debugging with F5
+| Setting | Default | Description |
+| :--- | :--- | :--- |
+| `dirban.tasksDir` | `"docs/tasks"` | Path to the directory storing task columns. |
+| `dirban.branchStrategy` | `"checkout"` | Workspace strategy when starting a task (`"checkout"`, `"worktree"`, or `"none"`). |
+| `dirban.priorities` | `["p0","p1","p2","p3"]` | Recognized priority tiers. |
 
-1. Open the repository root in VS Code.
-2. Select the debug target **Run Dirban Extension** from the Run & Debug view (`Ctrl+Shift+D` / `Cmd+Shift+D`).
-3. Press `F5`. A new Extension Development Host window will launch with the extension activated.
+---
+
+## Contributing & Local Development
+
+For instructions on building the extension from source, running tests, and debugging with F5, see **[DEVELOPMENT.md](DEVELOPMENT.md)**.
+
+---
+
+## License
+
+[MIT](https://github.com/andrew/dirban/blob/main/LICENSE)
