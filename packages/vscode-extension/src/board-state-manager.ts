@@ -70,16 +70,24 @@ export class BoardStateManager implements vscode.Disposable {
 
       if (currentRes.isOk()) {
         this.activeFocusedTask = currentRes.value.task
+        const taskId = this.activeFocusedTask.document.id || this.activeFocusedTask.filename
+        const isWorktree = Boolean(
+          vcsContext.isWorktree ||
+            (vcsContext.repoRoot && this.workspaceRoot.toLowerCase().includes(taskId.toLowerCase()))
+        )
+
         this.focusProvider.updateFocus(
           this.activeFocusedTask,
           this.config,
           vcsContext.currentBranch,
-          undefined
+          undefined,
+          isWorktree
         )
         this.statusBar.update(
           this.activeFocusedTask,
           vcsContext.currentBranch,
-          this.config?.branchStrategy
+          this.config?.branchStrategy,
+          isWorktree
         )
       } else {
         this.activeFocusedTask = null

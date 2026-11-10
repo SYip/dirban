@@ -18,7 +18,8 @@ export class DirbanStatusBarController implements vscode.Disposable {
   public update(
     task: BoardTask | null,
     vcsBranch?: string,
-    branchStrategy?: string
+    branchStrategy?: string,
+    isWorktree?: boolean
   ): void {
     if (!task) {
       this.statusBarItem.hide()
@@ -41,10 +42,12 @@ export class DirbanStatusBarController implements vscode.Disposable {
     const strategy = branchStrategy ?? "checkout"
     const isGitStrategy = strategy === "checkout" || strategy === "worktree"
     const isBranchMatched = isGit && vcsBranch?.toLowerCase().includes(id.toLowerCase())
+    const isWorktreeMatched = Boolean(isWorktree)
+    const isAligned = isBranchMatched || isWorktreeMatched
 
     let branchColorWarning = ""
     if (isGit && isGitStrategy) {
-      if (isBranchMatched) {
+      if (isAligned) {
         this.statusBarItem.color = new vscode.ThemeColor("charts.green")
       } else {
         this.statusBarItem.color = new vscode.ThemeColor("charts.yellow")

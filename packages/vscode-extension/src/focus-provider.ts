@@ -12,7 +12,8 @@ export class FocusHeaderTreeItem extends vscode.TreeItem {
   constructor(
     task: BoardTask,
     vcsBranch?: string,
-    branchStrategy?: string
+    branchStrategy?: string,
+    isWorktree?: boolean
   ) {
     const id = task.document.id || task.filename
     const title = task.document.title || "Untitled"
@@ -20,19 +21,21 @@ export class FocusHeaderTreeItem extends vscode.TreeItem {
 
     super(`${id}: ${title}`, vscode.TreeItemCollapsibleState.None)
 
-    // Check branch match
-    const isGit = Boolean(vcsBranch)
+    // Check branch / worktree match
+    const isGit = Boolean(vcsBranch) || Boolean(isWorktree)
     const strategy = branchStrategy ?? "checkout"
     const isGitStrategy = strategy === "checkout" || strategy === "worktree"
-    const isBranchMatched = isGit && vcsBranch?.toLowerCase().includes(id.toLowerCase())
+    const isBranchMatched = Boolean(vcsBranch && vcsBranch.toLowerCase().includes(id.toLowerCase()))
+    const isWorktreeMatched = Boolean(isWorktree)
+    const isAligned = isBranchMatched || isWorktreeMatched
 
     let branchText = ""
     let iconId = "flame"
     let iconColor: vscode.ThemeColor | undefined
 
     if (isGit && isGitStrategy) {
-      branchText = ` (${vcsBranch})`
-      if (isBranchMatched) {
+      branchText = isWorktreeMatched ? ` [worktree]` : ` (${vcsBranch})`
+      if (isAligned) {
         iconColor = new vscode.ThemeColor("charts.green")
       } else {
         iconColor = new vscode.ThemeColor("charts.yellow")
@@ -40,7 +43,7 @@ export class FocusHeaderTreeItem extends vscode.TreeItem {
     }
 
     this.description = `[${priority}]${branchText}`
-    this.tooltip = `${title} (${id})\nPriority: ${priority}${branchText ? `\nBranch: ${vcsBranch} ${isBranchMatched ? "(matched)" : "(mismatched)"}` : ""}\n\nClick to open preview to side`
+    this.tooltip = `${title} (${id})\nPriority: ${priority}${branchText ? `\nContext: ${vcsBranch ?? "worktree"} ${isAligned ? "(aligned)" : "(mismatched)"}` : ""}\n\nClick to open preview to side`
 
     this.iconPath = iconColor
       ? new vscode.ThemeIcon(iconId, iconColor)
@@ -93,6 +96,7 @@ export class DirbanFocusViewProvider implements vscode.TreeDataProvider<FocusTre
   private currentTask: BoardTask | null = null
   private currentConfig?: DirbanConfig
   private vcsBranch?: string
+  private isWorktree?: boolean
   private emptyMessage: string = "No active task in progress"
 
   public updateFocus(
@@ -100,10 +104,12 @@ export class DirbanFocusViewProvider implements vscode.TreeDataProvider<FocusTre
     config?: DirbanConfig,
     vcsBranch?: string,
     emptyNotice?: string,
+    isWorktree?: boolean,
   ): void {
     this.currentTask = task
     this.currentConfig = config
     this.vcsBranch = vcsBranch
+    this.isWorktree = isWorktree
     if (emptyNotice) {
       this.emptyMessage = emptyNotice
     } else {
@@ -137,7 +143,8 @@ export class DirbanFocusViewProvider implements vscode.TreeDataProvider<FocusTre
       new FocusHeaderTreeItem(
         task,
         this.vcsBranch,
-        this.currentConfig?.branchStrategy
+        this.currentConfig?.branchStrategy,
+        this.isWorktree
       )
     )
 

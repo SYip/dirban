@@ -156,6 +156,11 @@ describe("VS Code Extension Focus and Tree Items", () => {
     expect(children[0].description).toBe("[p1] (task/26-009-test)")
     expect(children[0].command?.command).toBe("dirban.previewCurrentTask")
 
+    // Worktree focus
+    provider.updateFocus(dummyTask, dummyConfig, undefined, undefined, true)
+    const worktreeChildren = provider.getChildren() as any[]
+    expect(worktreeChildren[0].description).toBe("[p1] [worktree]")
+
     // 2 & 3. Acceptance criteria nodes
     expect(children[1]).toBeInstanceOf(FocusCriterionTreeItem)
     expect(children[1].text).toBe("First criterion")
