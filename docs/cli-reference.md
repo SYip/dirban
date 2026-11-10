@@ -28,11 +28,35 @@ The `dirban` command provides deterministic, scriptable task and board operation
 
 ```mermaid
 flowchart LR
-    Idea(["Idea / Request"]) -->|dirban new| Backlog[("backlog/")]
-    Backlog -->|dirban ready| Todo["01-todo/"]
-    Todo -->|dirban start| Doing["02-doing/"]
-    Doing -->|dirban done| Done["03-done/"]
-    Done -->|dirban archive| Archive[("archive/")]
+    subgraph Backlog ["backlog/"]
+        direction TB
+        B1["Idea Capture"]
+    end
+
+    subgraph Todo ["01-todo/"]
+        direction TB
+        T1["Ready Queue"]
+    end
+
+    subgraph Doing ["02-doing/"]
+        direction TB
+        D1["Active Branch"]
+    end
+
+    subgraph Done ["03-done/"]
+        direction TB
+        DN1["Merged Trunk"]
+    end
+
+    subgraph Archive ["archive/"]
+        direction TB
+        A1["Long-term Storage"]
+    end
+
+    Backlog -->|dirban ready| Todo
+    Todo -->|dirban start| Doing
+    Doing -->|dirban done| Done
+    Done -->|dirban archive| Archive
 ```
 
 ### Synopsis
