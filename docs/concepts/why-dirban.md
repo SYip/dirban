@@ -26,6 +26,8 @@ relationships:
 
 # Why Dirban: Comparative Positioning & Philosophy
 
+**Dirban** (**Dir**ectory + Kan**ban**) is a lightweight, zero-database task engine where physical filesystem directories represent workflow columns and plain Markdown files represent tasks.
+
 ## 1. The Core Problem: The Speed Mismatch
 
 Traditional task management platforms (Linear, Jira) were designed around human sprint estimation rituals: multi-week sprints, quarterly roadmaps, and ticket lifecycles measured in **weeks to months**.

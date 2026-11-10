@@ -9,7 +9,7 @@
 
 ## What is Dirban?
 
-Dirban tracks task state using plain directories and Markdown files. It is designed for **solo builders, knowledge workers, and AI agents** (Cursor, Claude Code, Antigravity, Obsidian).
+**Dirban** (**Dir**ectory + Kan**ban**) tracks task state using plain directories and Markdown files. It is designed for **solo builders, knowledge workers, and AI agents** (Cursor, Claude Code, Antigravity, Obsidian).
 
 **The physical directory is the task state.** Moving a task between stages is just moving a file (`mv`).
 
