@@ -3,7 +3,7 @@
   "displayName": "Dirban",
   "description": "Zero-Database, Agent-Native Kanban Engine Backed by the File System and Google OKF",
   "version": "0.1.2",
-  "publisher": "dirban",
+  "publisher": "SYip",
   "repository": {
     "type": "git",
     "url": "https://github.com/SYip/dirban.git"
