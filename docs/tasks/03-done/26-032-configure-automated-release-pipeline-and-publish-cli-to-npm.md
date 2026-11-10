@@ -2,7 +2,7 @@
 id: "26-032"
 title: "Configure automated release pipeline and publish to npm and VS Code Marketplace"
 type: "task"
-status: "todo"
+status: "in-progress"
 priority: "p1"
 owner: "developer"
 assigned_to: "unassigned"
@@ -43,8 +43,8 @@ To make Dirban easily installable via package managers (`bun add -g dirban`, `np
    - Update `README.md` to restore `bun add -g dirban` / `npm install -g dirban` and add the VS Code Marketplace installation badge/link.
 
 ## Acceptance Criteria
-- [ ] Root `package.json` configured and verified with `bun pm pack` or `npm pack --dry-run` for npm release.
-- [ ] Core CLI build script produces an executable entrypoint with shebang and bundled dependencies.
-- [ ] VS Code extension package verified with `vsce package` producing a clean, valid `.vsix` bundle.
-- [ ] GitHub Actions release pipeline created to automate building, testing, npm publishing, and VS Code Marketplace publishing.
-- [ ] Documentation updated with official package links and one-click installation instructions.
+- [x] Root `package.json` configured and verified with `bun pm pack` or `npm pack --dry-run` for npm release.
+- [x] Core CLI build script produces an executable entrypoint with shebang and bundled dependencies.
+- [x] VS Code extension package verified with `vsce package` producing a clean, valid `.vsix` bundle.
+- [x] GitHub Actions release pipeline created to automate building, testing, npm publishing, and VS Code Marketplace publishing.
+- [x] Documentation updated with official package links and one-click installation instructions.

@@ -3,13 +3,36 @@
   "version": "0.1.0",
   "description": "Zero-Database, Agent-Native Kanban Engine & TUI Backed by the File System and Google Open Knowledge Format (OKF)",
   "type": "module",
-  "main": "main.ts",
+  "main": "./dist/dirban.js",
   "bin": {
-    "dirban": "./main.ts"
+    "dirban": "./dist/dirban.js"
   },
+  "files": [
+    "dist/dirban.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SYip/dirban.git"
+  },
+  "keywords": [
+    "kanban",
+    "agentic",
+    "ai-agents",
+    "markdown",
+    "git",
+    "cli",
+    "tui",
+    "task-management"
+  ],
+  "author": "SYip",
+  "license": "MIT",
   "scripts": {
     "dirban": "bun run main.ts",
-    "build": "bun build ./main.ts --compile --outfile dirban && (command -v codesign > /dev/null 2>&1 && codesign --force --sign - dirban || true)",
+    "build:cli": "bun build ./main.ts --target node --outfile dist/dirban.js",
+    "build": "bun run build:cli && bun build ./main.ts --compile --outfile dirban && (command -v codesign > /dev/null 2>&1 && codesign --force --sign - dirban || true)",
+    "prepack": "bun run build:cli",
     "install:local": "bun build ./main.ts --compile --outfile ~/.local/bin/dirban && (command -v codesign > /dev/null 2>&1 && codesign --force --sign - ~/.local/bin/dirban || true)",
     "build:extension": "bun --filter dirban-vscode build",
     "watch:extension": "bun --filter dirban-vscode watch",

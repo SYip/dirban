@@ -2,7 +2,9 @@
 
 > **Zero-database, folder-based Kanban board for builders, knowledge workers, and AI agents.**
 
-[![CI](https://github.com/andrew/dirban/actions/workflows/ci.yml/badge.svg)](https://github.com/andrew/dirban/actions)
+[![CI](https://github.com/SYip/dirban/actions/workflows/publish.yml/badge.svg)](https://github.com/SYip/dirban/actions)
+[![npm version](https://img.shields.io/npm/v/dirban.svg?color=cb3837)](https://www.npmjs.com/package/dirban)
+[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/dirban.dirban-vscode?color=blue&label=VS%20Code)](https://marketplace.visualstudio.com/items?itemName=dirban.dirban-vscode)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
@@ -27,25 +29,16 @@
 
 ### 1. Install & Initialize
 
-#### Option A: Build & Install Locally with Bun
 ```bash
-# Clone and install dependencies
-git clone https://github.com/andrew/dirban.git
-cd dirban && bun install
+# Install globally via Bun or npm:
+bun add -g dirban
+# or: npm install -g dirban
 
-# Link globally for immediate use
-bun link
-
-# Or compile into a standalone binary in ~/.local/bin
-bun run install:local
+# Or run instantly without installing:
+# npx dirban init
 ```
 
-#### Option B: Standalone Binary (No Bun/Node Required)
-```bash
-# Download the latest binary from GitHub Releases:
-curl -fsSL https://github.com/andrew/dirban/releases/latest/download/dirban-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m) -o ~/.local/bin/dirban
-chmod +x ~/.local/bin/dirban
-```
+*(Alternatively, download a standalone prebuilt binary from [GitHub Releases](https://github.com/SYip/dirban/releases) or build locally via `bun link`.)*
 
 #### Initialize a Board
 ```bash
@@ -96,7 +89,8 @@ dirban board
 dirban board --static
 ```
 
-### 2. VS Code Extension (`dirban-vscode`)
+### 2. VS Code Extension ([Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=dirban.dirban-vscode))
+- Install directly from VS Code: Search for `Dirban` (`dirban.dirban-vscode`).
 - **Focus View**: Pinned sidebar panel showing the currently active task, branch alignment, and interactive checklist.
 - **Status Bar Indicator**: Real-time status badge (`$(checklist) 26-001 [2/5]`) linking directly to the active task.
 - **Embedded Webview Kanban Board**: Visual drag-and-drop Kanban board running natively inside an editor tab.

@@ -6,7 +6,7 @@
   "publisher": "dirban",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dirban/dirban.git"
+    "url": "https://github.com/SYip/dirban.git"
   },
   "engines": {
     "vscode": "^1.90.0"
