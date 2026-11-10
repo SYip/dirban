@@ -12,9 +12,9 @@ export type FocusTreeItem =
 
 export class FocusHeaderTreeItem extends vscode.TreeItem {
   constructor(task: BoardTask) {
-    const id = task.document.id ?? task.document.frontmatter.id ?? task.filename
-    const title = task.document.title ?? task.document.frontmatter.title ?? "Untitled"
-    const priority = task.document.priority ?? task.document.frontmatter.priority ?? "p2"
+    const id = task.document.id || task.filename
+    const title = task.document.title || "Untitled"
+    const priority = task.document.priority || "p2"
 
     super(`${id}: ${title}`, vscode.TreeItemCollapsibleState.None)
     this.description = `[${priority}]`

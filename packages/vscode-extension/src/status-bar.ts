@@ -1,6 +1,9 @@
 import * as vscode from "vscode"
 import type { BoardTask } from "@dirban/core/board/types.ts"
 
+const MAX_STATUS_BAR_TITLE_LENGTH = 25
+const TRUNCATION_SLICE_LENGTH = 22
+
 export class DirbanStatusBarController implements vscode.Disposable {
   private readonly statusBarItem: vscode.StatusBarItem
 
@@ -25,7 +28,10 @@ export class DirbanStatusBarController implements vscode.Disposable {
 
     const countPart = total > 0 ? `[${checked}/${total}]` : ""
     const title = task.document.title ?? "Current Task"
-    const truncatedTitle = title.length > 25 ? `${title.slice(0, 22)}...` : title
+    const truncatedTitle =
+      title.length > MAX_STATUS_BAR_TITLE_LENGTH
+        ? `${title.slice(0, TRUNCATION_SLICE_LENGTH)}...`
+        : title
 
     this.statusBarItem.text = `$(checklist) ${id} ${truncatedTitle} ${countPart}`.trim()
     this.statusBarItem.tooltip = new vscode.MarkdownString(
