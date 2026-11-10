@@ -168,7 +168,7 @@
     "@types/vscode": "^1.90.0",
     "@types/vuedraggable": "^2.24.0",
     "@vitejs/plugin-vue": "^5.2.0",
-    "@vscode/vsce": "^3.2.1",
+    "@vscode/vsce": "^4.1.0",
     "concurrently": "^10.0.7",
     "esbuild": "^0.25.0",
     "typescript": "^5.8.2",
