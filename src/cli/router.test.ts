@@ -187,9 +187,10 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const exitHelpStart = await dispatchCommand("help", ctxHelpStart)
       expect(exitHelpStart).toBe(0)
-      expect(output).toContain("dirban start")
-      expect(output).toContain("--worktree")
-      expect(output).toContain("ALIASES: worktree add")
+      const cleanOutput = output.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "")
+      expect(cleanOutput).toContain("dirban start")
+      expect(cleanOutput).toContain("--worktree")
+      expect(cleanOutput).toContain("ALIASES: worktree add")
     } finally {
       console.log = origLog
     }

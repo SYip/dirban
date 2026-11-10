@@ -45,6 +45,9 @@ const createMockTask = (overrides?: Partial<BoardTask>): BoardTask => {
   return { ...defaultTask, ...overrides }
 }
 
+const stripAnsi = (str: string): string =>
+  str.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "")
+
 describe("CLI Formatters Tests", () => {
   it("Vector 1 (Standard Baseline Case): Formats current task and detail views with relative paths and criteria line breaks", () => {
     const task = createMockTask()
@@ -55,11 +58,11 @@ describe("CLI Formatters Tests", () => {
     expect(currentView).toContain("Path: \u001b]8;;file://" + task.filePath + "\u0007docs/tasks/02-doing/26-006-improve-cli-view.md")
 
     // Checks empty line between consecutive acceptance criteria items
-    expect(currentView).toContain("  [ ] #1: First criteria item\n\n  [x] #2: Second criteria item")
+    expect(stripAnsi(currentView)).toContain("  [ ] #1: First criteria item\n\n  [x] #2: Second criteria item")
 
     const detailView = formatTaskDetail(task)
     expect(detailView).toContain("docs/tasks/02-doing/26-006-improve-cli-view.md")
-    expect(detailView).toContain("  [ ] #1: First criteria item\n\n  [x] #2: Second criteria item")
+    expect(stripAnsi(detailView)).toContain("  [ ] #1: First criteria item\n\n  [x] #2: Second criteria item")
   })
 
   it("Vector 2 (Plan View & Header Simplification): Renders simplified headers and OSC 8 links", () => {
@@ -98,8 +101,8 @@ describe("CLI Formatters Tests", () => {
 
     // Assert OSC 8 hyperlink escape sequence is present
     expect(planOutput).toContain("\u001b]8;;file://")
-    expect(planOutput).toContain("26-001 - Setup task")
-    expect(planOutput).toContain("26-002 - Blocked task")
+    expect(stripAnsi(planOutput)).toContain("26-001 - Setup task")
+    expect(stripAnsi(planOutput)).toContain("26-002 - Blocked task")
   })
 
   it("Vector 3 (Boundary / Empty Criteria & URL Support): Handles empty criteria and link generator formatting", () => {
