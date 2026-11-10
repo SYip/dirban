@@ -15,7 +15,11 @@ export class DirbanStatusBarController implements vscode.Disposable {
     this.statusBarItem.command = "dirban.focusCurrentTask"
   }
 
-  public update(task: BoardTask | null): void {
+  public update(
+    task: BoardTask | null,
+    vcsBranch?: string,
+    branchStrategy?: string
+  ): void {
     if (!task) {
       this.statusBarItem.hide()
       return
@@ -33,9 +37,26 @@ export class DirbanStatusBarController implements vscode.Disposable {
         ? `${title.slice(0, TRUNCATION_SLICE_LENGTH)}...`
         : title
 
+    const isGit = Boolean(vcsBranch)
+    const strategy = branchStrategy ?? "checkout"
+    const isGitStrategy = strategy === "checkout" || strategy === "worktree"
+    const isBranchMatched = isGit && vcsBranch?.toLowerCase().includes(id.toLowerCase())
+
+    let branchColorWarning = ""
+    if (isGit && isGitStrategy) {
+      if (isBranchMatched) {
+        this.statusBarItem.color = new vscode.ThemeColor("charts.green")
+      } else {
+        this.statusBarItem.color = new vscode.ThemeColor("charts.yellow")
+        branchColorWarning = `\n\n⚠ **Branch Mismatch**: On branch \`${vcsBranch}\``
+      }
+    } else {
+      this.statusBarItem.color = undefined
+    }
+
     this.statusBarItem.text = `$(checklist) ${id} ${truncatedTitle} ${countPart}`.trim()
     this.statusBarItem.tooltip = new vscode.MarkdownString(
-      `**Dirban Active Task: ${id}**\n\n${title}\n\nStatus: \`${task.column}\` | Priority: \`${task.document.priority ?? "p2"}\`\n\n*Click to focus task / open preview*`
+      `**Dirban Active Task: ${id}**\n\n${title}\n\nStatus: \`${task.column}\` | Priority: \`${task.document.priority ?? "p2"}\`${branchColorWarning}\n\n*Click to focus task / open preview*`
     )
     this.statusBarItem.show()
   }

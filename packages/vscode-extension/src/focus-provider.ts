@@ -5,32 +5,52 @@ import type { DirbanConfig } from "@dirban/core/config/types.ts"
 
 export type FocusTreeItem =
   | FocusHeaderTreeItem
-  | FocusMetaTreeItem
   | FocusCriterionTreeItem
-  | FocusDocumentTreeItem
   | FocusEmptyTreeItem
 
 export class FocusHeaderTreeItem extends vscode.TreeItem {
-  constructor(task: BoardTask) {
+  constructor(
+    task: BoardTask,
+    vcsBranch?: string,
+    branchStrategy?: string
+  ) {
     const id = task.document.id || task.filename
     const title = task.document.title || "Untitled"
     const priority = task.document.priority || "p2"
 
     super(`${id}: ${title}`, vscode.TreeItemCollapsibleState.None)
-    this.description = `[${priority}]`
-    this.tooltip = `${title} (${id})\nPriority: ${priority}`
-    this.iconPath = new vscode.ThemeIcon("flame")
-    this.contextValue = "focusHeader"
-  }
-}
 
-export class FocusMetaTreeItem extends vscode.TreeItem {
-  constructor(label: string, value: string, icon: string) {
-    super(label, vscode.TreeItemCollapsibleState.None)
-    this.description = value
-    this.tooltip = `${label}: ${value}`
-    this.iconPath = new vscode.ThemeIcon(icon)
-    this.contextValue = "focusMeta"
+    // Check branch match
+    const isGit = Boolean(vcsBranch)
+    const strategy = branchStrategy ?? "checkout"
+    const isGitStrategy = strategy === "checkout" || strategy === "worktree"
+    const isBranchMatched = isGit && vcsBranch?.toLowerCase().includes(id.toLowerCase())
+
+    let branchText = ""
+    let iconId = "flame"
+    let iconColor: vscode.ThemeColor | undefined
+
+    if (isGit && isGitStrategy) {
+      branchText = ` (${vcsBranch})`
+      if (isBranchMatched) {
+        iconColor = new vscode.ThemeColor("charts.green")
+      } else {
+        iconColor = new vscode.ThemeColor("charts.yellow")
+      }
+    }
+
+    this.description = `[${priority}]${branchText}`
+    this.tooltip = `${title} (${id})\nPriority: ${priority}${branchText ? `\nBranch: ${vcsBranch} ${isBranchMatched ? "(matched)" : "(mismatched)"}` : ""}\n\nClick to open preview to side`
+
+    this.iconPath = iconColor
+      ? new vscode.ThemeIcon(iconId, iconColor)
+      : new vscode.ThemeIcon(iconId)
+
+    this.command = {
+      command: "dirban.previewCurrentTask",
+      title: "Preview Task",
+    }
+    this.contextValue = "focusHeader"
   }
 }
 
@@ -52,23 +72,6 @@ export class FocusCriterionTreeItem extends vscode.TreeItem {
       command: "dirban.toggleCriterion",
       title: "Toggle Criterion",
       arguments: [task, index, !checked],
-    }
-  }
-}
-
-export class FocusDocumentTreeItem extends vscode.TreeItem {
-  public readonly contextValue = "focusDocument"
-
-  constructor(public readonly task: BoardTask) {
-    const basename = path.basename(task.filePath)
-    super(basename, vscode.TreeItemCollapsibleState.None)
-    this.description = "Task Document"
-    this.tooltip = `Open ${basename}`
-    this.iconPath = new vscode.ThemeIcon("markdown")
-    this.command = {
-      command: "markdown.showPreviewToSide",
-      title: "Preview Task",
-      arguments: [vscode.Uri.file(task.filePath)],
     }
   }
 }
@@ -129,18 +132,16 @@ export class DirbanFocusViewProvider implements vscode.TreeDataProvider<FocusTre
     const task = this.currentTask
     const items: FocusTreeItem[] = []
 
-    // 1. Task Title & ID Node
-    items.push(new FocusHeaderTreeItem(task))
+    // 1. Unified Task Header Node (click opens side preview directly)
+    items.push(
+      new FocusHeaderTreeItem(
+        task,
+        this.vcsBranch,
+        this.currentConfig?.branchStrategy
+      )
+    )
 
-    // 2. VCS Branch / Strategy Meta Node
-    const strategy = this.currentConfig?.branchStrategy ?? "checkout"
-    const branchLabel = this.vcsBranch ? `branch: ${this.vcsBranch}` : `strategy: ${strategy}`
-    items.push(new FocusMetaTreeItem("Context", branchLabel, "git-branch"))
-
-    // 3. Document Link Node (Click opens Preview)
-    items.push(new FocusDocumentTreeItem(task))
-
-    // 4. Acceptance Criteria Items
+    // 2. Acceptance Criteria Items
     const criteria = task.document.acceptanceCriteria
     if (criteria.length > 0) {
       for (const item of criteria) {

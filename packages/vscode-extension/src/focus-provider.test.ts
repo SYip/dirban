@@ -41,11 +41,16 @@ mock.module("vscode", () => {
     constructor(public readonly value: string) {}
   }
 
+  class ThemeColor {
+    constructor(public readonly id: string) {}
+  }
+
   return {
     TreeItemCollapsibleState,
     StatusBarAlignment,
     TreeItem,
     ThemeIcon,
+    ThemeColor,
     EventEmitter,
     MarkdownString,
     Uri: {
@@ -58,6 +63,7 @@ mock.module("vscode", () => {
         text: "",
         tooltip: "",
         command: "",
+        color: undefined,
         show: () => {},
         hide: () => {},
         dispose: () => {},
@@ -70,9 +76,7 @@ mock.module("vscode", () => {
 const {
   DirbanFocusViewProvider,
   FocusHeaderTreeItem,
-  FocusMetaTreeItem,
   FocusCriterionTreeItem,
-  FocusDocumentTreeItem,
   FocusEmptyTreeItem,
 } = await import("./focus-provider.ts")
 
@@ -143,28 +147,23 @@ describe("VS Code Extension Focus and Tree Items", () => {
     provider.updateFocus(dummyTask, dummyConfig, "task/26-009-test", undefined)
 
     const children = provider.getChildren() as any[]
-    expect(children).toHaveLength(5)
+    // 1 header node + 2 criteria nodes = 3 nodes
+    expect(children).toHaveLength(3)
 
-    // 1. Header node
+    // 1. Header node with branch info and preview command
     expect(children[0]).toBeInstanceOf(FocusHeaderTreeItem)
     expect(children[0].label).toBe("26-009: Focus View Integration")
+    expect(children[0].description).toBe("[p1] (task/26-009-test)")
+    expect(children[0].command?.command).toBe("dirban.previewCurrentTask")
 
-    // 2. Meta node
-    expect(children[1]).toBeInstanceOf(FocusMetaTreeItem)
-    expect(children[1].description).toBe("branch: task/26-009-test")
+    // 2 & 3. Acceptance criteria nodes
+    expect(children[1]).toBeInstanceOf(FocusCriterionTreeItem)
+    expect(children[1].text).toBe("First criterion")
+    expect(children[1].checked).toBe(true)
 
-    // 3. Document node
-    expect(children[2]).toBeInstanceOf(FocusDocumentTreeItem)
-    expect(children[2].label).toBe("26-009-test.md")
-
-    // 4 & 5. Acceptance criteria nodes
-    expect(children[3]).toBeInstanceOf(FocusCriterionTreeItem)
-    expect(children[3].text).toBe("First criterion")
-    expect(children[3].checked).toBe(true)
-
-    expect(children[4]).toBeInstanceOf(FocusCriterionTreeItem)
-    expect(children[4].text).toBe("Second criterion")
-    expect(children[4].checked).toBe(false)
+    expect(children[2]).toBeInstanceOf(FocusCriterionTreeItem)
+    expect(children[2].text).toBe("Second criterion")
+    expect(children[2].checked).toBe(false)
   })
 
   it("DirbanFocusViewProvider shows empty node when no active task", () => {

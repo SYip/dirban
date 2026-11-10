@@ -76,7 +76,11 @@ export class BoardStateManager implements vscode.Disposable {
           vcsContext.currentBranch,
           undefined
         )
-        this.statusBar.update(this.activeFocusedTask)
+        this.statusBar.update(
+          this.activeFocusedTask,
+          vcsContext.currentBranch,
+          this.config?.branchStrategy
+        )
       } else {
         this.activeFocusedTask = null
         this.focusProvider.updateFocus(

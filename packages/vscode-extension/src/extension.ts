@@ -1,4 +1,5 @@
 import * as vscode from "vscode"
+import * as path from "node:path"
 import { resolveCurrentTask } from "@dirban/core/tasks/lifecycle/current.ts"
 import { doneTask } from "@dirban/core/tasks/lifecycle/done.ts"
 import { checkTaskItem } from "@dirban/core/tasks/mutation/check.ts"
@@ -12,6 +13,35 @@ import { BoardStateManager } from "./board-state-manager.ts"
 
 function getWorkspaceRoot(): string {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd()
+}
+
+/**
+ * Opens Markdown preview to the side if not already opened;
+ * if already opened or active, focuses or does nothing to avoid duplicate previews.
+ */
+async function showMarkdownPreviewSmart(filePath: string): Promise<void> {
+  const filename = path.basename(filePath)
+  const fileUri = vscode.Uri.file(filePath)
+
+  // Check if a tab with this markdown preview or document is already open
+  for (const group of vscode.window.tabGroups.all) {
+    for (const tab of group.tabs) {
+      const isPreview =
+        tab.label === `Preview ${filename}` ||
+        tab.label === `[Preview] ${filename}` 
+        // ||
+        // tab.label.includes(filename)
+
+      if (isPreview) {
+        if (tab.isActive) {
+          // Already open and focused -> do nothing
+          return
+        }
+      }
+    }
+  }
+
+  await vscode.commands.executeCommand("markdown.showPreviewToSide", fileUri)
 }
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -151,8 +181,7 @@ export function activate(context: vscode.ExtensionContext): void {
       }
 
       const task = currentRes.value.task
-      const docUri = vscode.Uri.file(task.filePath)
-      await vscode.commands.executeCommand("markdown.showPreviewToSide", docUri)
+      await showMarkdownPreviewSmart(task.filePath)
     })
   )
 
@@ -167,8 +196,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.window.showInformationMessage("Dirban: No active task to preview.")
         return
       }
-      const docUri = vscode.Uri.file(activeTask.filePath)
-      await vscode.commands.executeCommand("markdown.showPreviewToSide", docUri)
+      await showMarkdownPreviewSmart(activeTask.filePath)
     })
   )
 

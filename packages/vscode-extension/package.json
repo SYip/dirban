@@ -43,6 +43,11 @@
     "menus": {
       "view/title": [
         {
+          "command": "dirban.openBoard",
+          "when": "view == dirban.focusView || view == dirban.treeView",
+          "group": "navigation@0"
+        },
+        {
           "command": "dirban.previewCurrentTask",
           "when": "view == dirban.focusView",
           "group": "navigation@1"
@@ -59,7 +64,7 @@
         },
         {
           "command": "dirban.refreshBoard",
-          "when": "view == dirban.focusView",
+          "when": "view == dirban.focusView || view == dirban.treeView",
           "group": "navigation@4"
         }
       ]
@@ -67,7 +72,8 @@
     "commands": [
       {
         "command": "dirban.openBoard",
-        "title": "Dirban: Open Kanban Board"
+        "title": "Dirban: Open Kanban Board",
+        "icon": "$(project)"
       },
       {
         "command": "dirban.refreshBoard",
