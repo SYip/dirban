@@ -7,17 +7,15 @@ Command manual, interactive terminal shortcuts, and development workflows for Di
 ### Installation
 
 ```bash
-# Option A: Build and link globally with Bun
-git clone https://github.com/andrew/dirban.git
-cd dirban && bun install
-bun link
+# Install globally via Bun or npm:
+bun add -g dirban
+# or: npm install -g dirban
 
-# Or compile into a standalone binary in ~/.local/bin:
-bun run install:local
+# Or run directly with npx / bunx:
+# npx dirban init
 
-# Option B: Download standalone prebuilt binary from GitHub Releases
-curl -fsSL https://github.com/andrew/dirban/releases/latest/download/dirban-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m) -o ~/.local/bin/dirban
-chmod +x ~/.local/bin/dirban
+# Or download a standalone prebuilt binary from GitHub Releases:
+# curl -fsSL https://github.com/SYip/dirban/releases/latest/download/dirban-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m) -o ~/.local/bin/dirban
 ```
 
 ---
