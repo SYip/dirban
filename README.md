@@ -1,6 +1,6 @@
 # Dirban
 
-> **Zero-database, Git-native Kanban board for developers, knowledge workers, and AI agents.**
+> **Zero-database, folder-based Kanban board for builders, knowledge workers, and AI agents.**
 
 [![CI](https://github.com/andrew/dirban/actions/workflows/ci.yml/badge.svg)](https://github.com/andrew/dirban/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -18,7 +18,8 @@ Dirban tracks task state using plain directories and Markdown files. It is desig
 - **Isolated Task Files**: Each task is a self-contained Markdown file with an optional priority and checklist (`- [ ]`). Editing one task never collides with another in Git or file sync.
 - **Agent-Ready & Context-Efficient**: AI tools and scripts read only the active task file (`dirban current`), keeping token usage low and focus sharp.
 - **Git is Completely Optional**: While Dirban automates Git branching and worktrees for developers, it works equally well on plain folders (`branchStrategy: "none"`) in Obsidian vaults, Dropbox, or local drives.
-- **100% Local & Future-Proof**: Cloud task managers expect iteration cycles in weeks to months. Agent workflows iterate in minutes. If you ever stop using Dirban, your tasks remain standard Markdown files readable in any text editor.
+- **Built for Fast Iteration**: Cloud tools assume sprint cycles measured in weeks. Autonomous agents iterate in minutes. Dirban keeps pace without browser tabs, OAuth tokens, or sync delays.
+- **100% Local & Future-Proof**: Your data is just plain files. If you ever uninstall Dirban, your tasks remain standard Markdown notes readable in any text editor.
 
 ---
 
@@ -84,7 +85,7 @@ dirban done
 
 ## Interfaces: Terminal & Editor
 
-Dirban provides visual, interactive interfaces while preserving plain filesystem simplicity:
+Work from the terminal or directly inside your editor:
 
 ### 1. Interactive Terminal UI (TUI)
 ```bash
