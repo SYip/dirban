@@ -19,8 +19,7 @@ export const parsePlan: CommandParser<PlanCommandParams> = (ctx) => {
 
   const isUnblocked =
     ctx.flags.unblocked === true ||
-    ctx.flags["no-blocked"] === true ||
-    ctx.flags.ready === true
+    ctx.flags["no-blocked"] === true
 
   return ok({
     mode: "list",

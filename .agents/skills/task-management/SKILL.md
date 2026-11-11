@@ -61,20 +61,23 @@ Before starting work, check the board or inspect ready tasks:
 # 1. View current active board (static table)
 dirban board --static
 
-# 2. View a specific task's details & criteria
+# 2. Recommends the next unblocked, highest-priority task ready to work on
+dirban next
+
+# 3. View a specific task's details & criteria
 dirban view 26-001
 
-# 3. Start task execution (moves to 02-doing and provisions branch/worktree)
+# 4. Start task execution (moves task to 02-doing and provisions branch/worktree)
 dirban start 26-001
 
-# 4. Check active focus / current task anytime
+# 5. Check active focus / current task anytime
 dirban current
 
 # Stream active task Markdown to stdout for agent prompting
 dirban current --raw
 ```
 
-*(Note: You can also move files using standard Unix `mv docs/tasks/01-todo/26-001-*.md docs/tasks/02-doing/`)*.
+*(Note: `dirban start` requires the task to already be in an active column like `01-todo/`. Tasks still in `backlog/` must be promoted first via `dirban ready <id>`)*.
 
 ---
 
@@ -160,18 +163,21 @@ When reviewing and scheduling work:
    dirban plan
 
    # Scriptable flags for agents
-   dirban plan --ready
+   dirban plan --unblocked
    dirban plan --blocked
    ```
-2. **Unblocking & Promoting**:
-   * Prerequisite tasks in `relationships.depends_on` resolve automatically once they reach `done` or `archive/`.
+2. **Promote / Ready Tasks into Active Queue**:
+   * Promote unblocked task(s) from `backlog/` into `01-todo/` (`config.columns[0]`):
+     ```bash
+     dirban ready 26-001
+     dirban ready 001 002
+     dirban ready all             # Promotes all unblocked backlog tasks
+     dirban ready 001 --to=01-todo
+     ```
+   * Prerequisite tasks in `relationships.depends_on` resolve automatically once they reach `03-done` or `archive/`.
    * Clear external blocker strings via:
      ```bash
      dirban unblock <id> "<blocker string>"
-     ```
-   * Promote the unblocked task into the active workflow (`config.columns[0]`):
-     ```bash
-     dirban plan --promote=<id>
      ```
    * Record unblocking in the task's `## Execution Journal`:
      ```markdown
@@ -187,7 +193,9 @@ When reviewing and scheduling work:
 | :--- | :--- |
 | **Initialize Board** | `dirban init` |
 | **Inspect Board** | `dirban board --static` |
-| **Backlog Planning** | `dirban plan [--ready\|--blocked\|--promote=<id>\|-i]` |
+| **Next Ready Task** | `dirban next` |
+| **Backlog Planning** | `dirban plan [--unblocked\|--blocked\|-i]` |
+| **Ready / Promote Task** | `dirban ready <id...> [--to=<col>]` or `dirban ready all` |
 | **Block Task** | `dirban block <id> <reasons...>` |
 | **Unblock Task** | `dirban unblock <id> [reason]` |
 | **Current / Focus Task** | `dirban current [--raw]` or `dirban focus` |

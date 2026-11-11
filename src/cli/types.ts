@@ -27,7 +27,6 @@ export interface CliFlags {
   readonly "no-git"?: boolean
   readonly merge?: boolean
   readonly "no-merge"?: boolean
-  readonly ready?: boolean
   readonly blocked?: boolean
   readonly unblocked?: boolean
   readonly "no-blocked"?: boolean
@@ -62,7 +61,6 @@ export const CLI_PARSE_OPTIONS: NonNullable<ParseArgsConfig["options"]> = {
   "no-git": { type: "boolean" },
   merge: { type: "boolean" },
   "no-merge": { type: "boolean" },
-  ready: { type: "boolean" },
   blocked: { type: "boolean", short: "b" },
   unblocked: { type: "boolean", short: "u" },
   "no-blocked": { type: "boolean" },
