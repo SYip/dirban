@@ -16,6 +16,8 @@
 
 **The physical directory is the task state.** Moving a task between stages is just moving a file (`mv`).
 
+![Dirban Terminal TUI](docs/assets/dirban-cli-tui.jpg)
+
 - **Directories as Columns**: Workflow stages are plain folders (`01-todo/`, `02-doing/`, `03-done/`).
 - **Customizable Workflows**: Tailor column names, staging pipelines, and priority tiers to your exact workflow using [`.dirban.json`](docs/concepts/configuration.md).
 - **Isolated Task Files**: Each task is a self-contained Markdown file with an optional priority and checklist (`- [ ]`). Editing one task never collides with another in Git or file sync.

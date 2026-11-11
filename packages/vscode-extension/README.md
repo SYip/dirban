@@ -4,6 +4,8 @@ A folder-based Kanban board and active task tracker built directly into your edi
 
 Dirban tracks tasks using plain Markdown files in your repository. It keeps you and your autonomous coding agents aligned on the active task without context-switching to browser tabs or SaaS project management tools.
 
+![Dirban Kanban Board in VS Code](resources/kanban-board-preview.jpg)
+
 ---
 
 ## Core Architecture: Directory-as-State
