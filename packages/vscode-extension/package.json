@@ -209,6 +209,7 @@
     "@vscode/vsce": "^4.1.0",
     "concurrently": "^10.0.7",
     "esbuild": "^0.25.0",
+    "ovsx": "^1.4.0",
     "typescript": "^5.8.2",
     "vite": "^6.0.0"
   }

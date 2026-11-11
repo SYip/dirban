@@ -86,6 +86,10 @@ jobs:
         working-directory: packages/vscode-extension
         run: bun run vsce publish --oidc
 
+      - name: Publish to Open VSX Registry
+        working-directory: packages/vscode-extension
+        run: bun run ovsx publish --trusted-publishing --no-dependencies
+
   release-github:
     name: Build Standalone Binaries & GitHub Release
     needs: test

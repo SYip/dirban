@@ -4,7 +4,8 @@
 
 [![CI](https://github.com/SYip/dirban/actions/workflows/publish.yml/badge.svg)](https://github.com/SYip/dirban/actions)
 [![npm version](https://img.shields.io/npm/v/dirban.svg?color=cb3837)](https://www.npmjs.com/package/dirban)
-[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/syip.dirban-vscode?color=blue&label=VS%20Code)](https://marketplace.visualstudio.com/items?itemName=syip.dirban-vscode)
+[![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/syip.dirban-vscode?color=blue&label=VS%20Code)](https://marketplace.visualstudio.com/items?itemName=syip.dirban-vscode)
+[![Open VSX](https://img.shields.io/open-vsx/v/syip/dirban-vscode?color=purple&label=Open%20VSX)](https://open-vsx.org/extension/syip/dirban-vscode)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
@@ -89,8 +90,8 @@ dirban board
 dirban board --static
 ```
 
-### 2. VS Code Extension ([Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=syip.dirban-vscode))
-- Install directly from VS Code: Search for `Dirban` (`syip.dirban-vscode`).
+### 2. Editor Extension ([VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=syip.dirban-vscode) & [Open VSX](https://open-vsx.org/extension/syip/dirban-vscode))
+- Install directly in VS Code, VSCodium, Cursor, or Gitpod: Search for `Dirban` (`syip.dirban-vscode`).
 - **Focus View**: Pinned sidebar panel showing the currently active task, branch alignment, and interactive checklist.
 - **Status Bar Indicator**: Real-time status badge (`$(checklist) 26-001 [2/5]`) linking directly to the active task.
 - **Embedded Webview Kanban Board**: Visual drag-and-drop Kanban board running natively inside an editor tab.
