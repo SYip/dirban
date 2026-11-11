@@ -37,6 +37,7 @@
     "build:extension": "bun --filter dirban-vscode build",
     "watch:extension": "bun --filter dirban-vscode watch",
     "package:extension": "bun --filter dirban-vscode package",
+    "build:binaries": "bun run scripts/build-binaries.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit && bun --filter dirban-vscode typecheck"
   },
