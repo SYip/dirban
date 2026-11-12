@@ -35,47 +35,67 @@ When using `branchStrategy: "worktree"`, two architectural tensions emerge regar
 
 ## Decision
 
-### 1. Target Branch Commits for Task Lifecycle Transitions
+### 1. Task Content Authority & Target Branch Synchronization
 
-All board lifecycle movements are committed directly to the **target branch** (`main` or configured `targetBranch` / `dev`):
+To balance active in-worktree execution with a consistent repository board state, Dirban separates content authority from board state:
+
+> **Core Rule**: The **Task Branch holds the ground truth for task content** (checkboxes, test details, notes). The **Target Branch (`main`/`dev`) reflects the ground truth for board state** (which column the task is in).
+
+#### Lifecycle Transitions (`start`, `block`, `resume`, `done`):
 - **`dirban start <id>`**:
   1. Moves `docs/tasks/01-todo/<id>.md` to `docs/tasks/02-doing/<id>.md` on the target branch.
-  2. Commits on the target branch: `chore(task): start <id> <title>`.
-  3. Creates the worktree and branch (`task/<id>-<slug>`) *from that commit*. Because the file is already in `02-doing/`, both branches share the exact same path, avoiding rename collisions on subsequent merges.
-- **`dirban block <id>`**:
-  1. Moves `docs/tasks/02-doing/<id>.md` to `docs/tasks/backlog/<id>.md` (with blocker metadata in frontmatter) on the target branch.
-  2. Commits on the target branch: `chore(task): block <id> <reasons>`.
+  2. Commits on target branch: `chore(task): start <id> <title>`.
+  3. Creates the worktree and branch (`task/<id>-<slug>`) *from that commit*. Because the branch starts with the file already in `02-doing/`, both branches share the exact same path, avoiding rename collisions.
+- **`dirban block <id> <reasons...>`**:
+  1. **Task Branch First**: The task file is updated in the active worktree first. It moves `02-doing/<id>.md` -> `backlog/<id>.md`, sets `status: blocked`, and appends blocker reasons to frontmatter while preserving all in-flight checked criteria (`- [x]`) and test notes intact.
+  2. **Sync to Target Branch**: Dirban copies/syncs that exact updated task file from the worktree to `docs/tasks/backlog/<id>.md` on the target branch.
+  3. **Commit on Target Branch**: `chore(task): block <id> (<reasons>)`.
+  4. The worktree is kept alive and dirty working code is left untouched.
+- **`dirban resume <id>`**:
+  1. **Task Branch First**: Inside the worktree, the task file is moved back: `backlog/<id>.md` -> `02-doing/<id>.md` with cleared blocker status.
+  2. **Sync to Target Branch**: Dirban synchronizes the file to `docs/tasks/02-doing/<id>.md` on the target branch and commits: `chore(task): resume <id> <title>`.
+  3. Returns the worktree directory path so the agent or developer resumes coding with full context.
 - **`dirban done <id>`**:
   1. Merges task branch into the target branch.
   2. Moves `docs/tasks/02-doing/<id>.md` to `docs/tasks/03-done/<id>.md` on the target branch.
   3. Commits and safely cleans up the worktree.
 
-**Rationale**:
-- Maintains **100% "Directory-as-State" fidelity**: The directory structure in the target branch is always an accurate, real-time reflection of work in flight without needing auxiliary tools or git plumbing.
-- Creates an authentic, chronological audit trail of when tasks were picked up, blocked, or finished on the target branch.
+### 2. Live In-Flight Progress via Worktree Overlay
 
-### 2. Worktree Retention on `dirban block`
+During active development (between `start` and `done` / `block`), the developer or agent ticks off checkboxes `- [x]` directly in the worktree:
+- No commits are made to the target branch while actively typing or running tests.
+- When `dirban status`, the TUI, or the VS Code extension runs on the target branch, Dirban inspects active worktrees (`git worktree list`) and overlays the live task file content.
+- Result: The board always shows live quantitative progress (e.g. `3/5 criteria checked`) without polluting the target branch commit log.
+
+### 3. Worktree Retention on `dirban block`
 
 When a task is blocked:
 - The worktree and its task branch (`task/<id>-<slug>`) are **deliberately kept alive** and intact.
 - Dirban will **not** prune the directory or force stash/commit dirty changes.
-- **Rationale**: The state of work could be in-flight (waiting on developer input, API key, external PR, or human review). Pruning the worktree risks discarding context or creating detached stashes.
+- **Rationale**: In-flight work may be waiting on an external dependency (API token, human review, upstream PR). Retaining the worktree preserves the developer/agent workspace context 100%.
 
-### 3. Distinct `dirban resume` Lifecycle Command
+### 4. Distinct `dirban resume` Command Across Workspace Strategies
 
-To re-enter a blocked task or a task with an existing worktree, the user/agent invokes:
+To re-enter a blocked task or a task with an existing worktree/branch, the user/agent invokes:
 ```bash
 dirban resume <id>
 ```
 
-- **`dirban start <id>`**: Strict entry point for new, unstarted tasks in `01-todo/`. If executed on an existing/blocked task, it detects the existing worktree and prompts or delegates to `resume`.
-- **`dirban resume <id>`**:
-  1. Validates that blocker conditions are resolved (or unblocks them).
-  2. Moves the task file from `docs/tasks/backlog/<id>.md` back to `docs/tasks/02-doing/<id>.md` on the target branch and commits: `chore(task): resume <id> <title>`.
-  3. Fast-forwards / synchronizes the target branch changes into the existing task worktree.
-  4. Returns the existing worktree path for the agent or developer to resume work immediately.
+- **Unified Behavior Across Strategies**:
+  - Across both `worktree` and `checkout` strategies, `resume` follows the **exact same task file synchronization pattern**:
+    1. **Task Branch**: Moves the task file from `backlog/<id>.md` to `02-doing/<id>.md`, clears blocker status, and commits on the task branch: `chore(task): resume <id> <title>`.
+    2. **Target Branch Sync**: Synchronizes that exact file move to `02-doing/<id>.md` on the target branch and commits: `chore(task): resume <id> <title>`.
+  - **Workspace Action**:
+    - **`worktree`**: Returns the existing worktree path for the user/agent to continue working in.
+    - **`checkout`**: Checks out the existing task branch (`git checkout task/<id>-<slug>`).
+    - **`none`**: Moves the file from `backlog/<id>.md` to `02-doing/<id>.md` and clears blocker frontmatter (no git commits).
+- **Target Branch Upstream Merge Policy**:
+  - `resume` does **not** auto-merge the target branch into the feature branch by default. Auto-merging risks dirty-tree conflicts, broken in-flight tests, and noisy merge commits.
+  - If the target branch is ahead, Dirban emits an advisory note (e.g. `Target branch main is 2 commits ahead; run git merge main when ready`).
+  - An optional flag (`--sync`) allows users to explicitly request an upstream merge upon resume.
+- **Guard in `dirban start`**: Strict entry point for new, unstarted tasks in `01-todo/`. If executed on an existing/blocked task, it detects the existing worktree/branch and prompts or delegates to `resume`.
 
-### 4. Worktree Audit and Orphan Management
+### 5. Worktree Audit and Orphan Management
 
 To prevent stale worktrees from accumulating permanently:
 - Introduce `dirban worktree list` (or `dirban status --worktrees`): Audits active Git worktrees against task statuses on the board (e.g. flagging worktrees whose tasks are `backlog`, `done`, or non-existent).
