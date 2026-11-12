@@ -2,6 +2,7 @@ import { discoverBoard } from "../../board/discovery.ts"
 import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { err, ok } from "neverthrow"
 import pc from "picocolors"
+import { toRelativePath } from "../../cli/formatters.ts"
 import { moveTask } from "./move.ts"
 
 export interface MoveCommandParams {
@@ -40,9 +41,11 @@ export const handleMove: CommandHandler = (ctx) => {
     return 1
   }
 
+  const taskIdDisplay = moveRes.value.document.frontmatter.id ?? moveRes.value.filename
+  const relPath = toRelativePath(moveRes.value.filePath, ctx.cwd)
   console.log(
     pc.green(
-      `✔ Moved task ${moveRes.value.document.frontmatter.id} to ${moveRes.value.column}`,
+      `✔ Moved task ${taskIdDisplay} to '${moveRes.value.column}': ${pc.cyan(relPath)}`,
     ),
   )
   return 0

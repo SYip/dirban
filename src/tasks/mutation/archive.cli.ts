@@ -1,6 +1,7 @@
 import { discoverBoard } from "../../board/discovery.ts"
 import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
 import pc from "picocolors"
+import { toRelativePath } from "../../cli/formatters.ts"
 import { archiveTasks } from "./archive.ts"
 
 export const handleArchive: CommandHandler = (ctx) => {
@@ -18,11 +19,24 @@ export const handleArchive: CommandHandler = (ctx) => {
     return 1
   }
 
-  console.log(
-    pc.green(
-      `✔ Successfully archived ${archiveRes.value.archivedTasks.length} task(s) to ${archiveRes.value.targetDirectory}`,
-    ),
-  )
+  const archivedTasks = archiveRes.value.archivedTasks
+  if (archivedTasks.length === 1 && archivedTasks[0] != null) {
+    const singleTask = archivedTasks[0]
+    const taskIdDisplay = singleTask.document.id ?? singleTask.filename
+    const relPath = toRelativePath(singleTask.filePath, ctx.cwd)
+    console.log(
+      pc.green(
+        `✔ Archived task ${taskIdDisplay}: ${pc.cyan(relPath)}`,
+      ),
+    )
+  } else {
+    const relTargetDir = toRelativePath(archiveRes.value.targetDirectory, ctx.cwd)
+    console.log(
+      pc.green(
+        `✔ Successfully archived ${archivedTasks.length} task(s) to ${pc.cyan(relTargetDir)}`,
+      ),
+    )
+  }
   return 0
 }
 

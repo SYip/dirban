@@ -2,6 +2,7 @@ import { discoverBoard } from "../../board/discovery.ts"
 import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { err, ok } from "neverthrow"
 import pc from "picocolors"
+import { toRelativePath } from "../../cli/formatters.ts"
 import { blockTask, unblockTask } from "./block.ts"
 
 export interface BlockCommandParams {
@@ -42,9 +43,10 @@ export const handleBlock: CommandHandler = (ctx) => {
 
   const result = blockRes.value
   const id = result.task.document.id
+  const relPath = toRelativePath(result.task.filePath, ctx.cwd)
   console.log(
     pc.yellow(
-      `⛔ Task ${id} blocked: added [${result.addedBlockers.join(", ")}]`,
+      `⛔ Blocked task ${id}: ${pc.cyan(relPath)} (added [${result.addedBlockers.join(", ")}])`,
     ),
   )
   if (result.demotedToBacklog) {
@@ -108,9 +110,10 @@ export const handleUnblock: CommandHandler = (ctx) => {
 
   const result = unblockRes.value
   const id = result.task.document.id
+  const relPath = toRelativePath(result.task.filePath, ctx.cwd)
   console.log(
     pc.green(
-      `✔ Task ${id} unblocked: removed [${result.removedBlockers.join(", ")}]`,
+      `✔ Unblocked task ${id}: ${pc.cyan(relPath)} (removed [${result.removedBlockers.join(", ")}])`,
     ),
   )
   if (result.remainingBlockers.length > 0) {

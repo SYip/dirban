@@ -101,21 +101,21 @@ export const handleStart: CommandHandler = (ctx) => {
 
   const { task, branchName, strategy: usedStrategy, worktreePath, gitSkipped, gitMessage } = startRes.value
   const taskDisplayName = task.document.id ?? task.filename
-  const relPath = toRelativePath(task.filePath)
-  const linkedTask = formatTerminalLink(taskDisplayName, task.filePath)
+  const relPath = toRelativePath(task.filePath, ctx.cwd)
 
   console.log(
     pc.green(
-      `✔ Moved task ${linkedTask} to ${task.column} (${pc.dim(relPath)})`,
+      `✔ Started task ${taskDisplayName}: ${pc.cyan(relPath)}`,
     ),
   )
 
   if (gitSkipped && gitMessage != null) {
     console.log(pc.yellow(`Notice: ${gitMessage}`))
   } else if (usedStrategy === "worktree" && worktreePath != null) {
+    const relWorktree = toRelativePath(worktreePath, ctx.cwd)
     console.log(
       pc.green(
-        `✔ Created worktree for branch ${pc.cyan(branchName)} at ${pc.cyan(worktreePath)}`,
+        `✔ Created worktree for branch ${pc.cyan(branchName)}: ${pc.cyan(relWorktree)} (cd ${relWorktree})`,
       ),
     )
   } else {

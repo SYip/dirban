@@ -60,6 +60,19 @@ describe("CLI Formatters Tests", () => {
     // Checks empty line between consecutive acceptance criteria items
     expect(stripAnsi(currentView)).toContain("  [ ] #1: First criteria item\n\n  [x] #2: Second criteria item")
 
+    // Checks current task formatting with branch and worktree info
+    const branchView = formatCurrentTaskView(task, {
+      branch: "task/26-006-improve-cli",
+      isWorktree: false,
+    })
+    expect(branchView).toContain("Column: 02-doing | Branch: task/26-006-improve-cli | Path:")
+
+    const worktreeView = formatCurrentTaskView(task, {
+      branch: "task/26-006-improve-cli",
+      isWorktree: true,
+    })
+    expect(worktreeView).toContain("Column: 02-doing | Branch: task/26-006-improve-cli (worktree) | Path:")
+
     const detailView = formatTaskDetail(task)
     expect(detailView).toContain("docs/tasks/02-doing/26-006-improve-cli-view.md")
     expect(stripAnsi(detailView)).toContain("  [ ] #1: First criteria item\n\n  [x] #2: Second criteria item")
@@ -128,6 +141,7 @@ describe("CLI Formatters Tests", () => {
     const cwd = process.cwd()
     expect(toRelativePath(path.join(cwd, "docs/task.md"))).toBe("docs/task.md")
     expect(toRelativePath("already/relative.md")).toBe("already/relative.md")
+    expect(toRelativePath("docs\\nested\\task.md")).toBe("docs/nested/task.md")
     expect(formatTaskPathLink(path.join(cwd, "docs/task.md"))).toBe(
       `\u001b]8;;file://${path.join(cwd, "docs/task.md")}\u0007docs/task.md\u001b]8;;\u0007`,
     )

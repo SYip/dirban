@@ -3,6 +3,7 @@ import type { Priority } from "../../okf/types.ts"
 import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { err, ok } from "neverthrow"
 import pc from "picocolors"
+import { toRelativePath } from "../../cli/formatters.ts"
 import { createTask } from "./create.ts"
 
 export interface NewCommandParams {
@@ -64,9 +65,10 @@ export const handleNew: CommandHandler = (ctx) => {
     return 1
   }
 
+  const relPath = toRelativePath(createRes.value.filePath, ctx.cwd)
   console.log(
     pc.green(
-      `✔ Created task ${pc.bold(createRes.value.id)} in ${createRes.value.column}: ${pc.cyan(createRes.value.filePath)}`,
+      `✔ Created task ${pc.bold(createRes.value.id)} in ${createRes.value.column}: ${pc.cyan(relPath)}`,
     ),
   )
   return 0

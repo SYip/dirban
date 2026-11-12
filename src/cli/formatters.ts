@@ -16,7 +16,8 @@ export const formatTerminalLink = (label: string, fileOrUrl: string): string => 
 }
 
 export const toRelativePath = (targetPath: string, basePath: string = process.cwd()): string => {
-  return path.isAbsolute(targetPath) ? path.relative(basePath, targetPath) : targetPath
+  const rel = path.isAbsolute(targetPath) ? path.relative(basePath, targetPath) : targetPath
+  return rel.replaceAll("\\", "/")
 }
 
 export const formatTaskPathLink = (targetPath: string, basePath: string = process.cwd()): string => {
@@ -218,19 +219,32 @@ export const formatTaskDetail = (task: BoardTask): string => {
   return lines.join("\n")
 }
 
-export const formatCurrentTaskView = (task: BoardTask): string => {
+export const formatCurrentTaskView = (
+  task: BoardTask,
+  options?: { readonly branch?: string; readonly isWorktree?: boolean; readonly basePath?: string },
+): string => {
   const doc = task.document
   const fm = doc.frontmatter
   const priority = doc.priority ?? fm.priority ?? "p3"
   const title = doc.title ?? fm.title ?? task.filename
   const id = doc.id ?? fm.id ?? task.filename
   const lines: string[] = []
-  const linkedPath = formatTaskPathLink(task.filePath)
+  const linkedPath = formatTaskPathLink(task.filePath, options?.basePath)
 
   lines.push(
     `${getPriorityBadge(priority)} ${pc.bold(pc.white(title))} (${pc.green(id)})`,
   )
-  lines.push(pc.gray(`Column: ${task.column} | Path: ${linkedPath}`))
+
+  const metaParts: string[] = [
+    `Column: ${task.column}`,
+  ]
+  if (options?.branch != null && options.branch !== "") {
+    const branchLabel = options.isWorktree ? `Branch: ${options.branch} (worktree)` : `Branch: ${options.branch}`
+    metaParts.push(branchLabel)
+  }
+  metaParts.push(`Path: ${linkedPath}`)
+
+  lines.push(pc.gray(metaParts.join(" | ")))
 
   lines.push(`\n${pc.bold("Acceptance Criteria:")}`)
   lines.push(...formatAcceptanceCriteriaList(doc.acceptanceCriteria))

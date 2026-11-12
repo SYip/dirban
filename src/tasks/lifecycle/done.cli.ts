@@ -1,7 +1,7 @@
 import { err, ok } from "neverthrow"
 import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
-import { logError, logTip, logWarning } from "../../cli/formatters.ts"
+import { logError, logTip, logWarning, toRelativePath } from "../../cli/formatters.ts"
 import type { LifecycleStrategyType } from "../../workspace/types.ts"
 import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { doneTask, type DoneTaskError } from "./done.ts"
@@ -87,9 +87,11 @@ export const handleDone: CommandHandler = (ctx) => {
   }
 
   const { task, uncheckedCount, mergedBranch, baseBranch, worktreeRemoved, gitSkipped, message } = doneRes.value
+  const taskIdDisplay = task.document.id ?? task.filename
+  const relPath = toRelativePath(task.filePath, ctx.cwd)
   console.log(
     pc.green(
-      `✔ Completed task ${task.document.id ?? task.filename} (moved to ${task.column})`,
+      `✔ Completed task ${taskIdDisplay}: ${pc.cyan(relPath)}`,
     ),
   )
 
