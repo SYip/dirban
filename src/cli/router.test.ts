@@ -337,4 +337,116 @@ describe("CLI Router and Modular Command Handlers", () => {
       console.error = origErr
     }
   })
+
+  it("Vector 10: Standardized relative clickable file paths across CLI commands", async () => {
+    let output = ""
+    const origLog = console.log
+    console.log = (...args: unknown[]) => {
+      output += args.join(" ") + "\n"
+    }
+
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-paths-test-"))
+    try {
+      initializeBoard(MOCK_CONFIG, tempDir)
+
+      // 1. dirban new outputs relative path
+      output = ""
+      const newCtx: CliContext = {
+        flags: {},
+        positionals: ["new", "Standardize Path Test"],
+        config: MOCK_CONFIG,
+        cwd: tempDir,
+      }
+      const newExit = await dispatchCommand("new", newCtx)
+      expect(newExit).toBe(0)
+      expect(output).toContain("✔ Created task 26-001 in backlog: docs/tasks/backlog/26-001-standardize-path-test.md")
+
+      // 2. dirban move outputs relative path
+      output = ""
+      const moveCtx: CliContext = {
+        flags: {},
+        positionals: ["move", "26-001", "02-doing"],
+        config: MOCK_CONFIG,
+        cwd: tempDir,
+      }
+      const moveExit = await dispatchCommand("move", moveCtx)
+      expect(moveExit).toBe(0)
+      expect(output).toContain("✔ Moved task 26-001 to '02-doing': docs/tasks/02-doing/26-001-standardize-path-test.md")
+
+      // 3. dirban block outputs relative path
+      output = ""
+      const blockCtx: CliContext = {
+        flags: {},
+        positionals: ["block", "26-001", "Waiting on review"],
+        config: MOCK_CONFIG,
+        cwd: tempDir,
+      }
+      const blockExit = await dispatchCommand("block", blockCtx)
+      expect(blockExit).toBe(0)
+      expect(output).toContain("⛔ Blocked task 26-001: docs/tasks/backlog/26-001-standardize-path-test.md (added [Waiting on review])")
+
+      // 4. dirban unblock outputs relative path
+      output = ""
+      const unblockCtx: CliContext = {
+        flags: {},
+        positionals: ["unblock", "26-001", "Waiting on review"],
+        config: MOCK_CONFIG,
+        cwd: tempDir,
+      }
+      const unblockExit = await dispatchCommand("unblock", unblockCtx)
+      expect(unblockExit).toBe(0)
+      expect(output).toContain("✔ Unblocked task 26-001: docs/tasks/backlog/26-001-standardize-path-test.md (removed [Waiting on review])")
+
+      // 5. dirban ready outputs relative path
+      output = ""
+      const readyCtx: CliContext = {
+        flags: {},
+        positionals: ["ready", "26-001"],
+        config: MOCK_CONFIG,
+        cwd: tempDir,
+      }
+      const readyExit = await dispatchCommand("ready", readyCtx)
+      expect(readyExit).toBe(0)
+      expect(output).toContain("✔ Readied task 26-001: docs/tasks/01-todo/26-001-standardize-path-test.md")
+
+      // 6. dirban start outputs relative path
+      output = ""
+      const startCtx: CliContext = {
+        flags: { "no-git": true },
+        positionals: ["start", "26-001"],
+        config: MOCK_CONFIG,
+        cwd: tempDir,
+      }
+      const startExit = await dispatchCommand("start", startCtx)
+      expect(startExit).toBe(0)
+      expect(output).toContain("✔ Started task 26-001: docs/tasks/02-doing/26-001-standardize-path-test.md")
+
+      // 7. dirban done outputs relative path
+      output = ""
+      const doneCtx: CliContext = {
+        flags: { "no-git": true },
+        positionals: ["done", "26-001"],
+        config: MOCK_CONFIG,
+        cwd: tempDir,
+      }
+      const doneExit = await dispatchCommand("done", doneCtx)
+      expect(doneExit).toBe(0)
+      expect(output).toContain("✔ Completed task 26-001: docs/tasks/03-done/26-001-standardize-path-test.md")
+
+      // 8. dirban archive outputs relative path
+      output = ""
+      const archiveCtx: CliContext = {
+        flags: {},
+        positionals: ["archive", "26-001"],
+        config: MOCK_CONFIG,
+        cwd: tempDir,
+      }
+      const archiveExit = await dispatchCommand("archive", archiveCtx)
+      expect(archiveExit).toBe(0)
+      expect(output).toContain("✔ Archived task 26-001: archive/26-001-standardize-path-test.md")
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+      console.log = origLog
+    }
+  })
 })

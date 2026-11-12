@@ -4,6 +4,7 @@ import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
 import { formatCurrentTaskView } from "../../cli/formatters.ts"
 import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
+import { getVcsProvider } from "../../vcs/index.ts"
 import { resolveCurrentTask } from "./current.ts"
 
 export const handleCurrent: CommandHandler = (ctx) => {
@@ -45,7 +46,16 @@ export const handleCurrent: CommandHandler = (ctx) => {
     )
   }
 
-  console.log(formatCurrentTaskView(task))
+  const vcsProvider = getVcsProvider(ctx.cwd)
+  const vcsCtx = vcsProvider.getContext(ctx.cwd)
+
+  console.log(
+    formatCurrentTaskView(task, {
+      branch: vcsCtx.currentBranch,
+      isWorktree: vcsCtx.isWorktree,
+      basePath: ctx.cwd,
+    }),
+  )
   return 0
 }
 

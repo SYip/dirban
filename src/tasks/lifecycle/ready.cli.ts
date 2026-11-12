@@ -2,6 +2,7 @@ import type { CliContext, CommandDefinition, CommandHandler, CommandParser } fro
 import { discoverBoard } from "../../board/discovery.ts"
 import { err, ok } from "neverthrow"
 import pc from "picocolors"
+import { toRelativePath } from "../../cli/formatters.ts"
 import { partitionBacklog, promoteTasks } from "../planning/plan.ts"
 
 export interface ReadyCommandParams {
@@ -69,9 +70,10 @@ export const handleReady: CommandHandler = (ctx) => {
     )
   } else {
     for (const item of result.promoted) {
+      const relPath = toRelativePath(item.task.filePath, ctx.cwd)
       console.log(
         pc.green(
-          `✔ Successfully readied task ${item.task.document.id} to ${item.targetColumn}`,
+          `✔ Readied task ${item.task.document.id}: ${pc.cyan(relPath)}`,
         ),
       )
     }
