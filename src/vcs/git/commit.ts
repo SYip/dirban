@@ -1,5 +1,5 @@
-import { err, ok, type Result } from "neverthrow"
 import { spawnSync } from "node:child_process"
+import { err, ok, type Result } from "neverthrow"
 import type { VcsContext, VcsError } from "../types.ts"
 
 /**

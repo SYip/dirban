@@ -1,8 +1,8 @@
-import { discoverBoard } from "../../board/discovery.ts"
-import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { err, ok } from "neverthrow"
 import pc from "picocolors"
+import { discoverBoard } from "../../board/discovery.ts"
 import { toRelativePath } from "../../cli/formatters.ts"
+import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { moveTask } from "./move.ts"
 
 export interface MoveCommandParams {
@@ -44,9 +44,7 @@ export const handleMove: CommandHandler = (ctx) => {
   const taskIdDisplay = moveRes.value.document.frontmatter.id ?? moveRes.value.filename
   const relPath = toRelativePath(moveRes.value.filePath, ctx.cwd)
   console.log(
-    pc.green(
-      `✔ Moved task ${taskIdDisplay} to '${moveRes.value.column}': ${pc.cyan(relPath)}`,
-    ),
+    pc.green(`✔ Moved task ${taskIdDisplay} to '${moveRes.value.column}': ${pc.cyan(relPath)}`),
   )
   return 0
 }
@@ -56,10 +54,7 @@ export const moveCommand: CommandDefinition = {
   summary: "Atomically move a task to target column and record journal",
   usage: "dirban move <id> <target-column>",
   options: [],
-  examples: [
-    "dirban move 26-001 02-doing",
-    "dirban move 26-001 03-done",
-  ],
+  examples: ["dirban move 26-001 02-doing", "dirban move 26-001 03-done"],
   requiresTasksDir: true,
   parse: parseMove,
   execute: handleMove,

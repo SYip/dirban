@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test"
-import * as path from "node:path"
 import * as fs from "node:fs"
 import * as os from "node:os"
+import * as path from "node:path"
 import {
   DEFAULT_CONFIG,
   loadConfig,
@@ -34,11 +34,7 @@ describe("Config Module Tests", () => {
         defaultPriority: "p0",
         focusColumn: "doing",
       }
-      fs.writeFileSync(
-        path.join(tempDir, ".dirban.json"),
-        JSON.stringify(customConfig),
-        "utf-8",
-      )
+      fs.writeFileSync(path.join(tempDir, ".dirban.json"), JSON.stringify(customConfig), "utf-8")
 
       const result = loadConfig(tempDir)
       expect(result.isOk()).toBe(true)
@@ -57,11 +53,7 @@ describe("Config Module Tests", () => {
   it("Vector 3 (Malformed JSON): Returns JSON_PARSE_ERROR", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-config-"))
     try {
-      fs.writeFileSync(
-        path.join(tempDir, ".dirban.json"),
-        "{ invalid json",
-        "utf-8",
-      )
+      fs.writeFileSync(path.join(tempDir, ".dirban.json"), "{ invalid json", "utf-8")
 
       const result = loadConfig(tempDir)
       expect(result.isErr()).toBe(true)
@@ -141,21 +133,12 @@ describe("Config Module Tests", () => {
         priorities: ["urgent", "high", "normal", "low"],
         defaultPriority: "normal",
       }
-      fs.writeFileSync(
-        path.join(tempDir, ".dirban.json"),
-        JSON.stringify(customConfig),
-        "utf-8",
-      )
+      fs.writeFileSync(path.join(tempDir, ".dirban.json"), JSON.stringify(customConfig), "utf-8")
 
       const result = loadConfig(tempDir)
       expect(result.isOk()).toBe(true)
       if (result.isOk()) {
-        expect(result.value.priorities).toEqual([
-          "urgent",
-          "high",
-          "normal",
-          "low",
-        ])
+        expect(result.value.priorities).toEqual(["urgent", "high", "normal", "low"])
         expect(result.value.defaultPriority).toBe("normal")
       }
     } finally {

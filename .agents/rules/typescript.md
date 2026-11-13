@@ -6,10 +6,7 @@ description: "TypeScript standards: strict typing, no semicolons, pure functions
 # TypeScript Standards & Conventions
 
 ## 1. Strict Typing Policy
-* `noImplicitAny: true` is strictly enforced.
-* **Prohibited**: The `any` type and `as any` type assertions are strictly forbidden for function inputs, intermediate state, outputs, and fallbacks.
-* If handling untyped external inputs or heterogenous collections, use `unknown` with runtime type narrowing or explicit type guards.
-* Never use `as any` to bypass typecheck errors or construct mock default objects. If a parameter is required, ensure it is provided or explicitly model it as optional in the interface.
+* Enforced by `tsc` and Biome (`noExplicitAny: "error"`). Use `unknown` with runtime narrowing for untyped external inputs.
 
 ## 2. Boundary Typing & "Parse, Don't Validate"
 * **Parse at the Boundary, Trust in the Domain**:
@@ -24,9 +21,8 @@ description: "TypeScript standards: strict typing, no semicolons, pure functions
   * Preserves incomplete user keystrokes (e.g., empty string `""` on backspace, intermediate punctuation entry).
   * Prevents premature coercion or loss of precision during component-to-component transfers.
 
-## 3. Formatting & Semicolons
-* **No semicolons (`semi: false`)**: Do not use semicolons at the end of statements unless syntactically required (e.g., before an IIFE or array destructuring statement starting on a new line).
-* Enforced via code formatter configuration (`"semiColons": false` / `"semi": false`).
+## 3. Formatting & Linting
+* Enforced by Biome ([biome.json](file:///Users/andrew/Projects/dirban/biome.json)): `bun run check`, `bun run lint`, `bun run format` (no semicolons, 2-space indent, double quotes, leading binary operators, `noUnusedImports`, `noUnusedVariables`, `useConst`, `noParameterAssign`, `noUselessElse`, `noDoubleEquals` with `ignoreNull`).
 
 ## 4. Domain Models & Schemas
 * Explicitly define interfaces and data schemas within their business domain module (e.g., `user-profile/types.ts`) or colocated with the domain logic module, never in a generic global technical bucket like `/types/`.

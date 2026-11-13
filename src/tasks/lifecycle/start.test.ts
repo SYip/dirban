@@ -126,7 +126,9 @@ describe("Start Task Operations (startTask)", () => {
       })._unsafeUnwrap()
 
       const boardWithCustom = discoverBoard(customWorkflowConfig, tempDir)._unsafeUnwrap()
-      const startCustomRes = startTask(boardWithCustom, customWorkflowConfig, customTask.id, { cwd: tempDir })
+      const startCustomRes = startTask(boardWithCustom, customWorkflowConfig, customTask.id, {
+        cwd: tempDir,
+      })
       expect(startCustomRes.isOk()).toBe(true)
       if (startCustomRes.isOk()) {
         expect(startCustomRes.value.task.column).toBe("develop")
@@ -212,7 +214,9 @@ describe("Start Task Operations (startTask)", () => {
       })._unsafeUnwrap()
 
       const boardWithBacklog = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
-      const startBacklogRes = startTask(boardWithBacklog, DEFAULT_CONFIG, backlogTask.id, { cwd: tempDir })
+      const startBacklogRes = startTask(boardWithBacklog, DEFAULT_CONFIG, backlogTask.id, {
+        cwd: tempDir,
+      })
       expect(startBacklogRes.isErr()).toBe(true)
       if (startBacklogRes.isErr()) {
         expect(startBacklogRes.error.kind).toBe("INVALID_COLUMN_TRANSITION")
@@ -231,7 +235,9 @@ describe("Start Task Operations (startTask)", () => {
       })._unsafeUnwrap()
 
       const boardWithDoing = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
-      const startDoingRes = startTask(boardWithDoing, DEFAULT_CONFIG, doingTask.id, { cwd: tempDir })
+      const startDoingRes = startTask(boardWithDoing, DEFAULT_CONFIG, doingTask.id, {
+        cwd: tempDir,
+      })
       expect(startDoingRes.isErr()).toBe(true)
       if (startDoingRes.isErr()) {
         expect(startDoingRes.error.kind).toBe("ALREADY_STARTED")

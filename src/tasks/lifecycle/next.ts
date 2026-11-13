@@ -34,9 +34,7 @@ export const resolveNextTask = (
     })
   }
 
-  const column = board.columns.find(
-    (c) => c.name.toLowerCase() === todoColName.toLowerCase(),
-  )
+  const column = board.columns.find((c) => c.name.toLowerCase() === todoColName.toLowerCase())
 
   if (column == null || column.tasks.length === 0) {
     return err({

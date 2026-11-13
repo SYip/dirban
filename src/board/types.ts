@@ -31,17 +31,17 @@ export interface BoardFilterOptions {
 
 export type BoardError =
   | {
-    readonly kind: "DIRECTORY_NOT_FOUND"
-    readonly message: string
-    readonly path: string
-  }
+      readonly kind: "DIRECTORY_NOT_FOUND"
+      readonly message: string
+      readonly path: string
+    }
   | {
-    readonly kind: "FILE_READ_ERROR"
-    readonly message: string
-    readonly path: string
-  }
+      readonly kind: "FILE_READ_ERROR"
+      readonly message: string
+      readonly path: string
+    }
   | {
-    readonly kind: "TASK_PARSE_ERROR"
-    readonly message: string
-    readonly path: string
-  }
+      readonly kind: "TASK_PARSE_ERROR"
+      readonly message: string
+      readonly path: string
+    }

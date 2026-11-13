@@ -1,8 +1,8 @@
-import pc from "picocolors"
 import * as process from "node:process"
-import type { DirbanConfig } from "../config/types.ts"
+import pc from "picocolors"
 import { discoverBoard } from "../board/discovery.ts"
 import type { BoardTask } from "../board/types.ts"
+import type { DirbanConfig } from "../config/types.ts"
 import { checkTaskItem } from "../tasks/mutation/check.ts"
 import { moveTask } from "../tasks/mutation/move.ts"
 import { formatTaskDetail, getPriorityBadge } from "./formatters.ts"
@@ -18,9 +18,7 @@ export const startInteractiveTui = async (
   workspaceRoot: string = process.cwd(),
 ): Promise<void> => {
   if (!process.stdin.isTTY) {
-    console.error(
-      "Standard input is not a terminal TTY. Run with --static instead.",
-    )
+    console.error("Standard input is not a terminal TTY. Run with --static instead.")
     return
   }
 
@@ -55,9 +53,7 @@ export const startInteractiveTui = async (
       const currentTask = col?.tasks[state.taskIndex]
       if (currentTask != null) {
         console.log(formatTaskDetail(currentTask))
-        console.log(
-          pc.dim("Press [ESC], [Enter], or [v] to return to board."),
-        )
+        console.log(pc.dim("Press [ESC], [Enter], or [v] to return to board."))
       } else {
         state.detailOverlay = false
       }
@@ -69,10 +65,8 @@ export const startInteractiveTui = async (
     const termRows = process.stdout.rows || 30
 
     console.log(
-      pc.bold(
-        pc.cyan(`=== DIRBAN KANBAN (${totalTasks} tasks) ===`),
-      ) +
-        pc.gray(
+      pc.bold(pc.cyan(`=== DIRBAN KANBAN (${totalTasks} tasks) ===`))
+        + pc.gray(
           "  [←/→/h/l: Column] [↑/↓/j/k: Task] [m: Move] [Space: Check] [v/Enter: Full View] [q: Quit]",
         ),
     )
@@ -87,14 +81,8 @@ export const startInteractiveTui = async (
     // If screen is narrow (< 130 cols), expand the active column to ~40-45% width
     const colWidths: number[] = []
     if (usableWidth < 130 && numCols > 1) {
-      const activeWidth = Math.min(
-        Math.floor(usableWidth * 0.42),
-        usableWidth - (numCols - 1) * 18,
-      )
-      const inactiveWidth = Math.max(
-        Math.floor((usableWidth - activeWidth) / (numCols - 1)),
-        18,
-      )
+      const activeWidth = Math.min(Math.floor(usableWidth * 0.42), usableWidth - (numCols - 1) * 18)
+      const inactiveWidth = Math.max(Math.floor((usableWidth - activeWidth) / (numCols - 1)), 18)
       for (let i = 0; i < numCols; i++) {
         colWidths.push(i === state.columnIndex ? activeWidth : inactiveWidth)
       }
@@ -105,13 +93,14 @@ export const startInteractiveTui = async (
       }
     }
 
-    const stripAnsi = (str: string): string =>
-      str.replace(/\x1b\[[0-9;]*m/g, "")
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: ANSI escape stripping
+    const ANSI_COLOR_REGEX = /\x1b\[[0-9;]*m/g
+    const stripAnsi = (str: string): string => str.replace(ANSI_COLOR_REGEX, "")
 
     const padOrTruncate = (str: string, width: number): string => {
       const stripped = stripAnsi(str)
       if (stripped.length > width) {
-        return stripped.slice(0, Math.max(width - 1, 0)) + "…"
+        return `${stripped.slice(0, Math.max(width - 1, 0))}…`
       }
       return str + " ".repeat(Math.max(width - stripped.length, 0))
     }
@@ -119,17 +108,11 @@ export const startInteractiveTui = async (
     // Available vertical rows for the card viewport (excluding title, header, preview pane)
     const previewPaneHeight = 6
     const topBarHeight = 3
-    const maxViewportLines = Math.max(
-      termRows - previewPaneHeight - topBarHeight - 2,
-      6,
-    )
+    const maxViewportLines = Math.max(termRows - previewPaneHeight - topBarHeight - 2, 6)
 
     // Lines per card = 3 (top line, title line, divider)
     const LINES_PER_CARD = 3
-    const maxVisibleCards = Math.max(
-      Math.floor((maxViewportLines - 2) / LINES_PER_CARD),
-      1,
-    )
+    const maxVisibleCards = Math.max(Math.floor((maxViewportLines - 2) / LINES_PER_CARD), 1)
 
     // Build headers and windowed body lines for each column
     const headerLines: string[][] = []
@@ -149,11 +132,7 @@ export const startInteractiveTui = async (
       // Sticky Header
       const headerText = ` ${col.name} (${col.tasks.length}) `
       const headerBox = isCurrentCol
-        ? pc.bold(
-          pc.bgCyan(
-            pc.black(padOrTruncate(`▶${headerText}`, colW)),
-          ),
-        )
+        ? pc.bold(pc.bgCyan(pc.black(padOrTruncate(`▶${headerText}`, colW))))
         : pc.bold(pc.yellow(padOrTruncate(`■${headerText}`, colW)))
 
       const headerBorder = pc.gray("─".repeat(colW))
@@ -173,18 +152,12 @@ export const startInteractiveTui = async (
           }
         }
 
-        const visibleTasks = col.tasks.slice(
-          scrollOffset,
-          scrollOffset + maxVisibleCards,
-        )
+        const visibleTasks = col.tasks.slice(scrollOffset, scrollOffset + maxVisibleCards)
         const hiddenAbove = scrollOffset
-        const hiddenBelow = col.tasks.length -
-          (scrollOffset + visibleTasks.length)
+        const hiddenBelow = col.tasks.length - (scrollOffset + visibleTasks.length)
 
         if (hiddenAbove > 0) {
-          colBodyLines.push(
-            pc.cyan(padOrTruncate(` ▲ ${hiddenAbove} more above`, colW)),
-          )
+          colBodyLines.push(pc.cyan(padOrTruncate(` ▲ ${hiddenAbove} more above`, colW)))
         }
 
         for (let idx = 0; idx < visibleTasks.length; idx++) {
@@ -207,31 +180,17 @@ export const startInteractiveTui = async (
           const titleLine = `   ${title}`
 
           if (isCurrentTask) {
-            colBodyLines.push(
-              pc.bold(
-                pc.bgBlack(padOrTruncate(topCardLine, colW)),
-              ),
-            )
-            colBodyLines.push(
-              pc.bold(
-                pc.bgBlack(padOrTruncate(titleLine, colW)),
-              ),
-            )
+            colBodyLines.push(pc.bold(pc.bgBlack(padOrTruncate(topCardLine, colW))))
+            colBodyLines.push(pc.bold(pc.bgBlack(padOrTruncate(titleLine, colW))))
           } else {
             colBodyLines.push(padOrTruncate(topCardLine, colW))
             colBodyLines.push(pc.dim(padOrTruncate(titleLine, colW)))
           }
-          colBodyLines.push(
-            pc.gray(
-              padOrTruncate("  · · · · · · · · · · · · · ·", colW),
-            ),
-          )
+          colBodyLines.push(pc.gray(padOrTruncate("  · · · · · · · · · · · · · ·", colW)))
         }
 
         if (hiddenBelow > 0) {
-          colBodyLines.push(
-            pc.cyan(padOrTruncate(` ▼ ${hiddenBelow} more below`, colW)),
-          )
+          colBodyLines.push(pc.cyan(padOrTruncate(` ▼ ${hiddenBelow} more below`, colW)))
         }
       }
 
@@ -267,7 +226,7 @@ export const startInteractiveTui = async (
     const selectedCol = board.columns[state.columnIndex]
     const selectedTask = selectedCol?.tasks[state.taskIndex]
 
-    console.log(pc.cyan("\n" + "═".repeat(termCols)))
+    console.log(pc.cyan(`\n${"═".repeat(termCols)}`))
     if (selectedTask != null) {
       const doc = selectedTask.document
       const fm = selectedTask.document.frontmatter
@@ -275,11 +234,7 @@ export const startInteractiveTui = async (
       const badge = getPriorityBadge(priority)
       const title = doc.title ?? fm.title ?? selectedTask.filename
       const id = doc.id ?? fm.id ?? selectedTask.filename
-      console.log(
-        `${badge} ${pc.bold(pc.white(title))} [${
-          pc.green(id)
-        }]`,
-      )
+      console.log(`${badge} ${pc.bold(pc.white(title))} [${pc.green(id)}]`)
       const tagsList = doc.tags ?? fm.tags ?? []
       const tags = tagsList.length > 0 ? `Tags: ${tagsList.join(", ")} | ` : ""
       const assignee = doc.assigned_to ?? fm.assigned_to ?? "unassigned"
@@ -293,11 +248,8 @@ export const startInteractiveTui = async (
       if (selectedTask.document.acceptanceCriteria.length > 0) {
         const acStr = selectedTask.document.acceptanceCriteria
           .slice(0, 3)
-          .map((
-            a,
-          ) => (a.checked
-            ? pc.green(`[✓] #${a.index} ${a.text}`)
-            : pc.red(`[ ] #${a.index} ${a.text}`))
+          .map((a) =>
+            a.checked ? pc.green(`[✓] #${a.index} ${a.text}`) : pc.red(`[ ] #${a.index} ${a.text}`),
           )
           .join("   ")
         console.log(pc.dim("Criteria: ") + acStr)
@@ -380,7 +332,8 @@ export const startInteractiveTui = async (
           const nextColIndex = (state.columnIndex + 1) % board.columns.length
           const nextCol = board.columns[nextColIndex]
           if (nextCol != null) {
-            const taskId = currentTask.document.id ?? currentTask.document.frontmatter.id ?? currentTask.filename
+            const taskId =
+              currentTask.document.id ?? currentTask.document.frontmatter.id ?? currentTask.filename
             moveTask(board, taskId, nextCol.name)
             reloadBoard()
             state.columnIndex = nextColIndex
@@ -389,15 +342,11 @@ export const startInteractiveTui = async (
         }
       } // Toggle checkbox: Space
       else if (key === " ") {
-        if (
-          currentTask != null &&
-          currentTask.document.acceptanceCriteria.length > 0
-        ) {
-          const firstUnchecked = currentTask.document.acceptanceCriteria.find((
-            a,
-          ) => !a.checked)
+        if (currentTask != null && currentTask.document.acceptanceCriteria.length > 0) {
+          const firstUnchecked = currentTask.document.acceptanceCriteria.find((a) => !a.checked)
           const targetIndex = firstUnchecked != null ? firstUnchecked.index : 1
-          const taskId = currentTask.document.id ?? currentTask.document.frontmatter.id ?? currentTask.filename
+          const taskId =
+            currentTask.document.id ?? currentTask.document.frontmatter.id ?? currentTask.filename
           checkTaskItem(board, taskId, targetIndex)
           reloadBoard()
         }

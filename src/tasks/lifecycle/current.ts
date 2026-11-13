@@ -1,9 +1,9 @@
-import { ok, err, type Result } from "neverthrow"
-import type { Board, BoardTask } from "../../board/types.ts"
+import { err, ok, type Result } from "neverthrow"
 import { findTaskExact } from "../../board/discovery.ts"
 import { sortTasksByPriority } from "../../board/sorter.ts"
-import type { DirbanConfig } from "../../config/types.ts"
+import type { Board, BoardTask } from "../../board/types.ts"
 import { resolveFocusColumn } from "../../config/config.ts"
+import type { DirbanConfig } from "../../config/types.ts"
 import { getVcsProvider, type VersionControlProvider } from "../../vcs/index.ts"
 
 export type CurrentResolutionSource = "explicit" | "git-branch" | "git-worktree" | "doing-column"

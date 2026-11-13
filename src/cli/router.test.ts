@@ -2,11 +2,11 @@ import { describe, expect, it } from "bun:test"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
-import { dispatchCommand, printHelp } from "./router.ts"
 import { runCli } from "../../main.ts"
-import type { CliContext } from "./types.ts"
 import type { DirbanConfig } from "../config/types.ts"
 import { initializeBoard } from "../tasks/project/init.ts"
+import { dispatchCommand, } from "./router.ts"
+import type { CliContext } from "./types.ts"
 
 const MOCK_CONFIG: DirbanConfig = {
   tasksDir: "docs/tasks",
@@ -24,7 +24,7 @@ describe("CLI Router and Modular Command Handlers", () => {
     let output = ""
     const origLog = console.log
     console.log = (...args: unknown[]) => {
-      output += args.join(" ") + "\n"
+      output += `${args.join(" ")}\n`
     }
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-router-test-"))
@@ -50,7 +50,7 @@ describe("CLI Router and Modular Command Handlers", () => {
     let errOutput = ""
     const origErr = console.error
     console.error = (...args: unknown[]) => {
-      errOutput += args.join(" ") + "\n"
+      errOutput += `${args.join(" ")}\n`
     }
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-router-test-"))
@@ -103,7 +103,7 @@ describe("CLI Router and Modular Command Handlers", () => {
     let output = ""
     const origLog = console.log
     console.log = (...args: unknown[]) => {
-      output += args.join(" ") + "\n"
+      output += `${args.join(" ")}\n`
     }
 
     try {
@@ -120,10 +120,10 @@ describe("CLI Router and Modular Command Handlers", () => {
   })
 
   it("Vector 5: Dispatches ready command with task IDs and 'all'", async () => {
-    let output = ""
+    let _output = ""
     const origLog = console.log
     console.log = (...args: unknown[]) => {
-      output += args.join(" ") + "\n"
+      _output += `${args.join(" ")}\n`
     }
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-router-test-"))
@@ -159,7 +159,7 @@ describe("CLI Router and Modular Command Handlers", () => {
     let output = ""
     const origLog = console.log
     console.log = (...args: unknown[]) => {
-      output += args.join(" ") + "\n"
+      output += `${args.join(" ")}\n`
     }
 
     try {
@@ -187,6 +187,7 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const exitHelpStart = await dispatchCommand("help", ctxHelpStart)
       expect(exitHelpStart).toBe(0)
+      // biome-ignore lint/suspicious/noControlCharactersInRegex: ANSI escape stripping
       const cleanOutput = output.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "")
       expect(cleanOutput).toContain("dirban start")
       expect(cleanOutput).toContain("--worktree")
@@ -200,7 +201,7 @@ describe("CLI Router and Modular Command Handlers", () => {
     let errOutput = ""
     const origErr = console.error
     console.error = (...args: unknown[]) => {
-      errOutput += args.join(" ") + "\n"
+      errOutput += `${args.join(" ")}\n`
     }
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-router-val-"))
@@ -229,7 +230,7 @@ describe("CLI Router and Modular Command Handlers", () => {
     const origLog = console.log
     const origWrite = process.stdout.write
     console.log = (...args: unknown[]) => {
-      output += args.join(" ") + "\n"
+      output += `${args.join(" ")}\n`
     }
     process.stdout.write = (str: string | Uint8Array): boolean => {
       output += typeof str === "string" ? str : new TextDecoder().decode(str)
@@ -279,7 +280,7 @@ describe("CLI Router and Modular Command Handlers", () => {
     let errOutput = ""
     const origErr = console.error
     console.error = (...args: unknown[]) => {
-      errOutput += args.join(" ") + "\n"
+      errOutput += `${args.join(" ")}\n`
     }
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-router-validation-"))
@@ -307,7 +308,9 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const startExit = await dispatchCommand("start", startConflictCtx)
       expect(startExit).toBe(1)
-      expect(errOutput).toContain("Error: Cannot specify both --worktree and --current / --no-branch.")
+      expect(errOutput).toContain(
+        "Error: Cannot specify both --worktree and --current / --no-branch.",
+      )
 
       // 3. dirban start missing task ID
       errOutput = ""
@@ -342,7 +345,7 @@ describe("CLI Router and Modular Command Handlers", () => {
     let output = ""
     const origLog = console.log
     console.log = (...args: unknown[]) => {
-      output += args.join(" ") + "\n"
+      output += `${args.join(" ")}\n`
     }
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-paths-test-"))
@@ -359,7 +362,9 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const newExit = await dispatchCommand("new", newCtx)
       expect(newExit).toBe(0)
-      expect(output).toContain("✔ Created task 26-001 in backlog: docs/tasks/backlog/26-001-standardize-path-test.md")
+      expect(output).toContain(
+        "✔ Created task 26-001 in backlog: docs/tasks/backlog/26-001-standardize-path-test.md",
+      )
 
       // 2. dirban move outputs relative path
       output = ""
@@ -371,7 +376,9 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const moveExit = await dispatchCommand("move", moveCtx)
       expect(moveExit).toBe(0)
-      expect(output).toContain("✔ Moved task 26-001 to '02-doing': docs/tasks/02-doing/26-001-standardize-path-test.md")
+      expect(output).toContain(
+        "✔ Moved task 26-001 to '02-doing': docs/tasks/02-doing/26-001-standardize-path-test.md",
+      )
 
       // 3. dirban block outputs relative path
       output = ""
@@ -383,7 +390,9 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const blockExit = await dispatchCommand("block", blockCtx)
       expect(blockExit).toBe(0)
-      expect(output).toContain("⛔ Blocked task 26-001: docs/tasks/backlog/26-001-standardize-path-test.md (added [Waiting on review])")
+      expect(output).toContain(
+        "⛔ Blocked task 26-001: docs/tasks/backlog/26-001-standardize-path-test.md (added [Waiting on review])",
+      )
 
       // 4. dirban unblock outputs relative path
       output = ""
@@ -395,7 +404,9 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const unblockExit = await dispatchCommand("unblock", unblockCtx)
       expect(unblockExit).toBe(0)
-      expect(output).toContain("✔ Unblocked task 26-001: docs/tasks/backlog/26-001-standardize-path-test.md (removed [Waiting on review])")
+      expect(output).toContain(
+        "✔ Unblocked task 26-001: docs/tasks/backlog/26-001-standardize-path-test.md (removed [Waiting on review])",
+      )
 
       // 5. dirban ready outputs relative path
       output = ""
@@ -407,7 +418,9 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const readyExit = await dispatchCommand("ready", readyCtx)
       expect(readyExit).toBe(0)
-      expect(output).toContain("✔ Readied task 26-001: docs/tasks/01-todo/26-001-standardize-path-test.md")
+      expect(output).toContain(
+        "✔ Readied task 26-001: docs/tasks/01-todo/26-001-standardize-path-test.md",
+      )
 
       // 6. dirban start outputs relative path
       output = ""
@@ -419,7 +432,9 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const startExit = await dispatchCommand("start", startCtx)
       expect(startExit).toBe(0)
-      expect(output).toContain("✔ Started task 26-001: docs/tasks/02-doing/26-001-standardize-path-test.md")
+      expect(output).toContain(
+        "✔ Started task 26-001: docs/tasks/02-doing/26-001-standardize-path-test.md",
+      )
 
       // 7. dirban done outputs relative path
       output = ""
@@ -431,7 +446,9 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const doneExit = await dispatchCommand("done", doneCtx)
       expect(doneExit).toBe(0)
-      expect(output).toContain("✔ Completed task 26-001: docs/tasks/03-done/26-001-standardize-path-test.md")
+      expect(output).toContain(
+        "✔ Completed task 26-001: docs/tasks/03-done/26-001-standardize-path-test.md",
+      )
 
       // 8. dirban archive outputs relative path
       output = ""

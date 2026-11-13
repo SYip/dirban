@@ -1,9 +1,9 @@
-import { discoverBoard } from "../../board/discovery.ts"
-import type { Priority } from "../../okf/types.ts"
-import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { err, ok } from "neverthrow"
 import pc from "picocolors"
+import { discoverBoard } from "../../board/discovery.ts"
 import { toRelativePath } from "../../cli/formatters.ts"
+import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
+import type { Priority } from "../../okf/types.ts"
 import { createTask } from "./create.ts"
 
 export interface NewCommandParams {
@@ -21,9 +21,13 @@ export const parseNew: CommandParser<NewCommandParams> = (ctx) => {
     return err({ message: 'Missing task title. Usage: dirban new "<title>" [options]' })
   }
 
-  const tags = ctx.flags.tags != null
-    ? ctx.flags.tags.split(",").map((t) => t.trim()).filter((t) => t !== "")
-    : undefined
+  const tags =
+    ctx.flags.tags != null
+      ? ctx.flags.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter((t) => t !== "")
+      : undefined
 
   const priority = (ctx.flags.priority as Priority | undefined) ?? ctx.config.defaultPriority
 
@@ -81,7 +85,10 @@ export const newCommand: CommandDefinition = {
   usage: "dirban new <title> [options]",
   options: [
     { flag: "--column=<col>", description: "Target column (defaults to backlog or first column)" },
-    { flag: "--priority=<p>", description: "Task priority (defaults to configured default priority)" },
+    {
+      flag: "--priority=<p>",
+      description: "Task priority (defaults to configured default priority)",
+    },
     { flag: "--tags=<tag1,tag2>", description: "Comma-separated list of tags" },
     { flag: "--assignee=<user>", description: "Assignee name" },
     { flag: "--owner=<owner>", description: "Task owner (developer | agent | unassigned)" },

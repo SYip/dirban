@@ -18,10 +18,7 @@ const SLUGIFY = (text: string): string => {
  * Extracts all numeric suffixes from existing tasks for a given 2-digit year.
  * Matches patterns like "26-001", "task.26-001", "26-1", etc.
  */
-export const getExistingTaskNumbersForYear = (
-  board: Board,
-  yearYY: string,
-): readonly number[] => {
+export const getExistingTaskNumbersForYear = (board: Board, yearYY: string): readonly number[] => {
   const numbers: number[] = []
   const pattern = new RegExp(`(?:^|[^0-9])${yearYY}-(\\d+)(?:[^0-9]|$)`, "i")
 
@@ -33,7 +30,7 @@ export const getExistingTaskNumbersForYear = (
         const idMatch = taskId.match(pattern)
         if (idMatch?.[1] != null) {
           const num = parseInt(idMatch[1], 10)
-          if (!isNaN(num)) numbers.push(num)
+          if (!Number.isNaN(num)) numbers.push(num)
         }
       }
 
@@ -41,7 +38,7 @@ export const getExistingTaskNumbersForYear = (
       const fileMatch = task.filename.match(pattern)
       if (fileMatch?.[1] != null) {
         const num = parseInt(fileMatch[1], 10)
-        if (!isNaN(num)) numbers.push(num)
+        if (!Number.isNaN(num)) numbers.push(num)
       }
     }
   }
@@ -61,9 +58,7 @@ export const calculateNextTaskId = (
   const yearYY = String(referenceDate.getFullYear()).slice(-2)
   const existingNumbers = getExistingTaskNumbersForYear(board, yearYY)
 
-  const maxNumber = existingNumbers.length > 0
-    ? Math.max(...existingNumbers)
-    : 0
+  const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0
 
   const nextNumber = maxNumber + 1
   const padded = String(nextNumber).padStart(minDigits, "0")
@@ -104,13 +99,12 @@ export const createTask = (
     })
   }
 
-  const targetColumnName = options.column ??
-    board.columns[0]?.name ??
-    "backlog"
+  const targetColumnName = options.column ?? board.columns[0]?.name ?? "backlog"
 
-  const targetCol = board.columns.find((c) =>
-    c.name.toLowerCase() === targetColumnName.toLowerCase() ||
-    c.name.toLowerCase().endsWith(targetColumnName.toLowerCase())
+  const targetCol = board.columns.find(
+    (c) =>
+      c.name.toLowerCase() === targetColumnName.toLowerCase()
+      || c.name.toLowerCase().endsWith(targetColumnName.toLowerCase()),
   )
 
   if (targetCol == null) {
@@ -163,9 +157,10 @@ export const createTask = (
 
   yamlLines.push("---")
 
-  const criteria = options.criteria && options.criteria.length > 0
-    ? options.criteria
-    : ["Initial task implementation"]
+  const criteria =
+    options.criteria && options.criteria.length > 0
+      ? options.criteria
+      : ["Initial task implementation"]
 
   const bodyLines = [
     "",
@@ -187,10 +182,12 @@ export const createTask = (
     })
   }
 
-  return ok(Object.freeze({
-    id: nextId,
-    filePath,
-    column: targetCol.name,
-    filename,
-  }))
+  return ok(
+    Object.freeze({
+      id: nextId,
+      filePath,
+      column: targetCol.name,
+      filename,
+    }),
+  )
 }

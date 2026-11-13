@@ -1,8 +1,12 @@
-import type { CliContext, CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
-import { discoverBoard } from "../../board/discovery.ts"
 import { err, ok } from "neverthrow"
 import pc from "picocolors"
+import { discoverBoard } from "../../board/discovery.ts"
 import { toRelativePath } from "../../cli/formatters.ts"
+import type {
+  CommandDefinition,
+  CommandHandler,
+  CommandParser,
+} from "../../cli/types.ts"
 import { partitionBacklog, promoteTasks } from "../planning/plan.ts"
 
 export interface ReadyCommandParams {
@@ -11,11 +15,15 @@ export interface ReadyCommandParams {
 }
 
 export const parseReady: CommandParser<ReadyCommandParams> = (ctx) => {
-  const ids = ctx.positionals.slice(1).map((s) => s.trim()).filter((s) => s !== "")
+  const ids = ctx.positionals
+    .slice(1)
+    .map((s) => s.trim())
+    .filter((s) => s !== "")
 
   if (ids.length === 0) {
     return err({
-      message: "Specify at least one task ID to ready (or 'all'). Usage: dirban ready <id...> [--to=<column>]",
+      message:
+        "Specify at least one task ID to ready (or 'all'). Usage: dirban ready <id...> [--to=<column>]",
     })
   }
 
@@ -71,11 +79,7 @@ export const handleReady: CommandHandler = (ctx) => {
   } else {
     for (const item of result.promoted) {
       const relPath = toRelativePath(item.task.filePath, ctx.cwd)
-      console.log(
-        pc.green(
-          `✔ Readied task ${item.task.document.id}: ${pc.cyan(relPath)}`,
-        ),
-      )
+      console.log(pc.green(`✔ Readied task ${item.task.document.id}: ${pc.cyan(relPath)}`))
     }
   }
 
@@ -84,10 +88,14 @@ export const handleReady: CommandHandler = (ctx) => {
 
 export const readyCommand: CommandDefinition = {
   name: "ready",
-  summary: "Move unblocked backlog task(s) to todo queue (transition task from backlog to active queue)",
+  summary:
+    "Move unblocked backlog task(s) to todo queue (transition task from backlog to active queue)",
   usage: "dirban ready <id...> [--to=<column>]\n       dirban ready all",
   options: [
-    { flag: "--to=<column>", description: "Target column for task (defaults to first active column, e.g. 01-todo)" },
+    {
+      flag: "--to=<column>",
+      description: "Target column for task (defaults to first active column, e.g. 01-todo)",
+    },
   ],
   examples: [
     "dirban ready 26-001",

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.7/schema.json",
+  "files": {
+    "includes": ["src/**", "packages/**", "!**/dist", "!**/node_modules", "!packages/vscode-extension/resources"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": {
+      "semicolons": "asNeeded",
+      "quoteStyle": "double",
+      "operatorLinebreak": "before"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error"
+      },
+      "style": {
+        "noParameterAssign": "error",
+        "noUselessElse": "error",
+        "useConst": "error",
+        "useImportType": "error"
+      },
+      "suspicious": {
+        "noDoubleEquals": {
+          "level": "error",
+          "options": {
+            "ignoreNull": true
+          }
+        },
+        "noExplicitAny": "error"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.vue"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedImports": "off",
+            "noUnusedVariables": "off"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,9 +1,9 @@
-import pc from "picocolors"
 import * as process from "node:process"
-import type { DirbanConfig } from "../config/types.ts"
+import pc from "picocolors"
 import { discoverBoard } from "../board/discovery.ts"
-import { partitionBacklog, promoteTask, promoteTasks } from "../tasks/planning/plan.ts"
+import type { DirbanConfig } from "../config/types.ts"
 import { unblockTask } from "../tasks/planning/block.ts"
+import { partitionBacklog, promoteTasks } from "../tasks/planning/plan.ts"
 import { getPriorityBadge } from "./formatters.ts"
 
 export const startInteractivePlanTui = async (
@@ -15,7 +15,7 @@ export const startInteractivePlanTui = async (
     return
   }
 
-  let boardRes = discoverBoard(config, workspaceRoot)
+  const boardRes = discoverBoard(config, workspaceRoot)
   if (boardRes.isErr()) {
     console.error("Failed to load board:", boardRes.error)
     return
@@ -46,12 +46,12 @@ export const startInteractivePlanTui = async (
     const items = getItems()
 
     console.log(
-      pc.bold(
-        pc.cyan(`\n=== DIRBAN INTERACTIVE PLANNER (${plan.totalBacklog} backlog tasks) ===`),
-      ),
+      pc.bold(pc.cyan(`\n=== DIRBAN INTERACTIVE PLANNER (${plan.totalBacklog} backlog tasks) ===`)),
     )
     console.log(
-      pc.gray("↑/↓: Navigate | Space: Toggle select | p: Promote (selected/current) | u: Unblock | q: Quit\n"),
+      pc.gray(
+        "↑/↓: Navigate | Space: Toggle select | p: Promote (selected/current) | u: Unblock | q: Quit\n",
+      ),
     )
 
     if (statusMessage !== "") {
@@ -82,13 +82,11 @@ export const startInteractivePlanTui = async (
           console.log(pc.red(`         Blocked by: ${blocker}`))
         }
       } else if (item.evaluation.resolved.length > 0) {
-        console.log(
-          pc.gray(`         Resolved: [${item.evaluation.resolved.join(", ")}]`),
-        )
+        console.log(pc.gray(`         Resolved: [${item.evaluation.resolved.join(", ")}]`))
       }
     })
 
-    console.log(pc.gray("\n" + "─".repeat(50)))
+    console.log(pc.gray(`\n${"─".repeat(50)}`))
   }
 
   render()
@@ -146,11 +144,12 @@ export const startInteractivePlanTui = async (
 
       // 'p' or 'P' to promote (selected batch or current item)
       if (key === "p" || key === "P") {
-        const ids = selectedTaskIds.size > 0
-          ? Array.from(selectedTaskIds)
-          : items[selectedIndex] != null
-            ? [items[selectedIndex].task.document.id]
-            : []
+        const ids =
+          selectedTaskIds.size > 0
+            ? Array.from(selectedTaskIds)
+            : items[selectedIndex] != null
+              ? [items[selectedIndex].task.document.id]
+              : []
 
         if (ids.length === 0) return
 
@@ -202,7 +201,9 @@ export const startInteractivePlanTui = async (
         if (unblockRes.isErr()) {
           statusMessage = pc.red(`Unblock failed: ${unblockRes.error.message}`)
         } else {
-          statusMessage = pc.green(`✔ Cleared blocker "${firstBlocker}" from ${selected.task.document.id}`)
+          statusMessage = pc.green(
+            `✔ Cleared blocker "${firstBlocker}" from ${selected.task.document.id}`,
+          )
           const updatedBoard = discoverBoard(config, workspaceRoot)
           if (updatedBoard.isOk()) {
             board = updatedBoard.value
@@ -217,4 +218,3 @@ export const startInteractivePlanTui = async (
     process.stdin.on("data", onKey)
   })
 }
-

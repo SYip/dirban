@@ -2,13 +2,13 @@ import { describe, expect, it } from "bun:test"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
+import { evaluateTaskBlockers, isDependencyResolved } from "../../board/dependencies.ts"
 import { discoverBoard } from "../../board/discovery.ts"
 import { DEFAULT_CONFIG } from "../../config/config.ts"
-import { evaluateTaskBlockers, isDependencyResolved } from "../../board/dependencies.ts"
-import { blockTask, unblockTask } from "./block.ts"
 import { createTask } from "../mutation/create.ts"
-import { initializeBoard } from "../project/init.ts"
 import { moveTask } from "../mutation/move.ts"
+import { initializeBoard } from "../project/init.ts"
+import { blockTask, unblockTask } from "./block.ts"
 import { partitionBacklog, promoteTask, promoteTasks, resolveBacklogTaskId } from "./plan.ts"
 
 describe("Planning and Dependency Operations Tests", () => {
@@ -97,7 +97,8 @@ describe("Planning and Dependency Operations Tests", () => {
       let currentBoard = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
       let depTask = currentBoard.columns
         .find((c) => c.name === "backlog")
-        ?.tasks.find((t) => t.document.id === task2.id)!
+        ?.tasks.find((t) => t.document.id === task2.id)
+      if (!depTask) throw new Error("depTask not found")
 
       // Initially: both 26-001 (still in 01-todo) and "Waiting on API token" are unresolved
       let evaluation = evaluateTaskBlockers(depTask, currentBoard)
@@ -111,7 +112,8 @@ describe("Planning and Dependency Operations Tests", () => {
       currentBoard = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
       depTask = currentBoard.columns
         .find((c) => c.name === "backlog")
-        ?.tasks.find((t) => t.document.id === task2.id)!
+        ?.tasks.find((t) => t.document.id === task2.id)
+      if (!depTask) throw new Error("depTask not found")
 
       // Now: task 1 is in 03-done so it is automatically resolved!
       expect(isDependencyResolved(task1.id, currentBoard)).toBe(true)
@@ -136,7 +138,8 @@ describe("Planning and Dependency Operations Tests", () => {
       currentBoard = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
       depTask = currentBoard.columns
         .find((c) => c.name === "backlog")
-        ?.tasks.find((t) => t.document.id === task2.id)!
+        ?.tasks.find((t) => t.document.id === task2.id)
+      if (!depTask) throw new Error("depTask not found")
 
       evaluation = evaluateTaskBlockers(depTask, currentBoard)
       expect(evaluation.isBlocked).toBe(false)
@@ -221,22 +224,21 @@ describe("Planning and Dependency Operations Tests", () => {
       const boardWithBothBatch = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
 
       // Atomic batch promotion: if any task is blocked, 0 tasks are moved
-      const batchRes = promoteTasks(
-        boardWithBothBatch,
-        DEFAULT_CONFIG,
-        [batchTask1.id, blockedTask.id, batchTask2.id],
-      )
+      const batchRes = promoteTasks(boardWithBothBatch, DEFAULT_CONFIG, [
+        batchTask1.id,
+        blockedTask.id,
+        batchTask2.id,
+      ])
 
       expect(batchRes.promoted.length).toBe(0)
       expect(batchRes.failed.length).toBe(1)
       expect(batchRes.failed[0]?.taskId).toBe(blockedTask.id)
 
       // When all tasks are valid, all are promoted
-      const validBatchRes = promoteTasks(
-        boardWithBothBatch,
-        DEFAULT_CONFIG,
-        [batchTask1.id, batchTask2.id],
-      )
+      const validBatchRes = promoteTasks(boardWithBothBatch, DEFAULT_CONFIG, [
+        batchTask1.id,
+        batchTask2.id,
+      ])
 
       expect(validBatchRes.promoted.length).toBe(2)
       expect(validBatchRes.failed.length).toBe(0)
@@ -312,7 +314,8 @@ relationships:
       )
 
       const boardWithAmbiguity = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
-      const backlogAmbiguous = boardWithAmbiguity.columns.find((c) => c.name === "backlog")?.tasks ?? []
+      const backlogAmbiguous =
+        boardWithAmbiguity.columns.find((c) => c.name === "backlog")?.tasks ?? []
 
       // 2. Querying "001" or "1" now returns AMBIGUOUS_TASK_ID
       const ambiguousRes = resolveBacklogTaskId(backlogAmbiguous, "001")
@@ -326,11 +329,7 @@ relationships:
       }
 
       // Batch promotion with ambiguous ID aborts without moving anything
-      const batchAmbiguousRes = promoteTasks(
-        boardWithAmbiguity,
-        DEFAULT_CONFIG,
-        ["001"],
-      )
+      const batchAmbiguousRes = promoteTasks(boardWithAmbiguity, DEFAULT_CONFIG, ["001"])
       expect(batchAmbiguousRes.promoted.length).toBe(0)
       expect(batchAmbiguousRes.failed.length).toBe(1)
       expect(batchAmbiguousRes.failed[0]?.error.kind).toBe("AMBIGUOUS_TASK_ID")

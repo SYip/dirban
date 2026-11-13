@@ -1,4 +1,4 @@
-import { describe, it, expect, mock } from "bun:test"
+import { describe, expect, it, mock } from "bun:test"
 
 // Mock the 'vscode' ambient API before importing extension modules
 mock.module("vscode", () => {
@@ -17,10 +17,10 @@ mock.module("vscode", () => {
     public label?: string
     public collapsibleState?: TreeItemCollapsibleState
     public description?: string
-    public tooltip?: any
-    public iconPath?: any
+    public tooltip?: unknown
+    public iconPath?: unknown
     public contextValue?: string
-    public command?: any
+    public command?: { command: string }
 
     constructor(label: string, collapsibleState?: TreeItemCollapsibleState) {
       this.label = label
@@ -33,8 +33,8 @@ mock.module("vscode", () => {
   }
 
   class EventEmitter {
-    public event = (listener: any) => {}
-    public fire = (data?: any) => {}
+    public event = (_listener: unknown) => {}
+    public fire = (_data?: unknown) => {}
   }
 
   class MarkdownString {
@@ -73,12 +73,8 @@ mock.module("vscode", () => {
 })
 
 // Dynamic imports so mock.module takes effect before module evaluation
-const {
-  DirbanFocusViewProvider,
-  FocusHeaderTreeItem,
-  FocusCriterionTreeItem,
-  FocusEmptyTreeItem,
-} = await import("./focus-provider.ts")
+const { DirbanFocusViewProvider, FocusHeaderTreeItem, FocusCriterionTreeItem, FocusEmptyTreeItem } =
+  await import("./focus-provider.ts")
 
 const { ColumnTreeItem } = await import("./tree-provider.ts")
 const { DirbanStatusBarController } = await import("./status-bar.ts")
@@ -142,11 +138,11 @@ describe("VS Code Extension Focus and Tree Items", () => {
     expect(backlogItem.collapsibleState).toBe(1)
   })
 
-  it("DirbanFocusViewProvider builds correct tree nodes when task is active", () => {
+  it("DirbanFocusViewProvider builds correct tree nodes when task is active", async () => {
     const provider = new DirbanFocusViewProvider()
     provider.updateFocus(dummyTask, dummyConfig, "task/26-009-test", undefined)
 
-    const children = provider.getChildren() as any[]
+    const children = (await provider.getChildren()) ?? []
     // 1 header node + 2 criteria nodes = 3 nodes
     expect(children).toHaveLength(3)
 
@@ -158,24 +154,28 @@ describe("VS Code Extension Focus and Tree Items", () => {
 
     // Worktree focus
     provider.updateFocus(dummyTask, dummyConfig, undefined, undefined, true)
-    const worktreeChildren = provider.getChildren() as any[]
+    const worktreeChildren = (await provider.getChildren()) ?? []
     expect(worktreeChildren[0].description).toBe("[p1] [worktree]")
 
     // 2 & 3. Acceptance criteria nodes
     expect(children[1]).toBeInstanceOf(FocusCriterionTreeItem)
-    expect(children[1].text).toBe("First criterion")
-    expect(children[1].checked).toBe(true)
+    if (children[1] instanceof FocusCriterionTreeItem) {
+      expect(children[1].text).toBe("First criterion")
+      expect(children[1].checked).toBe(true)
+    }
 
     expect(children[2]).toBeInstanceOf(FocusCriterionTreeItem)
-    expect(children[2].text).toBe("Second criterion")
-    expect(children[2].checked).toBe(false)
+    if (children[2] instanceof FocusCriterionTreeItem) {
+      expect(children[2].text).toBe("Second criterion")
+      expect(children[2].checked).toBe(false)
+    }
   })
 
-  it("DirbanFocusViewProvider shows empty node when no active task", () => {
+  it("DirbanFocusViewProvider shows empty node when no active task", async () => {
     const provider = new DirbanFocusViewProvider()
     provider.updateFocus(null, dummyConfig, undefined, "No tasks in progress")
 
-    const children = provider.getChildren() as any[]
+    const children = (await provider.getChildren()) ?? []
     expect(children).toHaveLength(1)
     expect(children[0]).toBeInstanceOf(FocusEmptyTreeItem)
     expect(children[0].label).toBe("No tasks in progress")
@@ -184,7 +184,7 @@ describe("VS Code Extension Focus and Tree Items", () => {
   it("DirbanStatusBarController formats active task text with criteria tally", () => {
     const controller = new DirbanStatusBarController()
     controller.update(dummyTask)
-    const item = (controller as any).statusBarItem
+    const item = (controller as unknown as { statusBarItem: { text: string } }).statusBarItem
     expect(item.text).toBe("$(checklist) 26-009 Focus View Integration [1/2]")
 
     controller.update(null)

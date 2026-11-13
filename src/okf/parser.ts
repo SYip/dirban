@@ -38,9 +38,7 @@ const parsePriority = (val: unknown): Priority => {
 
 const parseStringArray = (val: unknown): readonly string[] => {
   if (Array.isArray(val)) {
-    return Object.freeze(
-      val.filter((x): x is string => typeof x === "string" && x.trim() !== ""),
-    )
+    return Object.freeze(val.filter((x): x is string => typeof x === "string" && x.trim() !== ""))
   }
   return Object.freeze([])
 }
@@ -75,12 +73,14 @@ const parseAllChecklistItems = (body: string): readonly ChecklistItem[] => {
     if (match != null && match[2] != null && match[3] != null) {
       const isChecked = match[2].toLowerCase() === "x"
       const text = match[3].trim()
-      items.push(Object.freeze({
-        index: itemIndex,
-        text,
-        checked: isChecked,
-        rawLine: line,
-      }))
+      items.push(
+        Object.freeze({
+          index: itemIndex,
+          text,
+          checked: isChecked,
+          rawLine: line,
+        }),
+      )
       itemIndex += 1
     }
   }
@@ -94,7 +94,8 @@ const parseJournal = (body: string): readonly string[] => {
     return Object.freeze([])
   }
 
-  const lines = journalMatch[1].split(LINE_SPLIT_REGEX)
+  const lines = journalMatch[1]
+    .split(LINE_SPLIT_REGEX)
     .map((l) => l.trim())
     .filter((l) => l.startsWith("-") || l.startsWith("*"))
 
@@ -135,9 +136,9 @@ export const parseTaskDocument = (
   let rawBody = rawContent
 
   if (hasFrontmatter) {
-    const secondDelimiterIndex = lines.slice(1).findIndex((line) =>
-      line.trim() === FRONTMATTER_DELIMITER
-    )
+    const secondDelimiterIndex = lines
+      .slice(1)
+      .findIndex((line) => line.trim() === FRONTMATTER_DELIMITER)
     if (secondDelimiterIndex === -1) {
       return err({
         kind: "MISSING_FRONTMATTER",
@@ -156,9 +157,7 @@ export const parseTaskDocument = (
     } catch (yamlErr) {
       return err({
         kind: "INVALID_YAML",
-        message: yamlErr instanceof Error
-          ? yamlErr.message
-          : "YAML parsing failure",
+        message: yamlErr instanceof Error ? yamlErr.message : "YAML parsing failure",
       })
     }
   }
@@ -172,27 +171,15 @@ export const parseTaskDocument = (
   // Title extraction: frontmatter title > first `# ` heading > filename fallback
   const titleHeader = extractSection(rawBody, TITLE_HEADING_REGEX)
   const rawTitle = typeof record.title === "string" ? record.title.trim() : ""
-  const title = rawTitle !== ""
-    ? rawTitle
-    : (titleHeader !== "" ? titleHeader : id)
+  const title = rawTitle !== "" ? rawTitle : titleHeader !== "" ? titleHeader : id
 
-  const okf_version = typeof record.okf_version === "string"
-    ? record.okf_version
-    : "1.0"
-  const status = typeof record.status === "string"
-    ? record.status.trim()
-    : "backlog"
+  const okf_version = typeof record.okf_version === "string" ? record.okf_version : "1.0"
+  const status = typeof record.status === "string" ? record.status.trim() : "backlog"
   const priority = parsePriority(record.priority)
   const owner = typeof record.owner === "string" ? record.owner : undefined
-  const assigned_to = typeof record.assigned_to === "string"
-    ? record.assigned_to
-    : undefined
-  const created_date = typeof record.created_date === "string"
-    ? record.created_date
-    : undefined
-  const last_updated = typeof record.last_updated === "string"
-    ? record.last_updated
-    : undefined
+  const assigned_to = typeof record.assigned_to === "string" ? record.assigned_to : undefined
+  const created_date = typeof record.created_date === "string" ? record.created_date : undefined
+  const last_updated = typeof record.last_updated === "string" ? record.last_updated : undefined
   const tags = parseStringArray(record.tags)
   const relationships = parseRelationships(record.relationships)
 
@@ -216,22 +203,24 @@ export const parseTaskDocument = (
   const verificationPlan = extractSection(rawBody, VERIFICATION_PLAN_SECTION_REGEX)
   const executionJournal = parseJournal(rawBody)
 
-  return ok(Object.freeze({
-    id,
-    title,
-    priority,
-    tags,
-    owner,
-    assigned_to,
-    created_date,
-    last_updated,
-    frontmatter,
-    titleHeader: titleHeader !== "" ? titleHeader : title,
-    objectiveScope,
-    acceptanceCriteria,
-    verificationPlan,
-    executionJournal,
-    otherSections: Object.freeze([]),
-    rawBody,
-  }))
+  return ok(
+    Object.freeze({
+      id,
+      title,
+      priority,
+      tags,
+      owner,
+      assigned_to,
+      created_date,
+      last_updated,
+      frontmatter,
+      titleHeader: titleHeader !== "" ? titleHeader : title,
+      objectiveScope,
+      acceptanceCriteria,
+      verificationPlan,
+      executionJournal,
+      otherSections: Object.freeze([]),
+      rawBody,
+    }),
+  )
 }

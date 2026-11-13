@@ -1,15 +1,14 @@
-import { err, ok, type Result } from "neverthrow"
 import * as fs from "node:fs"
+import { err, ok, type Result } from "neverthrow"
 import YAML from "yaml"
-import type { Board, BoardTask } from "../../board/types.ts"
 import { findTaskByIdOrName } from "../../board/discovery.ts"
+import type { Board, BoardTask } from "../../board/types.ts"
 import { LINE_SPLIT_REGEX } from "../../okf/parser.ts"
 import type { Priority } from "../../okf/types.ts"
-import { getIsoDate } from "./move.ts"
 import type { OperationError } from "../types.ts"
+import { getIsoDate } from "./move.ts"
 
-const detectEol = (content: string): "\r\n" | "\n" =>
-  content.includes("\r\n") ? "\r\n" : "\n"
+const detectEol = (content: string): "\r\n" | "\n" => (content.includes("\r\n") ? "\r\n" : "\n")
 
 export interface TaskMutationOptions {
   readonly priority?: Priority
@@ -34,9 +33,7 @@ const buildFrontmatterUpdates = (
     ["tags", options.tags != null ? [...options.tags] : undefined],
   ]
 
-  return Object.fromEntries(
-    candidateEntries.filter(([, value]) => value != null),
-  )
+  return Object.fromEntries(candidateEntries.filter(([, value]) => value != null))
 }
 
 export const setTaskMetadata = (
@@ -127,18 +124,16 @@ export const setTaskMetadata = (
   try {
     fs.writeFileSync(task.filePath, updatedContent, "utf-8")
 
-    return ok(Object.freeze({
-      ...task,
-      document: updatedDoc,
-    }))
+    return ok(
+      Object.freeze({
+        ...task,
+        document: updatedDoc,
+      }),
+    )
   } catch (fsErr) {
     return err({
       kind: "FS_ERROR",
-      message: fsErr instanceof Error
-        ? fsErr.message
-        : "Failed to save updated task metadata",
+      message: fsErr instanceof Error ? fsErr.message : "Failed to save updated task metadata",
     })
   }
 }
-
-

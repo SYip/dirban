@@ -1,19 +1,23 @@
-import * as vscode from "vscode"
-import * as path from "node:path"
 import * as fs from "node:fs"
-import type { Board, BoardTask } from "@dirban/core/board/types.ts"
+import * as path from "node:path"
+import type { Board, } from "@dirban/core/board/types.ts"
+import {
+  resolveFocusColumn,
+  resolveNextColumn,
+  resolvePreviousColumn,
+} from "@dirban/core/config/config.ts"
 import type { DirbanConfig } from "@dirban/core/config/types.ts"
-import { resolveFocusColumn, resolvePreviousColumn, resolveNextColumn } from "@dirban/core/config/config.ts"
-import { moveTask } from "@dirban/core/tasks/mutation/move.ts"
+import { resolveCurrentTask } from "@dirban/core/tasks/lifecycle/current.ts"
+import { doneTask } from "@dirban/core/tasks/lifecycle/done.ts"
+import { resumeTask } from "@dirban/core/tasks/lifecycle/resume.ts"
+import { startTask } from "@dirban/core/tasks/lifecycle/start.ts"
+import { archiveTasks } from "@dirban/core/tasks/mutation/archive.ts"
 import { checkTaskItem } from "@dirban/core/tasks/mutation/check.ts"
 import { createTask } from "@dirban/core/tasks/mutation/create.ts"
-import { promoteTasks } from "@dirban/core/tasks/planning/plan.ts"
-import { startTask } from "@dirban/core/tasks/lifecycle/start.ts"
-import { resumeTask } from "@dirban/core/tasks/lifecycle/resume.ts"
+import { moveTask } from "@dirban/core/tasks/mutation/move.ts"
 import { blockTask } from "@dirban/core/tasks/planning/block.ts"
-import { doneTask } from "@dirban/core/tasks/lifecycle/done.ts"
-import { archiveTasks } from "@dirban/core/tasks/mutation/archive.ts"
-import { resolveCurrentTask } from "@dirban/core/tasks/lifecycle/current.ts"
+import { promoteTasks } from "@dirban/core/tasks/planning/plan.ts"
+import * as vscode from "vscode"
 import type {
   ExtensionMessageToWebview,
   WebviewBoardState,
@@ -50,7 +54,7 @@ export class DirbanBoardWebviewPanel {
     this._panel.webview.onDidReceiveMessage(
       (message: WebviewMessageToExtension) => this._handleWebviewMessage(message),
       null,
-      this._disposables
+      this._disposables,
     )
   }
 
@@ -78,7 +82,7 @@ export class DirbanBoardWebviewPanel {
         enableScripts: true,
         retainContextWhenHidden: true,
         localResourceRoots: [extensionUri],
-      }
+      },
     )
 
     panel.iconPath = vscode.Uri.joinPath(extensionUri, "resources", "dirban-icon.svg")
@@ -88,7 +92,7 @@ export class DirbanBoardWebviewPanel {
       extensionUri,
       getBoard,
       getConfig,
-      onBoardMutation
+      onBoardMutation,
     )
     DirbanBoardWebviewPanel.currentPanel.sendState()
     return DirbanBoardWebviewPanel.currentPanel
@@ -106,7 +110,9 @@ export class DirbanBoardWebviewPanel {
     }))
 
     const focusCol = resolveFocusColumn(config) ?? undefined
-    const preFocusCol = focusCol ? (resolvePreviousColumn(config, focusCol) ?? config.columns[0]) : undefined
+    const preFocusCol = focusCol
+      ? (resolvePreviousColumn(config, focusCol) ?? config.columns[0])
+      : undefined
     const postFocusCol = focusCol ? resolveNextColumn(config, focusCol) : undefined
 
     const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd()
@@ -115,7 +121,9 @@ export class DirbanBoardWebviewPanel {
       ? (currentRes.value.task.document.id ?? currentRes.value.task.filename)
       : undefined
 
-    const doingCol = focusCol ? board.columns.find((c) => c.name.toLowerCase() === focusCol.toLowerCase()) : undefined
+    const doingCol = focusCol
+      ? board.columns.find((c) => c.name.toLowerCase() === focusCol.toLowerCase())
+      : undefined
     const activeTasksInDoingCount = doingCol ? doingCol.tasks.length : 0
 
     const state: WebviewBoardState = {
@@ -187,7 +195,7 @@ export class DirbanBoardWebviewPanel {
         const createRes = createTask(board, {
           title: message.title,
           column: message.column,
-          priority: message.priority as any,
+          priority: message.priority as DirbanConfig["defaultPriority"],
         })
         if (createRes.isErr()) {
           vscode.window.showErrorMessage(`Dirban task creation failed: ${createRes.error.message}`)
@@ -217,7 +225,7 @@ export class DirbanBoardWebviewPanel {
     board: Board,
     config: DirbanConfig,
     action: "ready" | "start" | "done" | "archive" | "block" | "resume",
-    taskId: string
+    taskId: string,
   ): Promise<void> {
     const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd()
 
@@ -229,7 +237,9 @@ export class DirbanBoardWebviewPanel {
           vscode.window.showErrorMessage(`Dirban Ready Failed: ${firstFail.error.message}`)
         } else {
           const promoted = result.promoted[0]
-          vscode.window.showInformationMessage(`Dirban: Task ${taskId} readied to ${promoted?.targetColumn ?? "todo"}`)
+          vscode.window.showInformationMessage(
+            `Dirban: Task ${taskId} readied to ${promoted?.targetColumn ?? "todo"}`,
+          )
           this._onBoardMutation()
         }
         break

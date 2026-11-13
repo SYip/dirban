@@ -12,10 +12,7 @@ export const extractSlugFromTask = (task: BoardTask): string => {
   }
   const title = task.document.title ?? ""
   if (title !== "") {
-    return title
-      .toLowerCase()
-      .replace(SLUG_CLEANUP_REGEX, "-")
-      .replace(SLUG_TRIM_HYPHENS_REGEX, "")
+    return title.toLowerCase().replace(SLUG_CLEANUP_REGEX, "-").replace(SLUG_TRIM_HYPHENS_REGEX, "")
   }
   return stem
 }

@@ -94,8 +94,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
 import type { BoardTask } from "@dirban/core/board/types.ts"
+import { computed } from "vue"
 import type { WebviewBoardState } from "../types.ts"
 
 const props = defineProps<{
@@ -107,7 +107,11 @@ defineEmits<{
   (e: "close"): void
   (e: "openFile", filePath: string): void
   (e: "toggleCriterion", task: BoardTask, itemIndex: number, checked: boolean): void
-  (e: "triggerLifecycle", action: "ready" | "start" | "done" | "archive" | "block" | "resume", task: BoardTask): void
+  (
+    e: "triggerLifecycle",
+    action: "ready" | "start" | "done" | "archive" | "block" | "resume",
+    task: BoardTask,
+  ): void
 }>()
 
 const canBlockTask = computed(() => {
@@ -183,16 +187,17 @@ const lifecycleAction = computed<LifecycleActionInfo | null>(() => {
     const startDesc = disabled
       ? (disabledReason ?? "")
       : strategy === "worktree"
-      ? "Creates dedicated git worktree and checks out branch."
-      : strategy === "none"
-      ? "Transitions task into doing (pure directory move, no Git)."
-      : "Creates and checks out local task branch in git."
+        ? "Creates dedicated git worktree and checks out branch."
+        : strategy === "none"
+          ? "Transitions task into doing (pure directory move, no Git)."
+          : "Creates and checks out local task branch in git."
 
-    const startBtn = strategy === "worktree"
-      ? "Start Task (Git Worktree)"
-      : strategy === "none"
-      ? "Start Task (Directory Only)"
-      : "Start Task (Checkout Branch)"
+    const startBtn =
+      strategy === "worktree"
+        ? "Start Task (Git Worktree)"
+        : strategy === "none"
+          ? "Start Task (Directory Only)"
+          : "Start Task (Checkout Branch)"
 
     return {
       action: "start",
@@ -219,14 +224,12 @@ const lifecycleAction = computed<LifecycleActionInfo | null>(() => {
     const doneDesc = disabled
       ? (disabledReason ?? "")
       : strategy === "worktree"
-      ? "Squash/merges branch, deletes worktree, and marks done."
-      : strategy === "none"
-      ? "Marks done without modifying Git branches."
-      : "Squash/merges task branch into base branch."
+        ? "Squash/merges branch, deletes worktree, and marks done."
+        : strategy === "none"
+          ? "Marks done without modifying Git branches."
+          : "Squash/merges task branch into base branch."
 
-    const doneBtn = strategy === "none"
-      ? "Complete Task (Mark Done)"
-      : "Complete & Merge Task"
+    const doneBtn = strategy === "none" ? "Complete Task (Mark Done)" : "Complete & Merge Task"
 
     return {
       action: "done",

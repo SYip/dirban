@@ -35,13 +35,13 @@ export const nextCommand: CommandDefinition = {
   summary: "Show next recommended task to work on from todo queue",
   usage: "dirban next [options]",
   options: [
-    { flag: "--raw", description: "Print bare task ID to stdout for shell composition (e.g. dirban start $(dirban next --raw))" },
+    {
+      flag: "--raw",
+      description:
+        "Print bare task ID to stdout for shell composition (e.g. dirban start $(dirban next --raw))",
+    },
   ],
-  examples: [
-    "dirban next",
-    "dirban next --raw",
-    "dirban start $(dirban next --raw)",
-  ],
+  examples: ["dirban next", "dirban next --raw", "dirban start $(dirban next --raw)"],
   requiresTasksDir: true,
   execute: handleNext,
 }

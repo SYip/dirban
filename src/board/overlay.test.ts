@@ -9,8 +9,7 @@ import type { VersionControlProvider, WorktreeEntry } from "../vcs/types.ts"
 import { buildWorktreeTaskMap, overlayWorktreeTask } from "./overlay.ts"
 import type { BoardTask } from "./types.ts"
 
-const createTempDir = (): string =>
-  fs.mkdtempSync(path.join(os.tmpdir(), "dirban-overlay-test-"))
+const createTempDir = (): string => fs.mkdtempSync(path.join(os.tmpdir(), "dirban-overlay-test-"))
 
 const createMockVcs = (
   entries: readonly WorktreeEntry[],
@@ -42,8 +41,16 @@ describe("Board Worktree Overlay Tests", () => {
     const vcs = createMockVcs(
       [
         { path: repoRoot, branchRef: "refs/heads/main", taskId: null },
-        { path: "/tmp/repo/.worktrees/26-001", branchRef: "refs/heads/task/26-001", taskId: "26-001" },
-        { path: "/tmp/repo/.worktrees/26-002", branchRef: "refs/heads/task/26-002", taskId: "26-002" },
+        {
+          path: "/tmp/repo/.worktrees/26-001",
+          branchRef: "refs/heads/task/26-001",
+          taskId: "26-001",
+        },
+        {
+          path: "/tmp/repo/.worktrees/26-002",
+          branchRef: "refs/heads/task/26-002",
+          taskId: "26-002",
+        },
       ],
       repoRoot,
     )
@@ -109,7 +116,10 @@ priority: high
   })
 
   test("Vector 3: overlayWorktreeTask returns original task when worktreeMap is empty or task has no active worktree", () => {
-    const parsed = parseTaskDocument("---\nid: 26-005\ntitle: No WT\nstatus: 01-todo\n---\n# No WT\n", "26-005-no-wt.md")
+    const parsed = parseTaskDocument(
+      "---\nid: 26-005\ntitle: No WT\nstatus: 01-todo\n---\n# No WT\n",
+      "26-005-no-wt.md",
+    )
     expect(parsed.isOk()).toBe(true)
     if (parsed.isErr()) return
 
@@ -121,6 +131,8 @@ priority: high
     }
 
     expect(overlayWorktreeTask(baseTask, new Map(), "docs/tasks")).toBe(baseTask)
-    expect(overlayWorktreeTask(baseTask, new Map([["26-999", "/tmp/wt"]]), "docs/tasks")).toBe(baseTask)
+    expect(overlayWorktreeTask(baseTask, new Map([["26-999", "/tmp/wt"]]), "docs/tasks")).toBe(
+      baseTask,
+    )
   })
 })

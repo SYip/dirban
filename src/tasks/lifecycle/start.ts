@@ -1,17 +1,16 @@
-import { ok, err, type Result } from "neverthrow"
-import type { Board, BoardTask } from "../../board/types.ts"
+import { err, ok, type Result } from "neverthrow"
 import { findTaskByIdOrName } from "../../board/discovery.ts"
+import type { Board, BoardTask } from "../../board/types.ts"
 import { resolveFocusColumn, resolvePreviousColumn } from "../../config/config.ts"
 import type { DirbanConfig } from "../../config/types.ts"
-import { moveTask } from "../mutation/move.ts"
 import { getVcsProvider, type VersionControlProvider } from "../../vcs/index.ts"
 import {
-  resolveWorkspaceStrategy,
   type LifecycleStrategyType,
+  resolveWorkspaceStrategy,
   type WorkspaceLifecycleStrategy,
   type WorkspaceStartResult,
 } from "../../workspace/index.ts"
-import type { OperationError } from "../types.ts"
+import { moveTask } from "../mutation/move.ts"
 
 export interface StartTaskSuccess {
   readonly task: BoardTask
@@ -35,7 +34,11 @@ export type StartTaskError =
     }
   | { readonly kind: "GIT_CONFLICT"; readonly message: string }
   | { readonly kind: "MOVE_ERROR"; readonly message: string }
-  | { readonly kind: "DIRTY_WORKING_TREE"; readonly message: string; readonly dirtyFiles: readonly string[] }
+  | {
+      readonly kind: "DIRTY_WORKING_TREE"
+      readonly message: string
+      readonly dirtyFiles: readonly string[]
+    }
 
 export interface StartTaskOptions {
   readonly strategy?: LifecycleStrategyType
@@ -93,9 +96,10 @@ export const startTask = (
   }
 
   const focusColName = resolveFocusColumn(config)
-  const expectedPreFocusCol = focusColName != null
-    ? resolvePreviousColumn(config, focusColName) ?? config.columns[0]
-    : config.columns[0]
+  const expectedPreFocusCol =
+    focusColName != null
+      ? (resolvePreviousColumn(config, focusColName) ?? config.columns[0])
+      : config.columns[0]
 
   const displayId = task.document.id ?? task.filename
 
@@ -119,7 +123,9 @@ export const startTask = (
       })
     }
 
-    const isCompleted = task.column === "archive" || (config.columns.length > 0 && task.column === config.columns[config.columns.length - 1])
+    const isCompleted =
+      task.column === "archive"
+      || (config.columns.length > 0 && task.column === config.columns[config.columns.length - 1])
     const message = isCompleted
       ? `Cannot start task ${displayId}: task is already completed in '${task.column}'.`
       : `Cannot start task ${displayId}: task is in '${task.column}' (expected '${expectedPreFocusCol}').`

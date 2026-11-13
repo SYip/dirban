@@ -70,10 +70,18 @@ export const handlePrune: CommandHandler = (ctx) => {
     console.log(pc.green(`✔ Pruned ${wt.status} worktree: ${toRelativePath(wt.path, ctx.cwd)}`))
   }
   for (const wt of skippedDirty) {
-    console.log(pc.yellow(`⚠ Skipped dirty worktree (pass --force to remove): ${toRelativePath(wt.path, ctx.cwd)}`))
+    console.log(
+      pc.yellow(
+        `⚠ Skipped dirty worktree (pass --force to remove): ${toRelativePath(wt.path, ctx.cwd)}`,
+      ),
+    )
   }
   for (const failure of failed) {
-    console.error(pc.red(`✖ Failed to prune ${toRelativePath(failure.worktree.path, ctx.cwd)}: ${failure.message}`))
+    console.error(
+      pc.red(
+        `✖ Failed to prune ${toRelativePath(failure.worktree.path, ctx.cwd)}: ${failure.message}`,
+      ),
+    )
   }
 
   return failed.length > 0 ? 1 : 0

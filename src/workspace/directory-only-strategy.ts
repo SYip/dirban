@@ -2,14 +2,14 @@ import { ok, type Result } from "neverthrow"
 import type { BoardTask } from "../board/types.ts"
 import { extractSlugFromTask, getEffectiveTaskId } from "./slug.ts"
 import type {
+  WorkspaceDoneError,
   WorkspaceDoneOptions,
   WorkspaceDoneResult,
-  WorkspaceDoneError,
   WorkspaceLifecycleContext,
   WorkspaceLifecycleStrategy,
+  WorkspaceStartError,
   WorkspaceStartOptions,
   WorkspaceStartResult,
-  WorkspaceStartError,
 } from "./types.ts"
 
 const DEFAULT_BRANCH_PREFIX = "task/"

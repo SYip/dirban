@@ -39,7 +39,10 @@
     "package:extension": "bun --filter dirban-vscode package",
     "build:binaries": "bun run scripts/build-binaries.ts",
     "test": "bun test",
-    "typecheck": "tsc --noEmit && bun --filter dirban-vscode typecheck"
+    "typecheck": "tsc --noEmit && bun --filter dirban-vscode typecheck",
+    "lint": "biome lint",
+    "format": "biome format --write",
+    "check": "biome check"
   },
   "workspaces": [
     "packages/*"
@@ -50,6 +53,7 @@
     "yaml": "^2.7.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.7",
     "@types/bun": "^1.2.4",
     "@types/node": "^22.13.0",
     "typescript": "^5.8.2"

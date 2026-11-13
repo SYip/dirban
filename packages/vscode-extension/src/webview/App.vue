@@ -40,16 +40,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue"
 import type { BoardTask } from "@dirban/core/board/types.ts"
-import type {
-  WebviewBoardState,
-  WebviewMessageToExtension,
-  ExtensionMessageToWebview,
-} from "./types.ts"
+import { onMounted, reactive, ref } from "vue"
 import BoardTopBar from "./components/BoardTopBar.vue"
 import ColumnLane from "./components/ColumnLane.vue"
 import TaskDrawer from "./components/TaskDrawer.vue"
+import type {
+  ExtensionMessageToWebview,
+  WebviewBoardState,
+  WebviewMessageToExtension,
+} from "./types.ts"
 
 declare function acquireVsCodeApi(): {
   postMessage: (message: WebviewMessageToExtension) => void
@@ -57,11 +57,14 @@ declare function acquireVsCodeApi(): {
   setState: (state: unknown) => void
 }
 
-const vscode = typeof acquireVsCodeApi === "function" ? acquireVsCodeApi() : {
-  postMessage: (msg: any) => console.log("VS Code Message:", msg),
-  getState: () => null,
-  setState: () => {},
-}
+const vscode =
+  typeof acquireVsCodeApi === "function"
+    ? acquireVsCodeApi()
+    : {
+        postMessage: (msg: unknown) => console.log("VS Code Message:", msg),
+        getState: () => null,
+        setState: () => {},
+      }
 
 const boardState = reactive<WebviewBoardState>({
   workspaceRoot: "",
@@ -76,7 +79,7 @@ onMounted(() => {
     const message = event.data as ExtensionMessageToWebview
     if (message.type === "boardState") {
       boardState.workspaceRoot = message.state.workspaceRoot
-      boardState.columns = message.state.columns as any
+      boardState.columns = message.state.columns as WebviewColumn[]
       boardState.config = message.state.config
 
       // Sync selected task with latest state from extension
@@ -115,7 +118,7 @@ function requestRefresh() {
 
 function promptNewTask() {
   const title = prompt("Enter new task title:")
-  if (title && title.trim()) {
+  if (title?.trim()) {
     vscode.postMessage({
       type: "createTask",
       title: title.trim(),

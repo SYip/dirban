@@ -40,9 +40,7 @@ export const handleCurrent: CommandHandler = (ctx) => {
 
   if (multipleInDoing) {
     console.log(
-      pc.yellow(
-        `Notice: Multiple tasks in doing (${doingCount}). Selected highest-priority task.`,
-      ),
+      pc.yellow(`Notice: Multiple tasks in doing (${doingCount}). Selected highest-priority task.`),
     )
   }
 
@@ -67,11 +65,7 @@ export const currentCommand: CommandDefinition = {
   options: [
     { flag: "--raw", description: "Print raw Markdown content to stdout for AI agent piping" },
   ],
-  examples: [
-    "dirban current",
-    "dirban focus",
-    "dirban current --raw",
-  ],
+  examples: ["dirban current", "dirban focus", "dirban current --raw"],
   requiresTasksDir: true,
   execute: handleCurrent,
 }

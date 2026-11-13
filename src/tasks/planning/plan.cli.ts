@@ -1,9 +1,13 @@
-import type { CliContext, CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
-import { discoverBoard } from "../../board/discovery.ts"
 import { ok } from "neverthrow"
 import pc from "picocolors"
+import { discoverBoard } from "../../board/discovery.ts"
 import { formatPlanView } from "../../cli/formatters.ts"
 import { startInteractivePlanTui } from "../../cli/plan-tui.ts"
+import type {
+  CommandDefinition,
+  CommandHandler,
+  CommandParser,
+} from "../../cli/types.ts"
 import { partitionBacklog } from "./plan.ts"
 
 export interface PlanCommandParams {
@@ -17,9 +21,7 @@ export const parsePlan: CommandParser<PlanCommandParams> = (ctx) => {
     return ok({ mode: "interactive" })
   }
 
-  const isUnblocked =
-    ctx.flags.unblocked === true ||
-    ctx.flags["no-blocked"] === true
+  const isUnblocked = ctx.flags.unblocked === true || ctx.flags["no-blocked"] === true
 
   return ok({
     mode: "list",
@@ -78,16 +80,20 @@ export const planCommand: CommandDefinition = {
   summary: "View backlog triage and dependency planning (options: --unblocked, --blocked, -i)",
   usage: "dirban plan [options]",
   options: [
-    { flag: "-u, --unblocked", description: "List only unblocked backlog tasks ready to be scheduled (alias: --no-blocked)" },
-    { flag: "-b, --blocked", description: "List only currently blocked backlog tasks and blocking sources" },
-    { flag: "-i, --interactive", description: "Launch interactive terminal planner to triage tasks" },
+    {
+      flag: "-u, --unblocked",
+      description: "List only unblocked backlog tasks ready to be scheduled (alias: --no-blocked)",
+    },
+    {
+      flag: "-b, --blocked",
+      description: "List only currently blocked backlog tasks and blocking sources",
+    },
+    {
+      flag: "-i, --interactive",
+      description: "Launch interactive terminal planner to triage tasks",
+    },
   ],
-  examples: [
-    "dirban plan",
-    "dirban plan --unblocked",
-    "dirban plan --blocked",
-    "dirban plan -i",
-  ],
+  examples: ["dirban plan", "dirban plan --unblocked", "dirban plan --blocked", "dirban plan -i"],
   requiresTasksDir: true,
   parse: parsePlan,
   execute: handlePlan,

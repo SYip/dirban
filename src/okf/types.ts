@@ -57,7 +57,7 @@ export type ParseError =
   | { readonly kind: "MISSING_FRONTMATTER"; readonly message: string }
   | { readonly kind: "INVALID_YAML"; readonly message: string }
   | {
-    readonly kind: "INVALID_SCHEMA"
-    readonly message: string
-    readonly field?: string
-  }
+      readonly kind: "INVALID_SCHEMA"
+      readonly message: string
+      readonly field?: string
+    }

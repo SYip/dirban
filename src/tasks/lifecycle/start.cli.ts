@@ -2,15 +2,14 @@ import { err, ok } from "neverthrow"
 import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
 import {
-  formatTerminalLink,
   logError,
   logTip,
   logWarning,
   toRelativePath,
 } from "../../cli/formatters.ts"
-import type { LifecycleStrategyType } from "../../workspace/types.ts"
 import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
-import { startTask, type StartTaskError } from "./start.ts"
+import type { LifecycleStrategyType } from "../../workspace/types.ts"
+import { type StartTaskError, startTask } from "./start.ts"
 
 export interface StartCommandParams {
   readonly taskId: string
@@ -41,13 +40,15 @@ export const parseStart: CommandParser<StartCommandParams> = (ctx) => {
 
   const strategy: LifecycleStrategyType | undefined = isNoneStrategy
     ? "none"
-    : strategyParam === "worktree" || strategyParam === "checkout" || strategyParam === "directory-only"
-    ? strategyParam
-    : ctx.flags.worktree
-    ? "worktree"
-    : ctx.flags.checkout
-    ? "checkout"
-    : undefined
+    : strategyParam === "worktree"
+        || strategyParam === "checkout"
+        || strategyParam === "directory-only"
+      ? strategyParam
+      : ctx.flags.worktree
+        ? "worktree"
+        : ctx.flags.checkout
+          ? "checkout"
+          : undefined
 
   const noGit = ctx.flags["no-git"]
 
@@ -104,15 +105,18 @@ export const handleStart: CommandHandler = (ctx) => {
     return 1
   }
 
-  const { task, branchName, strategy: usedStrategy, worktreePath, gitSkipped, gitMessage } = startRes.value
+  const {
+    task,
+    branchName,
+    strategy: usedStrategy,
+    worktreePath,
+    gitSkipped,
+    gitMessage,
+  } = startRes.value
   const taskDisplayName = task.document.id ?? task.filename
   const relPath = toRelativePath(task.filePath, ctx.cwd)
 
-  console.log(
-    pc.green(
-      `✔ Started task ${taskDisplayName}: ${pc.cyan(relPath)}`,
-    ),
-  )
+  console.log(pc.green(`✔ Started task ${taskDisplayName}: ${pc.cyan(relPath)}`))
 
   if (gitSkipped && gitMessage != null) {
     console.log(pc.yellow(`Notice: ${gitMessage}`))
@@ -124,9 +128,7 @@ export const handleStart: CommandHandler = (ctx) => {
       ),
     )
   } else {
-    console.log(
-      pc.green(`✔ Active on branch ${pc.cyan(branchName)} (${usedStrategy})`),
-    )
+    console.log(pc.green(`✔ Active on branch ${pc.cyan(branchName)} (${usedStrategy})`))
   }
   return 0
 }
@@ -137,12 +139,18 @@ export const startCommand: CommandDefinition = {
   summary: "Start work on task. Moves to focus column & provisions branch/worktree",
   usage: "dirban start <id> [options]",
   options: [
-    { flag: "--strategy <type>", description: "Lifecycle strategy: checkout | worktree | none | directory-only" },
+    {
+      flag: "--strategy <type>",
+      description: "Lifecycle strategy: checkout | worktree | none | directory-only",
+    },
     { flag: "--checkout", description: "Shorthand for --strategy checkout" },
     { flag: "--worktree", description: "Shorthand for --strategy worktree" },
     { flag: "--current", description: "Stay on current branch (shorthand for --strategy none)" },
     { flag: "--no-branch", description: "Alias for --current" },
-    { flag: "--no-git", description: "Skip Git operations (shorthand for --strategy directory-only)" },
+    {
+      flag: "--no-git",
+      description: "Skip Git operations (shorthand for --strategy directory-only)",
+    },
   ],
   examples: [
     "dirban start 26-001",

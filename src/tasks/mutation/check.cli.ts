@@ -1,7 +1,7 @@
-import { discoverBoard } from "../../board/discovery.ts"
-import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { err, ok } from "neverthrow"
 import pc from "picocolors"
+import { discoverBoard } from "../../board/discovery.ts"
+import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { checkTaskItem } from "./check.ts"
 
 export interface CheckCommandParams {
@@ -18,7 +18,7 @@ export const parseCheck: CommandParser<CheckCommandParams> = (ctx) => {
   }
 
   const index = parseInt(indexStr, 10)
-  if (isNaN(index) || index < 1) {
+  if (Number.isNaN(index) || index < 1) {
     return err({ message: "Index must be a positive number" })
   }
 
@@ -45,9 +45,7 @@ export const handleCheck: CommandHandler = (ctx) => {
     return 1
   }
 
-  const targetAc = checkRes.value.document.acceptanceCriteria.find((a) =>
-    a.index === index
-  )
+  const targetAc = checkRes.value.document.acceptanceCriteria.find((a) => a.index === index)
   const stateStr = targetAc?.checked ? pc.green("[x]") : pc.red("[ ]")
   console.log(
     pc.green(
@@ -62,10 +60,7 @@ export const checkCommand: CommandDefinition = {
   summary: "Toggle acceptance criteria checkbox item (1-based index)",
   usage: "dirban check <id> <index>",
   options: [],
-  examples: [
-    "dirban check 26-001 1",
-    "dirban check 26-001 2",
-  ],
+  examples: ["dirban check 26-001 1", "dirban check 26-001 2"],
   requiresTasksDir: true,
   parse: parseCheck,
   execute: handleCheck,

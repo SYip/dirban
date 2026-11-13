@@ -1,16 +1,10 @@
-import { err, ok, type Result } from "neverthrow"
 import { spawnSync } from "node:child_process"
 import * as fs from "node:fs"
 import * as path from "node:path"
-import type {
-  VcsContext,
-  VcsError,
-  VersionControlProvider,
-  WorktreeEntry,
-} from "../types.ts"
-
-import { checkGitWorkingTreeClean } from "./status.ts"
+import { err, ok, type Result } from "neverthrow"
+import type { VcsContext, VcsError, VersionControlProvider, WorktreeEntry } from "../types.ts"
 import { commitSingleGitFile } from "./commit.ts"
+import { checkGitWorkingTreeClean } from "./status.ts"
 
 export const TASK_ID_EXTRACT_REGEX = /(?:^|\/)(?:task\/)?([0-9]{2}-[0-9]+)(?:-[^/]*)?$/
 export const SLUG_CLEANUP_REGEX = /[^a-z0-9]+/g
@@ -26,9 +20,7 @@ export interface GitWorktreeEntry {
 /**
  * Parses raw stdout from `git worktree list --porcelain` into typed entries.
  */
-export const parseGitWorktreeListPorcelain = (
-  rawStdout: string,
-): readonly GitWorktreeEntry[] => {
+export const parseGitWorktreeListPorcelain = (rawStdout: string): readonly GitWorktreeEntry[] => {
   const blocks = rawStdout.split(WORKTREE_ENTRY_SPLIT_REGEX)
   const entries: GitWorktreeEntry[] = []
 
@@ -39,9 +31,7 @@ export const parseGitWorktreeListPorcelain = (
 
     const branchLine = lines.find((l) => l.startsWith("branch "))
     const entryPath = worktreeLine.slice("worktree ".length).trim()
-    const branchRef = branchLine != null
-      ? branchLine.slice("branch ".length).trim()
-      : undefined
+    const branchRef = branchLine != null ? branchLine.slice("branch ".length).trim() : undefined
 
     entries.push(Object.freeze({ path: entryPath, branchRef }))
   }
@@ -54,41 +44,42 @@ export class GitVcsProvider implements VersionControlProvider {
 
   getContext(cwd: string = process.cwd()): VcsContext {
     try {
-      const isInsideWorktreeResult = spawnSync(
-        "git",
-        ["rev-parse", "--is-inside-work-tree"],
-        { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
-      )
+      const isInsideWorktreeResult = spawnSync("git", ["rev-parse", "--is-inside-work-tree"], {
+        cwd,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      })
       const isGitRepo =
-        isInsideWorktreeResult.error == null &&
-        isInsideWorktreeResult.status === 0 &&
-        isInsideWorktreeResult.stdout.trim() === "true"
+        isInsideWorktreeResult.error == null
+        && isInsideWorktreeResult.status === 0
+        && isInsideWorktreeResult.stdout.trim() === "true"
 
       if (!isGitRepo) {
         return { isAvailable: false }
       }
 
-      const branchResult = spawnSync(
-        "git",
-        ["rev-parse", "--abbrev-ref", "HEAD"],
-        { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
-      )
+      const branchResult = spawnSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+        cwd,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      })
       const branchName = branchResult.status === 0 ? branchResult.stdout.trim() : undefined
 
-      const rootResult = spawnSync(
-        "git",
-        ["rev-parse", "--show-toplevel"],
-        { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
-      )
+      const rootResult = spawnSync("git", ["rev-parse", "--show-toplevel"], {
+        cwd,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      })
       const repoRoot = rootResult.status === 0 ? rootResult.stdout.trim() : undefined
 
-      const gitDirResult = spawnSync(
-        "git",
-        ["rev-parse", "--git-dir"],
-        { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
-      )
+      const gitDirResult = spawnSync("git", ["rev-parse", "--git-dir"], {
+        cwd,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      })
       const gitDir = gitDirResult.status === 0 ? gitDirResult.stdout.trim() : ""
-      const isWorktree = gitDir.includes("/.git/worktrees/") || gitDir.includes("\\.git\\worktrees\\")
+      const isWorktree =
+        gitDir.includes("/.git/worktrees/") || gitDir.includes("\\.git\\worktrees\\")
 
       return {
         isAvailable: true,
@@ -133,12 +124,7 @@ export class GitVcsProvider implements VersionControlProvider {
     return `${normalizedPrefix}${taskId}-${sanitizedSlug}`
   }
 
-  deriveWorktreePath(
-    repoRoot: string,
-    template: string,
-    taskId: string,
-    slug: string,
-  ): string {
+  deriveWorktreePath(repoRoot: string, template: string, taskId: string, slug: string): string {
     const repoName = path.basename(repoRoot)
     const expandedDir = template.replace(/\{repo\}/g, repoName)
     const sanitizedSlug = slug
@@ -168,10 +154,10 @@ export class GitVcsProvider implements VersionControlProvider {
 
     const trimmedTarget = taskIdOrTarget?.trim().toLowerCase()
     const isTargetingMain =
-      trimmedTarget == null ||
-      trimmedTarget === "" ||
-      trimmedTarget === "main" ||
-      trimmedTarget === "root"
+      trimmedTarget == null
+      || trimmedTarget === ""
+      || trimmedTarget === "main"
+      || trimmedTarget === "root"
 
     // 1. If asking for "main" or target omitted, return the primary root repository path
     if (isTargetingMain) {
@@ -189,17 +175,18 @@ export class GitVcsProvider implements VersionControlProvider {
     }
 
     // 2. Query git worktree list --porcelain to find matching active worktree
-    const worktreeListResult = spawnSync(
-      "git",
-      ["worktree", "list", "--porcelain"],
-      { cwd: ctx.repoRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
-    )
+    const worktreeListResult = spawnSync("git", ["worktree", "list", "--porcelain"], {
+      cwd: ctx.repoRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    })
 
     if (worktreeListResult.status === 0) {
       const entries = parseGitWorktreeListPorcelain(worktreeListResult.stdout)
       const matchingEntry = entries.find((entry) => {
         const pathMatches = entry.path.toLowerCase().includes(trimmedTarget)
-        const branchMatches = entry.branchRef != null && entry.branchRef.toLowerCase().includes(trimmedTarget)
+        const branchMatches =
+          entry.branchRef?.toLowerCase().includes(trimmedTarget)
         return pathMatches || branchMatches
       })
 
@@ -223,11 +210,11 @@ export class GitVcsProvider implements VersionControlProvider {
       })
     }
 
-    const worktreeListResult = spawnSync(
-      "git",
-      ["worktree", "list", "--porcelain"],
-      { cwd: ctx.repoRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
-    )
+    const worktreeListResult = spawnSync("git", ["worktree", "list", "--porcelain"], {
+      cwd: ctx.repoRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    })
 
     if (worktreeListResult.status !== 0) {
       return err({
@@ -295,16 +282,14 @@ export class GitVcsProvider implements VersionControlProvider {
       return ok({ alreadyOnBranch: true })
     }
 
-    const branchCheck = spawnSync(
-      "git",
-      ["rev-parse", "--verify", `refs/heads/${branchName}`],
-      { cwd: ctx.repoRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
-    )
+    const branchCheck = spawnSync("git", ["rev-parse", "--verify", `refs/heads/${branchName}`], {
+      cwd: ctx.repoRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    })
     const branchExists = branchCheck.status === 0
 
-    const checkoutArgs = branchExists
-      ? ["checkout", branchName]
-      : ["checkout", "-b", branchName]
+    const checkoutArgs = branchExists ? ["checkout", branchName] : ["checkout", "-b", branchName]
 
     const checkoutResult = spawnSync("git", checkoutArgs, {
       cwd: ctx.repoRoot,
@@ -344,11 +329,11 @@ export class GitVcsProvider implements VersionControlProvider {
 
     fs.mkdirSync(path.dirname(targetPath), { recursive: true })
 
-    const branchCheck = spawnSync(
-      "git",
-      ["rev-parse", "--verify", `refs/heads/${branchName}`],
-      { cwd: ctx.repoRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
-    )
+    const branchCheck = spawnSync("git", ["rev-parse", "--verify", `refs/heads/${branchName}`], {
+      cwd: ctx.repoRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    })
     const branchExists = branchCheck.status === 0
 
     const worktreeArgs = branchExists
@@ -413,11 +398,11 @@ export class GitVcsProvider implements VersionControlProvider {
     })
 
     if (addResult.status === 0) {
-      spawnSync(
-        "git",
-        ["commit", "-m", commitMsg],
-        { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
-      )
+      spawnSync("git", ["commit", "-m", commitMsg], {
+        cwd,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      })
     }
 
     if (options.isWorktree) {
@@ -440,11 +425,11 @@ export class GitVcsProvider implements VersionControlProvider {
         })
       }
 
-      const removeResult = spawnSync(
-        "git",
-        ["worktree", "remove", cwd],
-        { cwd: repoRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
-      )
+      const removeResult = spawnSync("git", ["worktree", "remove", cwd], {
+        cwd: repoRoot,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      })
 
       return ok({ worktreeRemoved: removeResult.status === 0 })
     }
@@ -485,4 +470,3 @@ export class GitVcsProvider implements VersionControlProvider {
     return ok({ worktreeRemoved: false })
   }
 }
-

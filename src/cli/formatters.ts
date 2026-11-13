@@ -20,7 +20,10 @@ export const toRelativePath = (targetPath: string, basePath: string = process.cw
   return rel.replaceAll("\\", "/")
 }
 
-export const formatTaskPathLink = (targetPath: string, basePath: string = process.cwd()): string => {
+export const formatTaskPathLink = (
+  targetPath: string,
+  basePath: string = process.cwd(),
+): string => {
   const relPath = toRelativePath(targetPath, basePath)
   return formatTerminalLink(relPath, targetPath)
 }
@@ -55,11 +58,7 @@ export const getPriorityBadge = (priority: string): string => {
   }
 }
 
-export const renderProgressBar = (
-  completed: number,
-  total: number,
-  width = 12,
-): string => {
+export const renderProgressBar = (completed: number, total: number, width = 12): string => {
   if (total === 0) {
     return pc.gray("[No Criteria]")
   }
@@ -71,10 +70,7 @@ export const renderProgressBar = (
   return `[${filledBar}${emptyBar}] ${completed}/${total}`
 }
 
-export const formatTaskCard = (
-  task: BoardTask,
-  isSelected = false,
-): readonly string[] => {
+export const formatTaskCard = (task: BoardTask, isSelected = false): readonly string[] => {
   const doc = task.document
   const priority = doc.priority ?? doc.frontmatter.priority ?? "p3"
   const badge = getPriorityBadge(priority)
@@ -86,21 +82,15 @@ export const formatTaskCard = (
   const line1 = `${prefix}${badge} ${idStr}`
   const line2 = `   ${title}`
 
-  const completedAc =
-    task.document.acceptanceCriteria.filter((c) => c.checked).length
+  const completedAc = task.document.acceptanceCriteria.filter((c) => c.checked).length
   const totalAc = task.document.acceptanceCriteria.length
-  const acBar = totalAc > 0
-    ? ` ${renderProgressBar(completedAc, totalAc, 8)}`
-    : ""
+  const acBar = totalAc > 0 ? ` ${renderProgressBar(completedAc, totalAc, 8)}` : ""
   const tags = doc.tags ?? doc.frontmatter.tags ?? []
-  const tagsStr = tags.length > 0
-    ? pc.gray(` [${tags.join(",")}]`)
-    : ""
+  const tagsStr = tags.length > 0 ? pc.gray(` [${tags.join(",")}]`) : ""
 
   const assignee = doc.assigned_to ?? doc.frontmatter.assigned_to
-  const assigneeStr = assignee != null && assignee !== "" && assignee !== "unassigned"
-    ? `${pc.dim(assignee)} `
-    : ""
+  const assigneeStr =
+    assignee != null && assignee !== "" && assignee !== "unassigned" ? `${pc.dim(assignee)} ` : ""
 
   const line3 = `   ${assigneeStr}${tagsStr}${acBar}`
   return Object.freeze([line1, line2, line3])
@@ -108,18 +98,10 @@ export const formatTaskCard = (
 
 export const formatBoardStatic = (board: Board): string => {
   const lines: string[] = []
-  lines.push(
-    pc.bold(
-      pc.cyan(
-        `\n=== DIRBAN KANBAN BOARD (${board.totalTasks} tasks) ===\n`,
-      ),
-    ),
-  )
+  lines.push(pc.bold(pc.cyan(`\n=== DIRBAN KANBAN BOARD (${board.totalTasks} tasks) ===\n`)))
 
   for (const col of board.columns) {
-    const colHeader = pc.bold(
-      pc.yellow(`■ ${col.name} (${col.tasks.length})`),
-    )
+    const colHeader = pc.bold(pc.yellow(`■ ${col.name} (${col.tasks.length})`))
     lines.push(colHeader)
     lines.push(pc.gray("─".repeat(50)))
 
@@ -148,22 +130,10 @@ export const formatTaskDetail = (task: BoardTask): string => {
 
   const linkedPath = formatTaskPathLink(task.filePath)
 
-  lines.push(
-    pc.bold(
-      pc.cyan(`\n═══════════════════════════════════════════════════════`),
-    ),
-  )
-  lines.push(
-    `${getPriorityBadge(priority)} ${pc.bold(pc.white(title))} (${
-      pc.green(id)
-    })`,
-  )
+  lines.push(pc.bold(pc.cyan(`\n═══════════════════════════════════════════════════════`)))
+  lines.push(`${getPriorityBadge(priority)} ${pc.bold(pc.white(title))} (${pc.green(id)})`)
   lines.push(pc.gray(`Path: ${linkedPath}`))
-  lines.push(
-    pc.bold(
-      pc.cyan(`───────────────────────────────────────────────────────`),
-    ),
-  )
+  lines.push(pc.bold(pc.cyan(`───────────────────────────────────────────────────────`)))
 
   lines.push(`${pc.bold("Column:")}      ${task.column}`)
   if (doc.owner != null && doc.owner !== "") {
@@ -184,16 +154,10 @@ export const formatTaskDetail = (task: BoardTask): string => {
   }
 
   if (fm.relationships?.depends_on != null && fm.relationships.depends_on.length > 0) {
-    lines.push(
-      `${pc.bold("Depends On:")}  ${
-        fm.relationships.depends_on.join(", ")
-      }`,
-    )
+    lines.push(`${pc.bold("Depends On:")}  ${fm.relationships.depends_on.join(", ")}`)
   }
   if (fm.relationships?.blocks != null && fm.relationships.blocks.length > 0) {
-    lines.push(
-      `${pc.bold("Blocks:")}      ${fm.relationships.blocks.join(", ")}`,
-    )
+    lines.push(`${pc.bold("Blocks:")}      ${fm.relationships.blocks.join(", ")}`)
   }
 
   if (task.document.objectiveScope !== "") {
@@ -211,11 +175,7 @@ export const formatTaskDetail = (task: BoardTask): string => {
     }
   }
 
-  lines.push(
-    pc.bold(
-      pc.cyan(`═══════════════════════════════════════════════════════\n`),
-    ),
-  )
+  lines.push(pc.bold(pc.cyan(`═══════════════════════════════════════════════════════\n`)))
   return lines.join("\n")
 }
 
@@ -231,15 +191,13 @@ export const formatCurrentTaskView = (
   const lines: string[] = []
   const linkedPath = formatTaskPathLink(task.filePath, options?.basePath)
 
-  lines.push(
-    `${getPriorityBadge(priority)} ${pc.bold(pc.white(title))} (${pc.green(id)})`,
-  )
+  lines.push(`${getPriorityBadge(priority)} ${pc.bold(pc.white(title))} (${pc.green(id)})`)
 
-  const metaParts: string[] = [
-    `Column: ${task.column}`,
-  ]
+  const metaParts: string[] = [`Column: ${task.column}`]
   if (options?.branch != null && options.branch !== "") {
-    const branchLabel = options.isWorktree ? `Branch: ${options.branch} (worktree)` : `Branch: ${options.branch}`
+    const branchLabel = options.isWorktree
+      ? `Branch: ${options.branch} (worktree)`
+      : `Branch: ${options.branch}`
     metaParts.push(branchLabel)
   }
   metaParts.push(`Path: ${linkedPath}`)
@@ -252,25 +210,21 @@ export const formatCurrentTaskView = (
   return lines.join("\n")
 }
 
-export const formatPlanView = (
-  plan: {
-    readonly ready: readonly {
-      readonly task: BoardTask
-      readonly evaluation: { readonly resolved: readonly string[] }
-    }[]
-    readonly blocked: readonly {
-      readonly task: BoardTask
-      readonly evaluation: { readonly unresolved: readonly string[] }
-    }[]
-    readonly totalBacklog: number
-  },
-): string => {
+export const formatPlanView = (plan: {
+  readonly ready: readonly {
+    readonly task: BoardTask
+    readonly evaluation: { readonly resolved: readonly string[] }
+  }[]
+  readonly blocked: readonly {
+    readonly task: BoardTask
+    readonly evaluation: { readonly unresolved: readonly string[] }
+  }[]
+  readonly totalBacklog: number
+}): string => {
   const lines: string[] = []
 
   lines.push(
-    pc.bold(
-      pc.cyan(`\n=== DIRBAN PLANNING & TRIAGE (${plan.totalBacklog} backlog tasks) ===\n`),
-    ),
+    pc.bold(pc.cyan(`\n=== DIRBAN PLANNING & TRIAGE (${plan.totalBacklog} backlog tasks) ===\n`)),
   )
 
   // Ready section
@@ -287,9 +241,7 @@ export const formatPlanView = (
       const linkedItem = formatTerminalLink(`${idStr} - ${title}`, item.task.filePath)
       lines.push(`  ${badge} ${linkedItem}`)
       if (item.evaluation.resolved.length > 0) {
-        lines.push(
-          pc.gray(`     Dependencies resolved: [${item.evaluation.resolved.join(", ")}]`),
-        )
+        lines.push(pc.gray(`     Dependencies resolved: [${item.evaluation.resolved.join(", ")}]`))
       }
     }
   }

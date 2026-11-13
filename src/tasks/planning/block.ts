@@ -1,16 +1,16 @@
-import { err, ok, type Result } from "neverthrow"
 import * as fs from "node:fs"
 import * as path from "node:path"
+import { err, ok, type Result } from "neverthrow"
 import YAML from "yaml"
-import type { Board, BoardTask } from "../../board/types.ts"
+import { isTaskId } from "../../board/dependencies.ts"
 import { findTaskByIdOrName } from "../../board/discovery.ts"
+import type { Board, BoardTask } from "../../board/types.ts"
+import type { DirbanConfig } from "../../config/types.ts"
 import { LINE_SPLIT_REGEX } from "../../okf/parser.ts"
 import type { TaskRelationships } from "../../okf/types.ts"
+import { getVcsProvider, type VersionControlProvider } from "../../vcs/index.ts"
 import { getIsoDate } from "../mutation/move.ts"
 import type { OperationError } from "../types.ts"
-import { isTaskId } from "../../board/dependencies.ts"
-import { getVcsProvider, type VersionControlProvider } from "../../vcs/index.ts"
-import type { DirbanConfig } from "../../config/types.ts"
 
 export interface BlockTaskOptions {
   readonly cwd?: string
@@ -23,13 +23,9 @@ const FRONTMATTER_DELIMITER = "---"
 const COMMA_SPLIT_REGEX = /\s*,\s*/
 const BACKLOG_COLUMN = "backlog" as const
 
-const detectEol = (content: string): "\r\n" | "\n" =>
-  content.includes("\r\n") ? "\r\n" : "\n"
+const detectEol = (content: string): "\r\n" | "\n" => (content.includes("\r\n") ? "\r\n" : "\n")
 
-export const normalizeBlockerInput = (
-  rawInput: string,
-  board: Board,
-): string => {
+export const normalizeBlockerInput = (rawInput: string, board: Board): string => {
   const trimmed = rawInput.trim()
   if (isTaskId(trimmed)) {
     return trimmed
@@ -59,9 +55,7 @@ export const parseBlockerReasons = (
     if (trimmed === "") continue
 
     // Support comma-separated inputs
-    const parts = trimmed.includes(",")
-      ? trimmed.split(COMMA_SPLIT_REGEX)
-      : [trimmed]
+    const parts = trimmed.includes(",") ? trimmed.split(COMMA_SPLIT_REGEX) : [trimmed]
 
     for (const part of parts) {
       const partTrimmed = part.trim()
@@ -320,7 +314,8 @@ export const blockTask = (
       } catch (renameErr) {
         return err({
           kind: "FS_ERROR",
-          message: renameErr instanceof Error ? renameErr.message : "Failed to demote task to backlog",
+          message:
+            renameErr instanceof Error ? renameErr.message : "Failed to demote task to backlog",
         })
       }
     }
@@ -381,9 +376,7 @@ export const unblockTask = (
 
   if (trimmedToClear != null && trimmedToClear !== "") {
     const normalizedTarget = normalizeBlockerInput(trimmedToClear, board)
-    const foundIndex = existingDeps.findIndex(
-      (d) => d === trimmedToClear || d === normalizedTarget,
-    )
+    const foundIndex = existingDeps.findIndex((d) => d === trimmedToClear || d === normalizedTarget)
 
     if (foundIndex === -1) {
       return err({
@@ -423,5 +416,3 @@ export const unblockTask = (
     remainingBlockers: remainingDeps,
   })
 }
-
-

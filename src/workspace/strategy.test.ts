@@ -2,8 +2,8 @@ import { describe, expect, it } from "bun:test"
 import { err, ok } from "neverthrow"
 import type { BoardTask } from "../board/types.ts"
 import { DEFAULT_CONFIG } from "../config/config.ts"
-import type { VersionControlProvider, VcsContext, VcsError } from "../vcs/types.ts"
 import { NoopVcsProvider } from "../vcs/noop.ts"
+import type { VcsContext, VcsError, VersionControlProvider } from "../vcs/types.ts"
 import { CurrentBranchStrategy } from "./current-branch-strategy.ts"
 import { DirectoryOnlyStrategy } from "./directory-only-strategy.ts"
 import { GitBranchStrategy } from "./git-branch-strategy.ts"
@@ -27,7 +27,14 @@ const MOCK_TASK: BoardTask = {
     id: "26-001",
     priority: "p1",
     tags: [],
-    acceptanceCriteria: [{ index: 0, checked: false, text: "Verify functionality", rawLine: "- [ ] Verify functionality" }],
+    acceptanceCriteria: [
+      {
+        index: 0,
+        checked: false,
+        text: "Verify functionality",
+        rawLine: "- [ ] Verify functionality",
+      },
+    ],
   },
 }
 
@@ -50,15 +57,18 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
         repoRoot: "/workspace",
         currentBranch: "main",
       }
-      const flagStrategy = resolveWorkspaceStrategy({ strategy: "worktree" }, vcsCtx, DEFAULT_CONFIG)
+      const flagStrategy = resolveWorkspaceStrategy(
+        { strategy: "worktree" },
+        vcsCtx,
+        DEFAULT_CONFIG,
+      )
       expect(flagStrategy.name).toBe("worktree")
       expect(flagStrategy instanceof GitWorktreeStrategy).toBe(true)
 
-      const configStrategy = resolveWorkspaceStrategy(
-        undefined,
-        vcsCtx,
-        { ...DEFAULT_CONFIG, branchStrategy: "worktree" },
-      )
+      const configStrategy = resolveWorkspaceStrategy(undefined, vcsCtx, {
+        ...DEFAULT_CONFIG,
+        branchStrategy: "worktree",
+      })
       expect(configStrategy.name).toBe("worktree")
       expect(configStrategy instanceof GitWorktreeStrategy).toBe(true)
     })
@@ -69,21 +79,35 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
       expect(s1.name).toBe("directory-only")
       expect(s1 instanceof DirectoryOnlyStrategy).toBe(true)
 
-      const gitAvailableCtx: VcsContext = { isAvailable: true, repoRoot: "/workspace", currentBranch: "main" }
+      const gitAvailableCtx: VcsContext = {
+        isAvailable: true,
+        repoRoot: "/workspace",
+        currentBranch: "main",
+      }
       const s2 = resolveWorkspaceStrategy({ noGit: true }, gitAvailableCtx, DEFAULT_CONFIG)
       expect(s2.name).toBe("directory-only")
       expect(s2 instanceof DirectoryOnlyStrategy).toBe(true)
 
-      const s3 = resolveWorkspaceStrategy({ strategy: "directory-only" }, gitAvailableCtx, DEFAULT_CONFIG)
+      const s3 = resolveWorkspaceStrategy(
+        { strategy: "directory-only" },
+        gitAvailableCtx,
+        DEFAULT_CONFIG,
+      )
       expect(s3.name).toBe("directory-only")
       expect(s3 instanceof DirectoryOnlyStrategy).toBe(true)
     })
 
     it("Vector 4 (Automatic Detection on Done): Auto-detects worktree from cwd or matching task worktree without user flags", () => {
-      const worktreeVcs: VersionControlProvider = Object.assign(Object.create(new NoopVcsProvider()), {
-        resolveWorktreePath: (id: string) => (id === "26-001" ? ok("/worktrees/26-001") : err({ kind: "WORKTREE_ERROR" as const, message: "not found" })),
-        extractTaskId: () => null,
-      })
+      const worktreeVcs: VersionControlProvider = Object.assign(
+        Object.create(new NoopVcsProvider()),
+        {
+          resolveWorktreePath: (id: string) =>
+            id === "26-001"
+              ? ok("/worktrees/26-001")
+              : err({ kind: "WORKTREE_ERROR" as const, message: "not found" }),
+          extractTaskId: () => null,
+        },
+      )
 
       const inWorktreeCtx: VcsContext = {
         isAvailable: true,
@@ -91,7 +115,14 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
         currentBranch: "task/26-001-sample-feature",
         isWorktree: true,
       }
-      const s1 = detectWorkspaceDoneStrategy(MOCK_TASK, undefined, inWorktreeCtx, worktreeVcs, DEFAULT_CONFIG, "/worktrees/26-001")
+      const s1 = detectWorkspaceDoneStrategy(
+        MOCK_TASK,
+        undefined,
+        inWorktreeCtx,
+        worktreeVcs,
+        DEFAULT_CONFIG,
+        "/worktrees/26-001",
+      )
       expect(s1.name).toBe("worktree")
       expect(s1 instanceof GitWorktreeStrategy).toBe(true)
 
@@ -101,16 +132,26 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
         currentBranch: "main",
         isWorktree: false,
       }
-      const s2 = detectWorkspaceDoneStrategy(MOCK_TASK, undefined, inMainRepoCtx, worktreeVcs, DEFAULT_CONFIG, "/workspace")
+      const s2 = detectWorkspaceDoneStrategy(
+        MOCK_TASK,
+        undefined,
+        inMainRepoCtx,
+        worktreeVcs,
+        DEFAULT_CONFIG,
+        "/workspace",
+      )
       expect(s2.name).toBe("worktree")
       expect(s2 instanceof GitWorktreeStrategy).toBe(true)
     })
 
     it("Vector 5 (Automatic Detection on Done - In-place Branch): Auto-detects in-place branch when active on task branch", () => {
-      const branchVcs: VersionControlProvider = Object.assign(Object.create(new NoopVcsProvider()), {
-        resolveWorktreePath: () => err({ kind: "WORKTREE_ERROR" as const, message: "not found" }),
-        extractTaskId: (branch?: string) => (branch?.includes("26-001") ? "26-001" : null),
-      })
+      const branchVcs: VersionControlProvider = Object.assign(
+        Object.create(new NoopVcsProvider()),
+        {
+          resolveWorktreePath: () => err({ kind: "WORKTREE_ERROR" as const, message: "not found" }),
+          extractTaskId: (branch?: string) => (branch?.includes("26-001") ? "26-001" : null),
+        },
+      )
 
       const onBranchCtx: VcsContext = {
         isAvailable: true,
@@ -118,7 +159,14 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
         currentBranch: "task/26-001-sample-feature",
         isWorktree: false,
       }
-      const s = detectWorkspaceDoneStrategy(MOCK_TASK, undefined, onBranchCtx, branchVcs, DEFAULT_CONFIG, "/workspace")
+      const s = detectWorkspaceDoneStrategy(
+        MOCK_TASK,
+        undefined,
+        onBranchCtx,
+        branchVcs,
+        DEFAULT_CONFIG,
+        "/workspace",
+      )
       expect(s.name).toBe("checkout")
       expect(s instanceof GitBranchStrategy).toBe(true)
     })
@@ -219,7 +267,11 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
 
       const doneCtx: WorkspaceLifecycleContext = {
         vcs: mockVcs,
-        vcsCtx: { isAvailable: true, repoRoot: "/workspace", currentBranch: "task/26-001-sample-feature" },
+        vcsCtx: {
+          isAvailable: true,
+          repoRoot: "/workspace",
+          currentBranch: "task/26-001-sample-feature",
+        },
         config: DEFAULT_CONFIG,
         cwd: "/workspace",
       }
@@ -238,7 +290,11 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
       const mockVcs = new NoopVcsProvider()
       const ctx: WorkspaceLifecycleContext = {
         vcs: mockVcs,
-        vcsCtx: { isAvailable: true, repoRoot: "/workspace", currentBranch: "task/26-001-sample-feature" },
+        vcsCtx: {
+          isAvailable: true,
+          repoRoot: "/workspace",
+          currentBranch: "task/26-001-sample-feature",
+        },
         config: DEFAULT_CONFIG,
         cwd: "/workspace",
       }
@@ -263,7 +319,11 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
       const strategy = new GitBranchStrategy()
       const ctx: WorkspaceLifecycleContext = {
         vcs: mockVcs,
-        vcsCtx: { isAvailable: true, repoRoot: "/workspace", currentBranch: "task/26-001-sample-feature" },
+        vcsCtx: {
+          isAvailable: true,
+          repoRoot: "/workspace",
+          currentBranch: "task/26-001-sample-feature",
+        },
         config: DEFAULT_CONFIG,
         cwd: "/workspace",
       }
@@ -310,7 +370,8 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
       let worktreeRemoved = false
 
       const mockVcs: VersionControlProvider = Object.assign(Object.create(new NoopVcsProvider()), {
-        resolveWorktreePath: () => err({ kind: "WORKTREE_ERROR" as const, message: "Not found" } as VcsError),
+        resolveWorktreePath: () =>
+          err({ kind: "WORKTREE_ERROR" as const, message: "Not found" } as VcsError),
         deriveWorktreePath: () => "/workspace.worktrees/26-001-sample-feature",
         createWorktree: (targetPath: string) => {
           createdPath = targetPath
@@ -382,7 +443,8 @@ describe("Workspace Lifecycle Strategy Pattern", () => {
     it("Vector 3 (Extreme / Error Boundary - Merge failure): Propagates git error onDone cleanly", () => {
       const mockVcs: VersionControlProvider = Object.assign(Object.create(new NoopVcsProvider()), {
         extractTaskId: () => "26-001",
-        autoMergeAndCleanup: () => err({ kind: "MERGE_ERROR" as const, message: "Merge conflict in file" } as VcsError),
+        autoMergeAndCleanup: () =>
+          err({ kind: "MERGE_ERROR" as const, message: "Merge conflict in file" } as VcsError),
       })
 
       const strategy = new GitWorktreeStrategy()

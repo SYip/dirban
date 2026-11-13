@@ -27,50 +27,38 @@ export const sortTasksByPriority = (
     }
     const idA = a.document.id ?? a.document.frontmatter.id ?? a.filename
     const idB = b.document.id ?? b.document.frontmatter.id ?? b.filename
-    return idA.localeCompare(
-      idB,
-      undefined,
-      { numeric: true, sensitivity: "base" },
-    )
+    return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: "base" })
   })
 }
 
-export const sortTasksByRecency = (
-  tasks: readonly BoardTask[],
-): readonly BoardTask[] => {
+export const sortTasksByRecency = (tasks: readonly BoardTask[]): readonly BoardTask[] => {
   return [...tasks].sort((a, b) => {
-    const dateA = a.document.last_updated ||
-      a.document.created_date ||
-      a.document.frontmatter.last_updated ||
-      a.document.frontmatter.created_date || ""
-    const dateB = b.document.last_updated ||
-      b.document.created_date ||
-      b.document.frontmatter.last_updated ||
-      b.document.frontmatter.created_date || ""
+    const dateA =
+      a.document.last_updated
+      || a.document.created_date
+      || a.document.frontmatter.last_updated
+      || a.document.frontmatter.created_date
+      || ""
+    const dateB =
+      b.document.last_updated
+      || b.document.created_date
+      || b.document.frontmatter.last_updated
+      || b.document.frontmatter.created_date
+      || ""
     if (dateA !== dateB) {
       return dateB.localeCompare(dateA)
     }
     const idA = a.document.id ?? a.document.frontmatter.id ?? a.filename
     const idB = b.document.id ?? b.document.frontmatter.id ?? b.filename
-    return idA.localeCompare(
-      idB,
-      undefined,
-      { numeric: true, sensitivity: "base" },
-    )
+    return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: "base" })
   })
 }
 
-export const sortTasksById = (
-  tasks: readonly BoardTask[],
-): readonly BoardTask[] => {
+export const sortTasksById = (tasks: readonly BoardTask[]): readonly BoardTask[] => {
   return [...tasks].sort((a, b) => {
     const idA = a.document.id ?? a.document.frontmatter.id ?? a.filename
     const idB = b.document.id ?? b.document.frontmatter.id ?? b.filename
-    return idA.localeCompare(
-      idB,
-      undefined,
-      { numeric: true, sensitivity: "base" },
-    )
+    return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: "base" })
   })
 }
 
@@ -105,18 +93,18 @@ export const filterTasks = (
     const tags = doc.tags ?? doc.frontmatter.tags ?? []
 
     const matchesTag =
-      filter.tag == null ||
-      filter.tag === "" ||
-      tags.some((tag) => tag.toLowerCase() === filter.tag?.toLowerCase())
+      filter.tag == null
+      || filter.tag === ""
+      || tags.some((tag) => tag.toLowerCase() === filter.tag?.toLowerCase())
 
     const ownerVal = (doc.owner ?? doc.frontmatter.owner ?? "").toLowerCase()
     const assignedVal = (doc.assigned_to ?? doc.frontmatter.assigned_to ?? "").toLowerCase()
     const targetOwner = (filter.owner ?? "").toLowerCase()
     const matchesOwner =
-      filter.owner == null ||
-      filter.owner === "" ||
-      ownerVal === targetOwner ||
-      assignedVal === targetOwner
+      filter.owner == null
+      || filter.owner === ""
+      || ownerVal === targetOwner
+      || assignedVal === targetOwner
 
     const searchQuery = (filter.search ?? "").toLowerCase()
     const title = (doc.title ?? doc.frontmatter.title ?? "").toLowerCase()
@@ -124,12 +112,12 @@ export const filterTasks = (
     const filename = task.filename.toLowerCase()
     const inBody = doc.rawBody.toLowerCase().includes(searchQuery)
     const matchesSearch =
-      filter.search == null ||
-      filter.search === "" ||
-      title.includes(searchQuery) ||
-      id.includes(searchQuery) ||
-      filename.includes(searchQuery) ||
-      inBody
+      filter.search == null
+      || filter.search === ""
+      || title.includes(searchQuery)
+      || id.includes(searchQuery)
+      || filename.includes(searchQuery)
+      || inBody
 
     return matchesTag && matchesOwner && matchesSearch
   })

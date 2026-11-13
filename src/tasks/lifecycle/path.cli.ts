@@ -1,6 +1,6 @@
 import pc from "picocolors"
-import { getVcsProvider } from "../../vcs/index.ts"
 import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
+import { getVcsProvider } from "../../vcs/index.ts"
 
 export const handlePath: CommandHandler = (ctx) => {
   const target = ctx.positionals[1]
@@ -22,10 +22,7 @@ export const pathCommand: CommandDefinition = {
   summary: "Print absolute filesystem path of a task worktree or main repository",
   usage: "dirban path [id|main]",
   options: [],
-  examples: [
-    "cd $(dirban path)",
-    "cd $(dirban path 26-001)",
-  ],
+  examples: ["cd $(dirban path)", "cd $(dirban path 26-001)"],
   requiresTasksDir: false,
   execute: handlePath,
 }

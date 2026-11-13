@@ -2,7 +2,11 @@ import { err, ok, type Result } from "neverthrow"
 import type { VersionControlProvider } from "../../vcs/index.ts"
 
 export type CleanGuardError =
-  | { readonly kind: "DIRTY_WORKING_TREE"; readonly message: string; readonly dirtyFiles: readonly string[] }
+  | {
+      readonly kind: "DIRTY_WORKING_TREE"
+      readonly message: string
+      readonly dirtyFiles: readonly string[]
+    }
   | { readonly kind: "GIT_CONFLICT"; readonly message: string }
 
 export interface AssertCleanOptions {
@@ -24,10 +28,10 @@ export const isVcsOperationSkipped = (
   strategyName: string,
   noGit?: boolean,
 ): boolean =>
-  !vcsCtx.isAvailable ||
-  noGit === true ||
-  strategyName === "none" ||
-  strategyName === "directory-only"
+  !vcsCtx.isAvailable
+  || noGit === true
+  || strategyName === "none"
+  || strategyName === "directory-only"
 
 /**
  * Validates that the working tree or target branch has no uncommitted non-task files
