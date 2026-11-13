@@ -2,6 +2,8 @@ import { err, ok, type Result } from "neverthrow"
 import { findTaskByIdOrName, findTaskExact } from "../../board/discovery.ts"
 import type { Board, BoardTask } from "../../board/types.ts"
 import {
+  ARCHIVE_COLUMN,
+  BACKLOG_COLUMN,
   DEFAULT_COLUMNS,
   resolveFocusColumn,
   resolveNextColumn,
@@ -90,7 +92,8 @@ export const doneTask = (
     if (focusColName != null && taskToDone.column !== focusColName) {
       const displayId = taskToDone.document.id ?? taskToDone.filename
       const isCompleted =
-        taskToDone.column === "archive"
+        taskToDone.column === ARCHIVE_COLUMN
+        || taskToDone.column === "archive"
         || taskToDone.column === DEFAULT_COLUMNS[DEFAULT_COLUMNS.length - 1]
 
       if (isCompleted) {
@@ -100,11 +103,11 @@ export const doneTask = (
         })
       }
 
-      if (taskToDone.column === "backlog") {
+      if (taskToDone.column === BACKLOG_COLUMN || taskToDone.column === "backlog") {
         return err({
           kind: "INVALID_COLUMN_TRANSITION",
-          message: `Cannot mark task ${displayId} as done: task is in 'backlog'. Run 'dirban ready ${displayId}' first.`,
-          currentColumn: "backlog",
+          message: `Cannot mark task ${displayId} as done: task is in '${taskToDone.column}'. Run 'dirban ready ${displayId}' first.`,
+          currentColumn: taskToDone.column,
           expectedColumn: focusColName,
           id: trimmedId,
           suggestion: `dirban ready ${displayId}`,

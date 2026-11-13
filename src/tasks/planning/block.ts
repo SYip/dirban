@@ -5,6 +5,7 @@ import YAML from "yaml"
 import { isTaskId } from "../../board/dependencies.ts"
 import { findTaskByIdOrName } from "../../board/discovery.ts"
 import type { Board, BoardTask } from "../../board/types.ts"
+import { BACKLOG_COLUMN } from "../../config/config.ts"
 import type { DirbanConfig } from "../../config/types.ts"
 import { LINE_SPLIT_REGEX } from "../../okf/parser.ts"
 import type { TaskRelationships } from "../../okf/types.ts"
@@ -21,7 +22,10 @@ export interface BlockTaskOptions {
 
 const FRONTMATTER_DELIMITER = "---"
 const COMMA_SPLIT_REGEX = /\s*,\s*/
-const BACKLOG_COLUMN = "backlog" as const
+const resolveBacklogColumn = (board: Board): string =>
+  board.columns.find(
+    (c) => c.name.toLowerCase() === BACKLOG_COLUMN || c.name.toLowerCase() === "backlog",
+  )?.name ?? BACKLOG_COLUMN
 
 const detectEol = (content: string): "\r\n" | "\n" => (content.includes("\r\n") ? "\r\n" : "\n")
 
@@ -298,9 +302,10 @@ export const blockTask = (
   let demoted = false
 
   // Demote task to backlog if it is currently in an active workflow column
-  if (task.column !== BACKLOG_COLUMN) {
+  const backlogColName = resolveBacklogColumn(board)
+  if (task.column !== backlogColName) {
     const parentDir = path.dirname(path.dirname(finalTask.filePath))
-    const targetPath = path.join(parentDir, BACKLOG_COLUMN, finalTask.filename)
+    const targetPath = path.join(parentDir, backlogColName, finalTask.filename)
 
     if (targetPath !== finalTask.filePath) {
       try {
@@ -309,7 +314,7 @@ export const blockTask = (
         finalTask = {
           ...finalTask,
           filePath: targetPath,
-          column: BACKLOG_COLUMN,
+          column: backlogColName,
         }
       } catch (renameErr) {
         return err({

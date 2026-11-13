@@ -362,7 +362,7 @@ describe("CLI Router and Modular Command Handlers", () => {
       const newExit = await dispatchCommand("new", newCtx)
       expect(newExit).toBe(0)
       expect(output).toContain(
-        "✔ Created task 26-001 in backlog: docs/tasks/backlog/26-001-standardize-path-test.md",
+        "✔ Created task 26-001 in 00-backlog: docs/tasks/00-backlog/26-001-standardize-path-test.md",
       )
 
       // 2. dirban move outputs relative path
@@ -390,7 +390,7 @@ describe("CLI Router and Modular Command Handlers", () => {
       const blockExit = await dispatchCommand("block", blockCtx)
       expect(blockExit).toBe(0)
       expect(output).toContain(
-        "⛔ Blocked task 26-001: docs/tasks/backlog/26-001-standardize-path-test.md (added [Waiting on review])",
+        "⛔ Blocked task 26-001: docs/tasks/00-backlog/26-001-standardize-path-test.md (added [Waiting on review])",
       )
 
       // 4. dirban unblock outputs relative path
@@ -404,7 +404,7 @@ describe("CLI Router and Modular Command Handlers", () => {
       const unblockExit = await dispatchCommand("unblock", unblockCtx)
       expect(unblockExit).toBe(0)
       expect(output).toContain(
-        "✔ Unblocked task 26-001: docs/tasks/backlog/26-001-standardize-path-test.md (removed [Waiting on review])",
+        "✔ Unblocked task 26-001: docs/tasks/00-backlog/26-001-standardize-path-test.md (removed [Waiting on review])",
       )
 
       // 5. dirban ready outputs relative path

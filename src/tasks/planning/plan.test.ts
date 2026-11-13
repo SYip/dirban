@@ -48,7 +48,7 @@ describe("Planning and Dependency Operations Tests", () => {
       if (blockRes.isOk()) {
         const val = blockRes.value
         expect(val.demotedToBacklog).toBe(true)
-        expect(val.task.column).toBe("backlog")
+        expect(val.task.column).toBe("00-backlog")
         // Normalized and deduplicated: 26-001 added only once + freeform text
         expect(val.task.document.frontmatter.relationships?.depends_on).toEqual([
           task1.id,
@@ -59,11 +59,11 @@ describe("Planning and Dependency Operations Tests", () => {
       // Verify file physically moved to backlog
       const reDiscovered = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
       const blockedTask = reDiscovered.columns
-        .find((c) => c.name === "backlog")
+        .find((c) => c.name === "00-backlog")
         ?.tasks.find((t) => t.document.id === task2.id)
 
       expect(blockedTask != null).toBe(true)
-      expect(blockedTask?.column).toBe("backlog")
+      expect(blockedTask?.column).toBe("00-backlog")
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }
@@ -86,7 +86,7 @@ describe("Planning and Dependency Operations Tests", () => {
       // Create task 26-002 in backlog
       const task2 = createTask(boardWithTask1, {
         title: "Dependent Task",
-        column: "backlog",
+        column: "00-backlog",
       })._unsafeUnwrap()
 
       const boardWithBoth = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
@@ -96,7 +96,7 @@ describe("Planning and Dependency Operations Tests", () => {
 
       let currentBoard = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
       let depTask = currentBoard.columns
-        .find((c) => c.name === "backlog")
+        .find((c) => c.name === "00-backlog")
         ?.tasks.find((t) => t.document.id === task2.id)
       if (!depTask) throw new Error("depTask not found")
 
@@ -111,7 +111,7 @@ describe("Planning and Dependency Operations Tests", () => {
 
       currentBoard = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
       depTask = currentBoard.columns
-        .find((c) => c.name === "backlog")
+        .find((c) => c.name === "00-backlog")
         ?.tasks.find((t) => t.document.id === task2.id)
       if (!depTask) throw new Error("depTask not found")
 
@@ -137,7 +137,7 @@ describe("Planning and Dependency Operations Tests", () => {
       // Check final evaluation: only task1 remains in depends_on, and task1 is in done column
       currentBoard = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
       depTask = currentBoard.columns
-        .find((c) => c.name === "backlog")
+        .find((c) => c.name === "00-backlog")
         ?.tasks.find((t) => t.document.id === task2.id)
       if (!depTask) throw new Error("depTask not found")
 
@@ -166,7 +166,7 @@ describe("Planning and Dependency Operations Tests", () => {
       // Create ready task 1 in backlog
       const readyTask = createTask(board, {
         title: "Ready Task",
-        column: "backlog",
+        column: "00-backlog",
       })._unsafeUnwrap()
 
       const boardWith1 = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
@@ -174,7 +174,7 @@ describe("Planning and Dependency Operations Tests", () => {
       // Create blocked task 2 in backlog
       const blockedTask = createTask(boardWith1, {
         title: "Blocked Task",
-        column: "backlog",
+        column: "00-backlog",
       })._unsafeUnwrap()
 
       const boardWith2 = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
@@ -212,13 +212,13 @@ describe("Planning and Dependency Operations Tests", () => {
       // Test batch promotion: promote multiple tasks and handle blocked tasks
       const batchTask1 = createTask(finalBoard, {
         title: "Batch Task 1",
-        column: "backlog",
+        column: "00-backlog",
       })._unsafeUnwrap()
 
       const boardWithBatch1 = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
       const batchTask2 = createTask(boardWithBatch1, {
         title: "Batch Task 2",
-        column: "backlog",
+        column: "00-backlog",
       })._unsafeUnwrap()
 
       const boardWithBothBatch = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
@@ -260,11 +260,11 @@ describe("Planning and Dependency Operations Tests", () => {
       // Create task 26-001 in backlog
       const task1 = createTask(board, {
         title: "Unique Suffix Task",
-        column: "backlog",
+        column: "00-backlog",
       })._unsafeUnwrap()
 
       const boardWithTask1 = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
-      const backlogCol = boardWithTask1.columns.find((c) => c.name === "backlog")
+      const backlogCol = boardWithTask1.columns.find((c) => c.name === "00-backlog")
       expect(backlogCol != null).toBe(true)
       if (backlogCol == null) return
 
@@ -284,10 +284,10 @@ describe("Planning and Dependency Operations Tests", () => {
 
       // Move task back to backlog to test ambiguity
       const boardMoved = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
-      moveTask(boardMoved, task1.id, "backlog")._unsafeUnwrap()
+      moveTask(boardMoved, task1.id, "00-backlog")._unsafeUnwrap()
 
       // Manually create another task in backlog with the same numeric suffix: "25-001"
-      const taskPath25 = path.join(tempDir, "docs/tasks/backlog/25-001-legacy-task.md")
+      const taskPath25 = path.join(tempDir, "docs/tasks/00-backlog/25-001-legacy-task.md")
       fs.writeFileSync(
         taskPath25,
         `---
@@ -315,7 +315,7 @@ relationships:
 
       const boardWithAmbiguity = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
       const backlogAmbiguous =
-        boardWithAmbiguity.columns.find((c) => c.name === "backlog")?.tasks ?? []
+        boardWithAmbiguity.columns.find((c) => c.name === "00-backlog")?.tasks ?? []
 
       // 2. Querying "001" or "1" now returns AMBIGUOUS_TASK_ID
       const ambiguousRes = resolveBacklogTaskId(backlogAmbiguous, "001")
