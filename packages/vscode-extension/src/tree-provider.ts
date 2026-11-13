@@ -1,8 +1,12 @@
-import * as vscode from "vscode"
 import * as path from "node:path"
 import type { BoardTask } from "@dirban/core/board/types.ts"
+import {
+  resolveFocusColumn,
+  resolveNextColumn,
+  resolvePreviousColumn,
+} from "@dirban/core/config/config.ts"
 import type { DirbanConfig } from "@dirban/core/config/types.ts"
-import { resolveFocusColumn, resolvePreviousColumn, resolveNextColumn } from "@dirban/core/config/config.ts"
+import * as vscode from "vscode"
 
 export type DirbanTreeItem = ColumnTreeItem | TaskTreeItem
 
@@ -105,7 +109,8 @@ export class TaskTreeItem extends vscode.TreeItem {
 
     super(`${id}: ${title}`, vscode.TreeItemCollapsibleState.None)
 
-    this.description = totalCount > 0 ? `[${priority}] ${checkedCount}/${totalCount}` : `[${priority}]`
+    this.description =
+      totalCount > 0 ? `[${priority}] ${checkedCount}/${totalCount}` : `[${priority}]`
     this.tooltip = `${title}\nFile: ${path.basename(task.filePath)}\nPriority: ${priority}`
     this.command = {
       command: "vscode.open",
@@ -113,18 +118,22 @@ export class TaskTreeItem extends vscode.TreeItem {
       arguments: [vscode.Uri.file(task.filePath)],
     }
     this.iconPath = new vscode.ThemeIcon(
-      totalCount > 0 && checkedCount === totalCount ? "pass-filled" : "tasklist"
+      totalCount > 0 && checkedCount === totalCount ? "pass-filled" : "tasklist",
     )
   }
 }
 
 export class DirbanTreeDataProvider implements vscode.TreeDataProvider<DirbanTreeItem> {
-  private readonly _onDidChangeTreeData: vscode.EventEmitter<DirbanTreeItem | undefined | null | void> =
-    new vscode.EventEmitter<DirbanTreeItem | undefined | null | void>()
-  public readonly onDidChangeTreeData: vscode.Event<DirbanTreeItem | undefined | null | void> =
+  private readonly _onDidChangeTreeData: vscode.EventEmitter<
+    DirbanTreeItem | undefined | null | undefined
+  > = new vscode.EventEmitter<DirbanTreeItem | undefined | null | undefined>()
+  public readonly onDidChangeTreeData: vscode.Event<DirbanTreeItem | undefined | null | undefined> =
     this._onDidChangeTreeData.event
 
-  private columnsData: ReadonlyArray<{ readonly name: string; readonly tasks: readonly BoardTask[] }> = []
+  private columnsData: ReadonlyArray<{
+    readonly name: string
+    readonly tasks: readonly BoardTask[]
+  }> = []
   private currentConfig?: DirbanConfig
 
   public updateBoard(
@@ -137,7 +146,7 @@ export class DirbanTreeDataProvider implements vscode.TreeDataProvider<DirbanTre
   }
 
   public refresh(): void {
-    this._onDidChangeTreeData.fire()
+    this._onDidChangeTreeData.fire(undefined)
   }
 
   public getTreeItem(element: DirbanTreeItem): vscode.TreeItem {
@@ -148,7 +157,7 @@ export class DirbanTreeDataProvider implements vscode.TreeDataProvider<DirbanTre
     if (!element) {
       // Root level: return columns
       return this.columnsData.map(
-        (col) => new ColumnTreeItem(col.name, col.tasks.length, this.currentConfig)
+        (col) => new ColumnTreeItem(col.name, col.tasks.length, this.currentConfig),
       )
     }
 

@@ -38,21 +38,12 @@ describe("Project and Lifecycle Storage Operations Tests", () => {
     try {
       const tasksDir = path.join(tempDir, "docs/tasks")
       fs.mkdirSync(path.join(tasksDir, "03-done"), { recursive: true })
-      fs.writeFileSync(
-        path.join(tasksDir, "03-done/26-001.md"),
-        SAMPLE_TASK,
-        "utf-8",
-      )
+      fs.writeFileSync(path.join(tasksDir, "03-done/26-001.md"), SAMPLE_TASK, "utf-8")
 
       const boardRes = discoverBoard(DEFAULT_CONFIG, tempDir)
       expect(boardRes.isOk()).toBe(true)
       if (boardRes.isOk()) {
-        const archiveRes = archiveTasks(
-          boardRes.value,
-          DEFAULT_CONFIG,
-          "all",
-          tempDir,
-        )
+        const archiveRes = archiveTasks(boardRes.value, DEFAULT_CONFIG, "all", tempDir)
         expect(archiveRes.isOk()).toBe(true)
         if (archiveRes.isOk()) {
           expect(archiveRes.value.archivedTasks.length).toBe(1)
@@ -82,11 +73,7 @@ describe("Project and Lifecycle Storage Operations Tests", () => {
       }
 
       // Add task with 26-001
-      fs.writeFileSync(
-        path.join(tasksDir, "00-backlog/26-001-task.md"),
-        SAMPLE_TASK,
-        "utf-8",
-      )
+      fs.writeFileSync(path.join(tasksDir, "00-backlog/26-001-task.md"), SAMPLE_TASK, "utf-8")
 
       // Add task with 26-009
       fs.writeFileSync(
@@ -133,21 +120,14 @@ describe("Project and Lifecycle Storage Operations Tests", () => {
         if (createRes.isOk()) {
           expect(createRes.value.id).toBe("26-001")
           expect(createRes.value.column).toBe("01-ready")
-          expect(createRes.value.filename).toBe(
-            "26-001-implement-oauth2-login-flow.md",
-          )
+          expect(createRes.value.filename).toBe("26-001-implement-oauth2-login-flow.md")
           expect(fs.existsSync(createRes.value.filePath)).toBe(true)
 
-          const writtenContent = fs.readFileSync(
-            createRes.value.filePath,
-            "utf-8",
-          )
+          const writtenContent = fs.readFileSync(createRes.value.filePath, "utf-8")
           expect(writtenContent.includes('id: "26-001"')).toBe(true)
           expect(writtenContent.includes('priority: "p1"')).toBe(true)
           expect(writtenContent.includes("- auth")).toBe(true)
-          expect(writtenContent.includes("- [ ] Configure OAuth client")).toBe(
-            true,
-          )
+          expect(writtenContent.includes("- [ ] Configure OAuth client")).toBe(true)
         }
       }
     } finally {

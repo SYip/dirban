@@ -7,6 +7,7 @@ Instructions for contributors developing and debugging the `dirban-vscode` exten
 ## Architecture & Build Pipeline
 
 The extension uses a dual bundler architecture:
+
 - **Extension Host**: Built with `esbuild` (`build.extension.ts`) targeting Node.js CommonJS format.
 - **Webview UI**: Built with `Vite` + `Vue 3` outputting single-page webview assets to `dist/webview/`.
 
@@ -44,6 +45,7 @@ bun run package
 
 1. Open the repository root in VS Code.
 2. Ensure dependencies are installed and the extension is built:
+
    ```bash
    cd packages/vscode-extension && bun run build
    ```

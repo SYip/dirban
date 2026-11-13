@@ -33,8 +33,18 @@ const createMockTask = (overrides?: Partial<BoardTask>): BoardTask => {
       titleHeader: "Improve CLI view formatting",
       objectiveScope: "Objective details here",
       acceptanceCriteria: [
-        { index: 1, checked: false, text: "First criteria item", rawLine: "- [ ] First criteria item" },
-        { index: 2, checked: true, text: "Second criteria item", rawLine: "- [x] Second criteria item" },
+        {
+          index: 1,
+          checked: false,
+          text: "First criteria item",
+          rawLine: "- [ ] First criteria item",
+        },
+        {
+          index: 2,
+          checked: true,
+          text: "Second criteria item",
+          rawLine: "- [x] Second criteria item",
+        },
       ],
       verificationPlan: "",
       executionJournal: [],
@@ -45,8 +55,9 @@ const createMockTask = (overrides?: Partial<BoardTask>): BoardTask => {
   return { ...defaultTask, ...overrides }
 }
 
-const stripAnsi = (str: string): string =>
-  str.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "")
+// biome-ignore lint/suspicious/noControlCharactersInRegex: ANSI escape stripping
+const ANSI_REGEX = /\x1b\[[0-9;]*[a-zA-Z]/g
+const stripAnsi = (str: string): string => str.replace(ANSI_REGEX, "")
 
 describe("CLI Formatters Tests", () => {
   it("Vector 1 (Standard Baseline Case): Formats current task and detail views with relative paths and criteria line breaks", () => {
@@ -55,10 +66,16 @@ describe("CLI Formatters Tests", () => {
 
     // Checks relative path rendering in the visible text
     expect(currentView).toContain("docs/tasks/02-doing/26-006-improve-cli-view.md\u001b]8;;")
-    expect(currentView).toContain("Path: \u001b]8;;file://" + task.filePath + "\u0007docs/tasks/02-doing/26-006-improve-cli-view.md")
+    expect(currentView).toContain(
+      "Path: \u001b]8;;file://"
+        + task.filePath
+        + "\u0007docs/tasks/02-doing/26-006-improve-cli-view.md",
+    )
 
     // Checks empty line between consecutive acceptance criteria items
-    expect(stripAnsi(currentView)).toContain("  [ ] #1: First criteria item\n\n  [x] #2: Second criteria item")
+    expect(stripAnsi(currentView)).toContain(
+      "  [ ] #1: First criteria item\n\n  [x] #2: Second criteria item",
+    )
 
     // Checks current task formatting with branch and worktree info
     const branchView = formatCurrentTaskView(task, {
@@ -71,11 +88,15 @@ describe("CLI Formatters Tests", () => {
       branch: "task/26-006-improve-cli",
       isWorktree: true,
     })
-    expect(worktreeView).toContain("Column: 02-doing | Branch: task/26-006-improve-cli (worktree) | Path:")
+    expect(worktreeView).toContain(
+      "Column: 02-doing | Branch: task/26-006-improve-cli (worktree) | Path:",
+    )
 
     const detailView = formatTaskDetail(task)
     expect(detailView).toContain("docs/tasks/02-doing/26-006-improve-cli-view.md")
-    expect(stripAnsi(detailView)).toContain("  [ ] #1: First criteria item\n\n  [x] #2: Second criteria item")
+    expect(stripAnsi(detailView)).toContain(
+      "  [ ] #1: First criteria item\n\n  [x] #2: Second criteria item",
+    )
   })
 
   it("Vector 2 (Plan View & Header Simplification): Renders simplified headers and OSC 8 links", () => {

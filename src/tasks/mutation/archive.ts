@@ -1,9 +1,9 @@
-import { err, ok, type Result } from "neverthrow"
-import * as path from "node:path"
 import * as fs from "node:fs"
+import * as path from "node:path"
+import { err, ok, type Result } from "neverthrow"
+import { findTaskByIdOrName } from "../../board/discovery.ts"
 import type { Board, BoardTask } from "../../board/types.ts"
 import type { DirbanConfig } from "../../config/types.ts"
-import { findTaskByIdOrName } from "../../board/discovery.ts"
 import type { OperationError } from "../types.ts"
 
 export interface ArchiveResult {
@@ -26,9 +26,7 @@ export const archiveTasks = (
   } catch (mkdirErr) {
     return err({
       kind: "FS_ERROR",
-      message: mkdirErr instanceof Error
-        ? mkdirErr.message
-        : "Failed to create archive directory",
+      message: mkdirErr instanceof Error ? mkdirErr.message : "Failed to create archive directory",
     })
   }
 
@@ -47,10 +45,7 @@ export const archiveTasks = (
   } else {
     // Archive all tasks in completed/done columns
     for (const col of board.columns) {
-      if (
-        col.name.toLowerCase().includes("done") ||
-        col.name.toLowerCase().includes("completed")
-      ) {
+      if (col.name.toLowerCase().includes("done") || col.name.toLowerCase().includes("completed")) {
         tasksToArchive.push(...col.tasks)
       }
     }
@@ -70,9 +65,10 @@ export const archiveTasks = (
     } catch (renameErr) {
       return err({
         kind: "FS_ERROR",
-        message: renameErr instanceof Error
-          ? renameErr.message
-          : "Failed to move task to archive directory",
+        message:
+          renameErr instanceof Error
+            ? renameErr.message
+            : "Failed to move task to archive directory",
       })
     }
   }
@@ -82,5 +78,3 @@ export const archiveTasks = (
     targetDirectory: archiveBaseDir,
   })
 }
-
-

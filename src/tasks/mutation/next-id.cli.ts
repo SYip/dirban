@@ -1,7 +1,7 @@
-import { discoverBoard } from "../../board/discovery.ts"
-import { calculateNextTaskId } from "../mutation/create.ts"
-import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
 import pc from "picocolors"
+import { discoverBoard } from "../../board/discovery.ts"
+import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
+import { calculateNextTaskId } from "../mutation/create.ts"
 
 export const handleNextId: CommandHandler = (ctx) => {
   const boardRes = discoverBoard(ctx.config, ctx.cwd)
@@ -20,10 +20,7 @@ export const nextIdCommand: CommandDefinition = {
   summary: "Print the next available task ID for the current year",
   usage: "dirban next-id",
   options: [],
-  examples: [
-    "dirban next-id",
-    "export ID=$(dirban next-id)",
-  ],
+  examples: ["dirban next-id", "export ID=$(dirban next-id)"],
   requiresTasksDir: true,
   execute: handleNextId,
 }

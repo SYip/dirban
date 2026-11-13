@@ -82,9 +82,10 @@ export const initializeBoard = (
     } catch (e) {
       return err({
         kind: "FS_ERROR",
-        message: e instanceof Error
-          ? `Failed to create directory ${dirPath}: ${e.message}`
-          : `Failed to create directory ${dirPath}`,
+        message:
+          e instanceof Error
+            ? `Failed to create directory ${dirPath}: ${e.message}`
+            : `Failed to create directory ${dirPath}`,
       })
     }
   }
@@ -98,8 +99,9 @@ export const initializeBoard = (
   let configFileUpdated: string | undefined
 
   const target = options.configTarget ?? "auto"
-  const useVsCode = target === "vscode" ||
-    (target === "auto" && fs.existsSync(vscodeDir) && !fs.existsSync(dirbanConfigPath))
+  const useVsCode =
+    target === "vscode"
+    || (target === "auto" && fs.existsSync(vscodeDir) && !fs.existsSync(dirbanConfigPath))
 
   try {
     if (useVsCode) {
@@ -137,7 +139,7 @@ export const initializeBoard = (
       if (modified) {
         fs.writeFileSync(
           vscodeSettingsPath,
-          JSON.stringify(currentSettings, null, 2) + "\n",
+          `${JSON.stringify(currentSettings, null, 2)}\n`,
           "utf-8",
         )
         if (fs.existsSync(vscodeSettingsPath)) {
@@ -155,29 +157,28 @@ export const initializeBoard = (
           defaultPriority: config.defaultPriority,
           archiveDir: config.archiveDir,
         }
-        fs.writeFileSync(
-          dirbanConfigPath,
-          JSON.stringify(configContent, null, 2) + "\n",
-          "utf-8",
-        )
+        fs.writeFileSync(dirbanConfigPath, `${JSON.stringify(configContent, null, 2)}\n`, "utf-8")
         configFileCreated = CONFIG_FILE_NAME
       }
     }
   } catch (e) {
     return err({
       kind: "FS_ERROR",
-      message: e instanceof Error
-        ? `Failed to write configuration: ${e.message}`
-        : "Failed to write configuration",
+      message:
+        e instanceof Error
+          ? `Failed to write configuration: ${e.message}`
+          : "Failed to write configuration",
     })
   }
 
-  return ok(Object.freeze({
-    tasksDir: rootDir,
-    archiveDir,
-    createdDirectories: Object.freeze(created),
-    alreadyExistedDirectories: Object.freeze(alreadyExisted),
-    configFileCreated,
-    configFileUpdated,
-  }))
+  return ok(
+    Object.freeze({
+      tasksDir: rootDir,
+      archiveDir,
+      createdDirectories: Object.freeze(created),
+      alreadyExistedDirectories: Object.freeze(alreadyExisted),
+      configFileCreated,
+      configFileUpdated,
+    }),
+  )
 }

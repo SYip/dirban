@@ -1,20 +1,12 @@
-import * as vscode from "vscode"
-import * as path from "node:path"
+
 import type { BoardTask } from "@dirban/core/board/types.ts"
 import type { DirbanConfig } from "@dirban/core/config/types.ts"
+import * as vscode from "vscode"
 
-export type FocusTreeItem =
-  | FocusHeaderTreeItem
-  | FocusCriterionTreeItem
-  | FocusEmptyTreeItem
+export type FocusTreeItem = FocusHeaderTreeItem | FocusCriterionTreeItem | FocusEmptyTreeItem
 
 export class FocusHeaderTreeItem extends vscode.TreeItem {
-  constructor(
-    task: BoardTask,
-    vcsBranch?: string,
-    branchStrategy?: string,
-    isWorktree?: boolean
-  ) {
+  constructor(task: BoardTask, vcsBranch?: string, branchStrategy?: string, isWorktree?: boolean) {
     const id = task.document.id || task.filename
     const title = task.document.title || "Untitled"
     const priority = task.document.priority || "p2"
@@ -25,12 +17,12 @@ export class FocusHeaderTreeItem extends vscode.TreeItem {
     const isGit = Boolean(vcsBranch) || Boolean(isWorktree)
     const strategy = branchStrategy ?? "checkout"
     const isGitStrategy = strategy === "checkout" || strategy === "worktree"
-    const isBranchMatched = Boolean(vcsBranch && vcsBranch.toLowerCase().includes(id.toLowerCase()))
+    const isBranchMatched = Boolean(vcsBranch?.toLowerCase().includes(id.toLowerCase()))
     const isWorktreeMatched = Boolean(isWorktree)
     const isAligned = isBranchMatched || isWorktreeMatched
 
     let branchText = ""
-    let iconId = "flame"
+    const iconId = "flame"
     let iconColor: vscode.ThemeColor | undefined
 
     if (isGit && isGitStrategy) {
@@ -68,9 +60,7 @@ export class FocusCriterionTreeItem extends vscode.TreeItem {
   ) {
     super(text, vscode.TreeItemCollapsibleState.None)
     this.tooltip = `${checked ? "Completed" : "Pending"}: ${text}`
-    this.iconPath = new vscode.ThemeIcon(
-      checked ? "pass-filled" : "circle-large-outline"
-    )
+    this.iconPath = new vscode.ThemeIcon(checked ? "pass-filled" : "circle-large-outline")
     this.command = {
       command: "dirban.toggleCriterion",
       title: "Toggle Criterion",
@@ -88,9 +78,10 @@ export class FocusEmptyTreeItem extends vscode.TreeItem {
 }
 
 export class DirbanFocusViewProvider implements vscode.TreeDataProvider<FocusTreeItem> {
-  private readonly _onDidChangeTreeData: vscode.EventEmitter<FocusTreeItem | undefined | null | void> =
-    new vscode.EventEmitter<FocusTreeItem | undefined | null | void>()
-  public readonly onDidChangeTreeData: vscode.Event<FocusTreeItem | undefined | null | void> =
+  private readonly _onDidChangeTreeData: vscode.EventEmitter<
+    FocusTreeItem | undefined | null | undefined
+  > = new vscode.EventEmitter<FocusTreeItem | undefined | null | undefined>()
+  public readonly onDidChangeTreeData: vscode.Event<FocusTreeItem | undefined | null | undefined> =
     this._onDidChangeTreeData.event
 
   private currentTask: BoardTask | null = null
@@ -119,7 +110,7 @@ export class DirbanFocusViewProvider implements vscode.TreeDataProvider<FocusTre
   }
 
   public refresh(): void {
-    this._onDidChangeTreeData.fire()
+    this._onDidChangeTreeData.fire(undefined)
   }
 
   public getTreeItem(element: FocusTreeItem): vscode.TreeItem {
@@ -144,17 +135,15 @@ export class DirbanFocusViewProvider implements vscode.TreeDataProvider<FocusTre
         task,
         this.vcsBranch,
         this.currentConfig?.branchStrategy,
-        this.isWorktree
-      )
+        this.isWorktree,
+      ),
     )
 
     // 2. Acceptance Criteria Items
     const criteria = task.document.acceptanceCriteria
     if (criteria.length > 0) {
       for (const item of criteria) {
-        items.push(
-          new FocusCriterionTreeItem(task, item.index, item.text, item.checked)
-        )
+        items.push(new FocusCriterionTreeItem(task, item.index, item.text, item.checked))
       }
     }
 

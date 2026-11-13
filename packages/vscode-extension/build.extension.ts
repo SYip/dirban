@@ -1,5 +1,5 @@
-import * as esbuild from "esbuild"
 import { resolve } from "node:path"
+import * as esbuild from "esbuild"
 
 const isWatch = process.argv.includes("--watch")
 

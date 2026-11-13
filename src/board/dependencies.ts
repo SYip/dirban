@@ -15,10 +15,7 @@ const isDoneColumn = (columnName: string): boolean => {
   return normalized.includes("done") || normalized.startsWith("archive")
 }
 
-export const isDependencyResolved = (
-  dependency: string,
-  board: Board,
-): boolean => {
+export const isDependencyResolved = (dependency: string, board: Board): boolean => {
   const trimmed = dependency.trim()
   if (!isTaskId(trimmed)) {
     // Freeform text blockers remain unresolved until explicitly unblocked
@@ -39,10 +36,7 @@ export const isDependencyResolved = (
   return false
 }
 
-export const evaluateTaskBlockers = (
-  task: BoardTask,
-  board: Board,
-): TaskBlockerEvaluation => {
+export const evaluateTaskBlockers = (task: BoardTask, board: Board): TaskBlockerEvaluation => {
   const dependencies = task.document.frontmatter.relationships?.depends_on ?? []
   if (dependencies.length === 0) {
     return {
@@ -69,4 +63,3 @@ export const evaluateTaskBlockers = (
     resolved,
   }
 }
-

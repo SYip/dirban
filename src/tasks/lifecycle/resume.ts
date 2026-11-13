@@ -1,14 +1,14 @@
-import { err, ok, type Result } from "neverthrow"
 import * as fs from "node:fs"
 import * as path from "node:path"
-import type { Board, BoardTask } from "../../board/types.ts"
+import { err, ok, type Result } from "neverthrow"
 import { findTaskByIdOrName } from "../../board/discovery.ts"
+import type { Board, BoardTask } from "../../board/types.ts"
 import { resolveFocusColumn } from "../../config/config.ts"
 import type { DirbanConfig } from "../../config/types.ts"
 import { getVcsProvider, type VersionControlProvider } from "../../vcs/index.ts"
 import {
-  resolveWorkspaceStrategy,
   type LifecycleStrategyType,
+  resolveWorkspaceStrategy,
   type WorkspaceLifecycleStrategy,
 } from "../../workspace/index.ts"
 import { unblockTask } from "../planning/block.ts"
@@ -25,8 +25,16 @@ export interface ResumeTaskSuccess {
 export type ResumeTaskError =
   | { readonly kind: "TASK_NOT_FOUND"; readonly id: string; readonly message: string }
   | { readonly kind: "TASK_NOT_BLOCKED"; readonly message: string }
-  | { readonly kind: "DIRTY_WORKING_TREE"; readonly message: string; readonly dirtyFiles: readonly string[] }
-  | { readonly kind: "HAS_ACTIVE_BLOCKERS"; readonly message: string; readonly blockers: readonly string[] }
+  | {
+      readonly kind: "DIRTY_WORKING_TREE"
+      readonly message: string
+      readonly dirtyFiles: readonly string[]
+    }
+  | {
+      readonly kind: "HAS_ACTIVE_BLOCKERS"
+      readonly message: string
+      readonly blockers: readonly string[]
+    }
   | { readonly kind: "GIT_CONFLICT"; readonly message: string }
   | { readonly kind: "FS_ERROR"; readonly message: string }
 
@@ -66,7 +74,12 @@ const resolveWorktreeOrBranch = (
 
   if (vcsCtx.repoRoot != null) {
     const worktreesDirTemplate = config.worktreesDir ?? ".worktrees/{taskId}"
-    const targetPath = vcs.deriveWorktreePath(vcsCtx.repoRoot, worktreesDirTemplate, effectiveId, "")
+    const targetPath = vcs.deriveWorktreePath(
+      vcsCtx.repoRoot,
+      worktreesDirTemplate,
+      effectiveId,
+      "",
+    )
     const createRes = vcs.createWorktree(targetPath, branchName, cwd)
     if (createRes.isOk()) {
       return { worktreePath: targetPath, branchName }
@@ -174,9 +187,10 @@ export const resumeTask = (
   // 2. Move file from backlog/ to focus column (e.g. 02-doing/)
   const tasksDir = config.tasksDir ?? "docs/tasks"
   const repoRoot = vcsCtx.repoRoot
-  const tasksRoot = repoRoot != null && fs.existsSync(repoRoot)
-    ? path.join(repoRoot, tasksDir)
-    : path.dirname(path.dirname(workingTask.filePath))
+  const tasksRoot =
+    repoRoot != null && fs.existsSync(repoRoot)
+      ? path.join(repoRoot, tasksDir)
+      : path.dirname(path.dirname(workingTask.filePath))
   const targetColDir = path.join(tasksRoot, focusColName)
   const targetFilePath = path.join(targetColDir, workingTask.filename)
 
@@ -193,7 +207,13 @@ export const resumeTask = (
   }
 
   // Also sync into worktree if active
-  syncResumedFileToWorktree(activeWorktreePath, tasksDir, focusColName, workingTask.filename, targetFilePath)
+  syncResumedFileToWorktree(
+    activeWorktreePath,
+    tasksDir,
+    focusColName,
+    workingTask.filename,
+    targetFilePath,
+  )
 
   const updatedTask: BoardTask = {
     ...workingTask,

@@ -1,10 +1,10 @@
 import { err, ok, type Result } from "neverthrow"
-import type { Board, BoardTask } from "../../board/types.ts"
 import { evaluateTaskBlockers, type TaskBlockerEvaluation } from "../../board/dependencies.ts"
 import { findTaskByIdOrName, findTaskByQuery } from "../../board/discovery.ts"
+import type { Board, BoardTask } from "../../board/types.ts"
+import type { DirbanConfig } from "../../config/types.ts"
 import { moveTask } from "../mutation/move.ts"
 import type { OperationError } from "../types.ts"
-import type { DirbanConfig } from "../../config/types.ts"
 
 const BACKLOG_COLUMN = "backlog" as const
 
@@ -66,9 +66,7 @@ export const resolveBacklogTaskId = (
 }
 
 export const partitionBacklog = (board: Board): PartitionedPlan => {
-  const backlogCol = board.columns.find(
-    (c) => c.name.toLowerCase() === BACKLOG_COLUMN,
-  )
+  const backlogCol = board.columns.find((c) => c.name.toLowerCase() === BACKLOG_COLUMN)
 
   if (backlogCol == null || backlogCol.tasks.length === 0) {
     return {
@@ -131,14 +129,10 @@ export const promoteTasks = (
     }
   }
 
-  const backlogCol = board.columns.find(
-    (c) => c.name.toLowerCase() === BACKLOG_COLUMN,
-  )
+  const backlogCol = board.columns.find((c) => c.name.toLowerCase() === BACKLOG_COLUMN)
   const backlogTasks = backlogCol?.tasks ?? []
 
-  const trimmedIds = taskIdsOrPaths
-    .map((id) => id.trim())
-    .filter((id) => id !== "")
+  const trimmedIds = taskIdsOrPaths.map((id) => id.trim()).filter((id) => id !== "")
 
   // Phase 1: Pre-validation (all-or-nothing check)
   // Resolve every task and verify it is not blocked.
@@ -218,9 +212,7 @@ export const promoteTask = (
     })
   }
 
-  const backlogCol = board.columns.find(
-    (c) => c.name.toLowerCase() === BACKLOG_COLUMN,
-  )
+  const backlogCol = board.columns.find((c) => c.name.toLowerCase() === BACKLOG_COLUMN)
   const backlogTasks = backlogCol?.tasks ?? []
 
   const resolveRes = resolveBacklogTaskId(backlogTasks, taskIdOrPath)
@@ -248,5 +240,3 @@ export const promoteTask = (
     targetColumn,
   })
 }
-
-

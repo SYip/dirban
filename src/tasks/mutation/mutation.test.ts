@@ -4,8 +4,8 @@ import * as os from "node:os"
 import * as path from "node:path"
 import { discoverBoard } from "../../board/discovery.ts"
 import { DEFAULT_CONFIG } from "../../config/config.ts"
-import { moveTask } from "./move.ts"
 import { checkTaskItem } from "./check.ts"
+import { moveTask } from "./move.ts"
 import { setTaskMetadata } from "./set.ts"
 
 const SAMPLE_TASK = `---
@@ -51,11 +51,7 @@ describe("Card Mutation Operations Tests", () => {
       const tasksDir = path.join(tempDir, "docs/tasks")
       fs.mkdirSync(path.join(tasksDir, "00-backlog"), { recursive: true })
       fs.mkdirSync(path.join(tasksDir, "01-ready"), { recursive: true })
-      fs.writeFileSync(
-        path.join(tasksDir, "00-backlog/26-001.md"),
-        SAMPLE_TASK,
-        "utf-8",
-      )
+      fs.writeFileSync(path.join(tasksDir, "00-backlog/26-001.md"), SAMPLE_TASK, "utf-8")
 
       const boardRes = discoverBoard(DEFAULT_CONFIG, tempDir)
       expect(boardRes.isOk()).toBe(true)
@@ -81,11 +77,7 @@ describe("Card Mutation Operations Tests", () => {
     try {
       const tasksDir = path.join(tempDir, "docs/tasks")
       fs.mkdirSync(path.join(tasksDir, "00-backlog"), { recursive: true })
-      fs.writeFileSync(
-        path.join(tasksDir, "00-backlog/26-001.md"),
-        SAMPLE_TASK,
-        "utf-8",
-      )
+      fs.writeFileSync(path.join(tasksDir, "00-backlog/26-001.md"), SAMPLE_TASK, "utf-8")
 
       const boardRes = discoverBoard(DEFAULT_CONFIG, tempDir)
       expect(boardRes.isOk()).toBe(true)
@@ -93,9 +85,7 @@ describe("Card Mutation Operations Tests", () => {
         const checkRes = checkTaskItem(boardRes.value, "26-001", 1)
         expect(checkRes.isOk()).toBe(true)
         if (checkRes.isOk()) {
-          expect(
-            checkRes.value.document.acceptanceCriteria[0]?.checked,
-          ).toBe(true)
+          expect(checkRes.value.document.acceptanceCriteria[0]?.checked).toBe(true)
           const content = fs.readFileSync(checkRes.value.filePath, "utf-8")
           expect(content.includes("- [x] First criterion")).toBe(true)
         }
@@ -110,11 +100,7 @@ describe("Card Mutation Operations Tests", () => {
     try {
       const tasksDir = path.join(tempDir, "docs/tasks")
       fs.mkdirSync(path.join(tasksDir, "00-backlog"), { recursive: true })
-      fs.writeFileSync(
-        path.join(tasksDir, "00-backlog/26-001.md"),
-        SAMPLE_TASK,
-        "utf-8",
-      )
+      fs.writeFileSync(path.join(tasksDir, "00-backlog/26-001.md"), SAMPLE_TASK, "utf-8")
 
       const boardRes = discoverBoard(DEFAULT_CONFIG, tempDir)
       expect(boardRes.isOk()).toBe(true)
@@ -128,10 +114,7 @@ describe("Card Mutation Operations Tests", () => {
         if (setRes.isOk()) {
           expect(setRes.value.document.frontmatter.priority).toBe("p0")
           expect(setRes.value.document.frontmatter.assigned_to).toBe("andrew")
-          expect(setRes.value.document.frontmatter.tags).toEqual([
-            "urgent",
-            "core",
-          ])
+          expect(setRes.value.document.frontmatter.tags).toEqual(["urgent", "core"])
         }
       }
     } finally {

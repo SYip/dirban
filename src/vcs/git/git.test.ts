@@ -1,15 +1,16 @@
 import { describe, expect, it } from "bun:test"
-import {
-  GitVcsProvider,
-  parseGitWorktreeListPorcelain,
-} from "./index.ts"
 import { NoopVcsProvider } from "../noop.ts"
+import { GitVcsProvider, parseGitWorktreeListPorcelain } from "./index.ts"
 
 describe("VCS Git Provider Tests", () => {
   it("Vector 9 (Git helper functions & VCS Providers): Derives deterministic branch names, worktree paths, and extracts IDs", () => {
     const gitProvider = new GitVcsProvider()
-    expect(gitProvider.deriveBranchName("task/", "26-003", "git-workflow")).toBe("task/26-003-git-workflow")
-    expect(gitProvider.deriveBranchName("feature", "26-003", "my Feature!")).toBe("feature/26-003-my-feature")
+    expect(gitProvider.deriveBranchName("task/", "26-003", "git-workflow")).toBe(
+      "task/26-003-git-workflow",
+    )
+    expect(gitProvider.deriveBranchName("feature", "26-003", "my Feature!")).toBe(
+      "feature/26-003-my-feature",
+    )
     expect(gitProvider.deriveBranchName("task/", "26-003", "")).toBe("task/26-003")
 
     const derivedPath = gitProvider.deriveWorktreePath(
@@ -24,7 +25,9 @@ describe("VCS Git Provider Tests", () => {
     expect(gitProvider.extractTaskId("26-003-my-feature")).toBe("26-003")
     expect(gitProvider.extractTaskId("26-003")).toBe("26-003")
     expect(gitProvider.extractTaskId("main")).toBe(null)
-    expect(gitProvider.extractTaskId(undefined, "/path/to/.dirban.worktrees/26-003-git-flow")).toBe("26-003")
+    expect(gitProvider.extractTaskId(undefined, "/path/to/.dirban.worktrees/26-003-git-flow")).toBe(
+      "26-003",
+    )
 
     const noopProvider = new NoopVcsProvider()
     expect(noopProvider.getContext().isAvailable).toBe(false)

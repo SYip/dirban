@@ -1,8 +1,8 @@
-import { discoverBoard } from "../../board/discovery.ts"
-import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { err, ok } from "neverthrow"
 import pc from "picocolors"
+import { discoverBoard } from "../../board/discovery.ts"
 import { toRelativePath } from "../../cli/formatters.ts"
+import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { blockTask, unblockTask } from "./block.ts"
 
 export interface BlockCommandParams {
@@ -12,10 +12,16 @@ export interface BlockCommandParams {
 
 export const parseBlock: CommandParser<BlockCommandParams> = (ctx) => {
   const taskId = ctx.positionals[1]?.trim()
-  const reasons = ctx.positionals.slice(2).map((r) => r.trim()).filter((r) => r !== "")
+  const reasons = ctx.positionals
+    .slice(2)
+    .map((r) => r.trim())
+    .filter((r) => r !== "")
 
   if (taskId == null || taskId === "" || reasons.length === 0) {
-    return err({ message: "Task ID and at least one blocker reason required. Usage: dirban block <id-or-path> <reason...>" })
+    return err({
+      message:
+        "Task ID and at least one blocker reason required. Usage: dirban block <id-or-path> <reason...>",
+    })
   }
 
   return ok({ taskId, reasons })
@@ -120,9 +126,7 @@ export const handleUnblock: CommandHandler = (ctx) => {
     ),
   )
   if (result.remainingBlockers.length > 0) {
-    console.log(
-      pc.gray(`   Remaining blockers: [${result.remainingBlockers.join(", ")}]`),
-    )
+    console.log(pc.gray(`   Remaining blockers: [${result.remainingBlockers.join(", ")}]`))
   } else {
     console.log(pc.cyan(`   All blockers cleared. Task is ready for planning / promotion.`))
   }
@@ -134,10 +138,7 @@ export const unblockCommand: CommandDefinition = {
   summary: "Remove a resolved blocker from a task",
   usage: "dirban unblock <id-or-path> [reason]",
   options: [],
-  examples: [
-    "dirban unblock 26-002",
-    "dirban unblock 26-002 'Waiting on API key'",
-  ],
+  examples: ["dirban unblock 26-002", "dirban unblock 26-002 'Waiting on API key'"],
   requiresTasksDir: true,
   parse: parseUnblock,
   execute: handleUnblock,

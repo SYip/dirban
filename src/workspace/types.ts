@@ -1,7 +1,7 @@
 import type { Result } from "neverthrow"
 import type { BoardTask } from "../board/types.ts"
 import type { DirbanConfig } from "../config/types.ts"
-import type { VersionControlProvider, VcsContext } from "../vcs/types.ts"
+import type { VcsContext, VersionControlProvider } from "../vcs/types.ts"
 
 export type LifecycleStrategyType = "directory-only" | "checkout" | "worktree" | "none"
 
@@ -42,8 +42,7 @@ export interface WorkspaceDoneResult {
   readonly message?: string
 }
 
-export type WorkspaceDoneError =
-  | { readonly kind: "GIT_ERROR"; readonly message: string }
+export type WorkspaceDoneError = { readonly kind: "GIT_ERROR"; readonly message: string }
 
 export interface WorkspaceLifecycleStrategy {
   readonly name: LifecycleStrategyType

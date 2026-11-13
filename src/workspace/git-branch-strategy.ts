@@ -2,14 +2,14 @@ import { err, ok, type Result } from "neverthrow"
 import type { BoardTask } from "../board/types.ts"
 import { extractSlugFromTask, getEffectiveTaskId } from "./slug.ts"
 import type {
+  WorkspaceDoneError,
   WorkspaceDoneOptions,
   WorkspaceDoneResult,
-  WorkspaceDoneError,
   WorkspaceLifecycleContext,
   WorkspaceLifecycleStrategy,
+  WorkspaceStartError,
   WorkspaceStartOptions,
   WorkspaceStartResult,
-  WorkspaceStartError,
 } from "./types.ts"
 
 const DEFAULT_BRANCH_PREFIX = "task/"
@@ -65,9 +65,9 @@ export class GitBranchStrategy implements WorkspaceLifecycleStrategy {
     const effectiveId = getEffectiveTaskId(task)
     const detectedId = ctx.vcs.extractTaskId(ctx.vcsCtx.currentBranch, ctx.cwd)
     const isTaskBranch =
-      detectedId != null &&
-      effectiveId !== "" &&
-      (detectedId === effectiveId || effectiveId.endsWith(detectedId))
+      detectedId != null
+      && effectiveId !== ""
+      && (detectedId === effectiveId || effectiveId.endsWith(detectedId))
 
     if (!isTaskBranch || ctx.vcsCtx.currentBranch == null) {
       return ok({
@@ -87,9 +87,7 @@ export class GitBranchStrategy implements WorkspaceLifecycleStrategy {
     }
 
     const shouldSkipMerge =
-      options?.noMerge !== undefined
-        ? options.noMerge === true
-        : ctx.config.autoMerge === false
+      options?.noMerge !== undefined ? options.noMerge === true : ctx.config.autoMerge === false
 
     if (shouldSkipMerge) {
       return ok({

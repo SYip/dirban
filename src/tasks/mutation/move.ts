@@ -1,15 +1,17 @@
-import { err, ok, type Result } from "neverthrow"
-import * as path from "node:path"
 import * as fs from "node:fs"
-import type { Board, BoardTask } from "../../board/types.ts"
+import * as path from "node:path"
+import { err, ok, type Result } from "neverthrow"
 import { findTaskByIdOrName } from "../../board/discovery.ts"
+import type { Board, BoardTask } from "../../board/types.ts"
 import type { OperationError } from "../types.ts"
 
-declare const Temporal: {
-  Now?: {
-    plainDateISO: () => { toString: () => string }
-  }
-} | undefined
+declare const Temporal:
+  | {
+      Now?: {
+        plainDateISO: () => { toString: () => string }
+      }
+    }
+  | undefined
 
 export const getIsoDate = (): string => {
   if (typeof Temporal !== "undefined" && Temporal?.Now != null) {
@@ -32,9 +34,10 @@ export const moveTask = (
     })
   }
 
-  const targetCol = board.columns.find((c) =>
-    c.name.toLowerCase() === targetColumnName.toLowerCase() ||
-    c.name.toLowerCase().endsWith(targetColumnName.toLowerCase())
+  const targetCol = board.columns.find(
+    (c) =>
+      c.name.toLowerCase() === targetColumnName.toLowerCase()
+      || c.name.toLowerCase().endsWith(targetColumnName.toLowerCase()),
   )
 
   if (targetCol == null) {
@@ -62,19 +65,18 @@ export const moveTask = (
       }),
     })
 
-    return ok(Object.freeze({
-      filePath: newFilePath,
-      filename: task.filename,
-      column: targetCol.name,
-      document: updatedDoc,
-    }))
+    return ok(
+      Object.freeze({
+        filePath: newFilePath,
+        filename: task.filename,
+        column: targetCol.name,
+        document: updatedDoc,
+      }),
+    )
   } catch (fsErr) {
     return err({
       kind: "FS_ERROR",
-      message: fsErr instanceof Error
-        ? fsErr.message
-        : "Failed to move task file on disk",
+      message: fsErr instanceof Error ? fsErr.message : "Failed to move task file on disk",
     })
   }
 }
-

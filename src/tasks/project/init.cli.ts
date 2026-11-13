@@ -1,11 +1,10 @@
 import pc from "picocolors"
-import { initializeBoard } from "./init.ts"
 import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
+import { initializeBoard } from "./init.ts"
 
 export const handleInit: CommandHandler = (ctx) => {
-  const configTarget = ctx.flags.config === "vscode" || ctx.flags.config === "dirban"
-    ? ctx.flags.config
-    : "auto"
+  const configTarget =
+    ctx.flags.config === "vscode" || ctx.flags.config === "dirban" ? ctx.flags.config : "auto"
 
   const initRes = initializeBoard(ctx.config, ctx.cwd, { configTarget })
   if (initRes.isErr()) {
@@ -14,11 +13,7 @@ export const handleInit: CommandHandler = (ctx) => {
   }
 
   console.log(
-    pc.bold(
-      pc.green(
-        `✔ Initialized Dirban board in ${pc.cyan(initRes.value.tasksDir)}:`,
-      ),
-    ),
+    pc.bold(pc.green(`✔ Initialized Dirban board in ${pc.cyan(initRes.value.tasksDir)}:`)),
   )
   for (const col of ctx.config.columns) {
     console.log(`  ├── ${pc.yellow(col)}/`)
@@ -27,15 +22,11 @@ export const handleInit: CommandHandler = (ctx) => {
 
   if (initRes.value.configFileCreated != null) {
     console.log(
-      pc.green(
-        `\n✔ Created configuration in ${pc.cyan(initRes.value.configFileCreated)}`,
-      ),
+      pc.green(`\n✔ Created configuration in ${pc.cyan(initRes.value.configFileCreated)}`),
     )
   } else if (initRes.value.configFileUpdated != null) {
     console.log(
-      pc.green(
-        `\n✔ Added dirban settings to ${pc.cyan(initRes.value.configFileUpdated)}`,
-      ),
+      pc.green(`\n✔ Added dirban settings to ${pc.cyan(initRes.value.configFileUpdated)}`),
     )
   }
 
@@ -51,11 +42,7 @@ export const initCommand: CommandDefinition = {
     { flag: "--config=<vscode|dirban>", description: "Target configuration file format" },
     { flag: "-y, --yes", description: "Accept all defaults non-interactively" },
   ],
-  examples: [
-    "dirban init",
-    "dirban init --config=dirban",
-    "dirban init -y",
-  ],
+  examples: ["dirban init", "dirban init --config=dirban", "dirban init -y"],
   requiresTasksDir: false,
   execute: handleInit,
 }

@@ -29,9 +29,9 @@
 </template>
 
 <script setup lang="ts">
+import type { BoardTask } from "@dirban/core/board/types.ts"
 import { computed } from "vue"
 import draggable from "vuedraggable"
-import type { BoardTask } from "@dirban/core/board/types.ts"
 import TaskCard from "./TaskCard.vue"
 
 const props = defineProps<{
@@ -61,7 +61,7 @@ const columnClass = computed(() => {
   return "lane-standard"
 })
 
-function handleDragChange(event: any) {
+function handleDragChange(event: { added?: { element: BoardTask } }) {
   if (event.added) {
     const task = event.added.element as BoardTask
     emit("moveTask", { task, targetColumn: props.name })

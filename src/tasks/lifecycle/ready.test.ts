@@ -1,13 +1,13 @@
 import { describe, expect, it } from "bun:test"
-import { parseReady, handleReady } from "./ready.cli.ts"
-import { parsePlan, handlePlan } from "../planning/plan.cli.ts"
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { DEFAULT_CONFIG } from "../../config/config.ts"
-import { initializeBoard } from "../project/init.ts"
-import { createTask } from "../mutation/create.ts"
 import { discoverBoard } from "../../board/discovery.ts"
+import { DEFAULT_CONFIG } from "../../config/config.ts"
+import { createTask } from "../mutation/create.ts"
+import { parsePlan } from "../planning/plan.cli.ts"
+import { initializeBoard } from "../project/init.ts"
+import { handleReady, parseReady } from "./ready.cli.ts"
 
 describe("Ready Command and Backlog Filter Tests", () => {
   it("Vector 1 (Baseline): parseReady requires at least one task ID or 'all'", () => {
@@ -52,7 +52,9 @@ describe("Ready Command and Backlog Filter Tests", () => {
       expect(exitCode).toBe(0)
 
       const updatedBoard = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
-      const inTodo = updatedBoard.columns.find((c) => c.name === "01-todo")?.tasks.find((t) => t.document.id === task.id)
+      const inTodo = updatedBoard.columns
+        .find((c) => c.name === "01-todo")
+        ?.tasks.find((t) => t.document.id === task.id)
       expect(inTodo).toBeDefined()
     } finally {
       rmSync(tempDir, { recursive: true, force: true })

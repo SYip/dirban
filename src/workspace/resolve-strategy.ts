@@ -1,6 +1,6 @@
 import type { BoardTask } from "../board/types.ts"
 import type { DirbanConfig } from "../config/types.ts"
-import type { VersionControlProvider, VcsContext } from "../vcs/types.ts"
+import type { VcsContext, VersionControlProvider } from "../vcs/types.ts"
 import { CurrentBranchStrategy } from "./current-branch-strategy.ts"
 import { DirectoryOnlyStrategy } from "./directory-only-strategy.ts"
 import { GitBranchStrategy } from "./git-branch-strategy.ts"
@@ -18,9 +18,7 @@ export const resolveWorkspaceStrategy = (
   vcsCtx: VcsContext,
   config: DirbanConfig,
 ): WorkspaceLifecycleStrategy => {
-  const isNoGitRequested =
-    options?.noGit ||
-    options?.strategy === "directory-only"
+  const isNoGitRequested = options?.noGit || options?.strategy === "directory-only"
 
   if (isNoGitRequested) {
     return new DirectoryOnlyStrategy()
@@ -60,9 +58,7 @@ export const detectWorkspaceDoneStrategy = (
   config: DirbanConfig,
   cwd: string,
 ): WorkspaceLifecycleStrategy => {
-  const isNoGitRequested =
-    options?.noGit ||
-    options?.strategy === "directory-only"
+  const isNoGitRequested = options?.noGit || options?.strategy === "directory-only"
 
   if (isNoGitRequested) {
     return new DirectoryOnlyStrategy()
@@ -107,9 +103,9 @@ export const detectWorkspaceDoneStrategy = (
   // 3. Is current branch a task branch matching this task?
   const detectedBranchId = vcs.extractTaskId(vcsCtx.currentBranch, cwd)
   const isTaskBranch =
-    detectedBranchId != null &&
-    effectiveId !== "" &&
-    (detectedBranchId === effectiveId || effectiveId.endsWith(detectedBranchId))
+    detectedBranchId != null
+    && effectiveId !== ""
+    && (detectedBranchId === effectiveId || effectiveId.endsWith(detectedBranchId))
 
   if (isTaskBranch) {
     return new GitBranchStrategy()

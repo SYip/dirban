@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test"
-import * as path from "node:path"
 import * as fs from "node:fs"
 import * as os from "node:os"
+import * as path from "node:path"
 import { DEFAULT_CONFIG } from "../config/config.ts"
 import {
   discoverBoard,
@@ -267,7 +267,9 @@ relationships:
         expect(todoTasksOnly.task.document.id).toBe("task.26-001")
       }
 
-      const multiColScoped = findTaskByQuery(reloadedTasks, "001", { column: ["01-todo", "02-doing"] })
+      const multiColScoped = findTaskByQuery(reloadedTasks, "001", {
+        column: ["01-todo", "02-doing"],
+      })
       expect(multiColScoped.kind).toBe("AMBIGUOUS")
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })

@@ -2,9 +2,9 @@ import { GitVcsProvider } from "./git/index.ts"
 import { NoopVcsProvider } from "./noop.ts"
 import type { VersionControlProvider } from "./types.ts"
 
-export * from "./types.ts"
 export * from "./git/index.ts"
 export * from "./noop.ts"
+export * from "./types.ts"
 
 /**
  * Returns the appropriate VCS provider for the given directory.
@@ -19,4 +19,3 @@ export const getVcsProvider = (cwd: string = process.cwd()): VersionControlProvi
   }
   return new NoopVcsProvider()
 }
-

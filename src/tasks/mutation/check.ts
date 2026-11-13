@@ -1,13 +1,12 @@
-import { err, ok, type Result } from "neverthrow"
-import type { Board, BoardTask } from "../../board/types.ts"
-import { findTaskByIdOrName } from "../../board/discovery.ts"
 import * as fs from "node:fs"
+import { err, ok, type Result } from "neverthrow"
+import { findTaskByIdOrName } from "../../board/discovery.ts"
+import type { Board, BoardTask } from "../../board/types.ts"
 import { LINE_SPLIT_REGEX } from "../../okf/parser.ts"
-import { getIsoDate } from "./move.ts"
 import type { OperationError } from "../types.ts"
+import { getIsoDate } from "./move.ts"
 
-const detectEol = (content: string): "\r\n" | "\n" =>
-  content.includes("\r\n") ? "\r\n" : "\n"
+const detectEol = (content: string): "\r\n" | "\n" => (content.includes("\r\n") ? "\r\n" : "\n")
 
 export const checkTaskItem = (
   board: Board,
@@ -29,8 +28,7 @@ export const checkTaskItem = (
   if (targetItem == null) {
     return err({
       kind: "INDEX_OUT_OF_BOUNDS",
-      message:
-        `Acceptance criteria item #${targetIndex} does not exist (total: ${items.length})`,
+      message: `Acceptance criteria item #${targetIndex} does not exist (total: ${items.length})`,
       index: targetIndex,
     })
   }
@@ -86,18 +84,16 @@ export const checkTaskItem = (
   try {
     fs.writeFileSync(task.filePath, updatedLines.join(eol), "utf-8")
 
-    return ok(Object.freeze({
-      ...task,
-      document: updatedDoc,
-    }))
+    return ok(
+      Object.freeze({
+        ...task,
+        document: updatedDoc,
+      }),
+    )
   } catch (fsErr) {
     return err({
       kind: "FS_ERROR",
-      message: fsErr instanceof Error
-        ? fsErr.message
-        : "Failed to save updated task checklist",
+      message: fsErr instanceof Error ? fsErr.message : "Failed to save updated task checklist",
     })
   }
 }
-
-

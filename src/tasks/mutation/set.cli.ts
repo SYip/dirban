@@ -1,8 +1,8 @@
-import { discoverBoard } from "../../board/discovery.ts"
-import type { Priority } from "../../okf/types.ts"
-import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { err, ok } from "neverthrow"
 import pc from "picocolors"
+import { discoverBoard } from "../../board/discovery.ts"
+import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
+import type { Priority } from "../../okf/types.ts"
 import { setTaskMetadata } from "./set.ts"
 
 export interface SetCommandParams {
@@ -20,9 +20,13 @@ export const parseSet: CommandParser<SetCommandParams> = (ctx) => {
     return err({ message: "Usage: dirban set <id> [options]" })
   }
 
-  const tags = ctx.flags.tags != null
-    ? ctx.flags.tags.split(",").map((t) => t.trim()).filter((t) => t !== "")
-    : undefined
+  const tags =
+    ctx.flags.tags != null
+      ? ctx.flags.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter((t) => t !== "")
+      : undefined
   const priority = ctx.flags.priority as Priority | undefined
 
   return ok({
@@ -62,11 +66,7 @@ export const handleSet: CommandHandler = (ctx) => {
     return 1
   }
 
-  console.log(
-    pc.green(
-      `✔ Updated metadata for ${setRes.value.document.frontmatter.id}`,
-    ),
-  )
+  console.log(pc.green(`✔ Updated metadata for ${setRes.value.document.frontmatter.id}`))
   return 0
 }
 

@@ -6,7 +6,7 @@ export const handlePriorities: CommandHandler = (ctx) => {
     .map((p: string) =>
       p === ctx.config.defaultPriority
         ? `${pc.bold(pc.green(p))} ${pc.gray("(default)")}`
-        : pc.cyan(p)
+        : pc.cyan(p),
     )
     .join(", ")
 
@@ -19,9 +19,7 @@ export const prioritiesCommand: CommandDefinition = {
   summary: "List available task priority levels and highlight the default",
   usage: "dirban priorities",
   options: [],
-  examples: [
-    "dirban priorities",
-  ],
+  examples: ["dirban priorities"],
   requiresTasksDir: false,
   execute: handlePriorities,
 }

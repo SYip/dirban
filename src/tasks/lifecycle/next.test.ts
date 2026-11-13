@@ -3,12 +3,12 @@ import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
 import { discoverBoard } from "../../board/discovery.ts"
+import { formatNextTaskView } from "../../cli/formatters.ts"
 import { DEFAULT_CONFIG } from "../../config/config.ts"
 import type { DirbanConfig } from "../../config/types.ts"
 import { createTask } from "../mutation/create.ts"
 import { initializeBoard } from "../project/init.ts"
 import { resolveNextTask } from "./next.ts"
-import { formatNextTaskView } from "../../cli/formatters.ts"
 
 describe("Resolve Next Task (dirban next)", () => {
   it("Vector 1 (Standard Baseline Case): Selects highest priority task from todo queue", () => {
@@ -45,7 +45,12 @@ describe("Resolve Next Task (dirban next)", () => {
         expect(nextRes.value.sourceColumn).toBe("01-todo")
         expect(nextRes.value.queueCount).toBe(3)
 
-        const formatted = formatNextTaskView(nextRes.value.task, nextRes.value.sourceColumn, nextRes.value.queueCount, tempDir)
+        const formatted = formatNextTaskView(
+          nextRes.value.task,
+          nextRes.value.sourceColumn,
+          nextRes.value.queueCount,
+          tempDir,
+        )
         expect(formatted).toContain("Next Recommended Task")
         expect(formatted).toContain("P0 Critical Task in Todo")
         expect(formatted).toContain("dirban start")

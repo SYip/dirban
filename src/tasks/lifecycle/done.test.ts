@@ -54,7 +54,9 @@ describe("Done Task Operations (doneTask)", () => {
       })._unsafeUnwrap()
 
       const boardInDevelop = discoverBoard(customWorkflowConfig, tempDir)._unsafeUnwrap()
-      const doneRes = doneTask(boardInDevelop, customWorkflowConfig, customTask.id, { cwd: tempDir })
+      const doneRes = doneTask(boardInDevelop, customWorkflowConfig, customTask.id, {
+        cwd: tempDir,
+      })
       expect(doneRes.isOk()).toBe(true)
       if (doneRes.isOk()) {
         expect(doneRes.value.task.column).toBe("test")
@@ -103,7 +105,8 @@ describe("Done Task Operations (doneTask)", () => {
       let doneHookCalled = false
       const trackingStrategy = {
         name: "directory-only" as const,
-        onStart: () => ok({ branchName: "b", strategy: "directory-only" as const, gitSkipped: true }),
+        onStart: () =>
+          ok({ branchName: "b", strategy: "directory-only" as const, gitSkipped: true }),
         onDone: () => {
           doneHookCalled = true
           return ok({ gitSkipped: true })
@@ -179,16 +182,11 @@ describe("Done Task Operations (doneTask)", () => {
       })
 
       const refreshed = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
-      const res = doneTask(
-        refreshed,
-        { ...DEFAULT_CONFIG, autoMerge: false },
-        task.id,
-        {
-          cwd: tempDir,
-          vcsProvider: mockVcs,
-          noMerge: false,
-        },
-      )
+      const res = doneTask(refreshed, { ...DEFAULT_CONFIG, autoMerge: false }, task.id, {
+        cwd: tempDir,
+        vcsProvider: mockVcs,
+        noMerge: false,
+      })
       expect(res.isOk()).toBe(true)
       expect(forcedMergeExecuted).toBe(true)
       if (res.isOk()) {
@@ -213,7 +211,9 @@ describe("Done Task Operations (doneTask)", () => {
       })._unsafeUnwrap()
 
       const boardWithBacklog = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
-      const doneBacklogRes = doneTask(boardWithBacklog, DEFAULT_CONFIG, backlogTask.id, { cwd: tempDir })
+      const doneBacklogRes = doneTask(boardWithBacklog, DEFAULT_CONFIG, backlogTask.id, {
+        cwd: tempDir,
+      })
       expect(doneBacklogRes.isErr()).toBe(true)
       if (doneBacklogRes.isErr()) {
         expect(doneBacklogRes.error.kind).toBe("INVALID_COLUMN_TRANSITION")

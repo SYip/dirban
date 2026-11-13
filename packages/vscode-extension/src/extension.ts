@@ -1,15 +1,15 @@
-import * as vscode from "vscode"
 import * as path from "node:path"
+import type { BoardTask } from "@dirban/core/board/types.ts"
 import { resolveCurrentTask } from "@dirban/core/tasks/lifecycle/current.ts"
 import { doneTask } from "@dirban/core/tasks/lifecycle/done.ts"
 import { checkTaskItem } from "@dirban/core/tasks/mutation/check.ts"
 import { createTask } from "@dirban/core/tasks/mutation/create.ts"
-import type { BoardTask } from "@dirban/core/board/types.ts"
-import { DirbanTreeDataProvider } from "./tree-provider.ts"
-import { DirbanFocusViewProvider } from "./focus-provider.ts"
-import { DirbanStatusBarController } from "./status-bar.ts"
+import * as vscode from "vscode"
 import { DirbanBoardWebviewPanel } from "./board-panel.ts"
 import { BoardStateManager } from "./board-state-manager.ts"
+import { DirbanFocusViewProvider } from "./focus-provider.ts"
+import { DirbanStatusBarController } from "./status-bar.ts"
+import { DirbanTreeDataProvider } from "./tree-provider.ts"
 
 function getWorkspaceRoot(): string {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd()
@@ -26,11 +26,9 @@ async function showMarkdownPreviewSmart(filePath: string): Promise<void> {
   // Check if a tab with this markdown preview or document is already open
   for (const group of vscode.window.tabGroups.all) {
     for (const tab of group.tabs) {
-      const isPreview =
-        tab.label === `Preview ${filename}` ||
-        tab.label === `[Preview] ${filename}` 
-        // ||
-        // tab.label.includes(filename)
+      const isPreview = tab.label === `Preview ${filename}` || tab.label === `[Preview] ${filename}`
+      // ||
+      // tab.label.includes(filename)
 
       if (isPreview) {
         if (tab.isActive) {
@@ -68,12 +66,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(statusBar)
 
   // 4. Board State Manager (Facade & Coalescing Refresh Controller)
-  const stateManager = new BoardStateManager(
-    root,
-    treeDataProvider,
-    focusDataProvider,
-    statusBar
-  )
+  const stateManager = new BoardStateManager(root, treeDataProvider, focusDataProvider, statusBar)
   context.subscriptions.push(stateManager)
 
   // Initial load
@@ -104,16 +97,16 @@ export function activate(context: vscode.ExtensionContext): void {
         context.extensionUri,
         () => stateManager.getBoard(),
         () => stateManager.getConfig(),
-        () => stateManager.refreshImmediate()
+        () => stateManager.refreshImmediate(),
       )
-    })
+    }),
   )
 
   context.subscriptions.push(
     vscode.commands.registerCommand("dirban.refreshBoard", () => {
       stateManager.refreshImmediate()
       vscode.window.showInformationMessage("Dirban board refreshed.")
-    })
+    }),
   )
 
   context.subscriptions.push(
@@ -124,7 +117,9 @@ export function activate(context: vscode.ExtensionContext): void {
         board = stateManager.getBoard()
       }
       if (!board) {
-        vscode.window.showErrorMessage("Dirban: Board not available. Please initialize board first.")
+        vscode.window.showErrorMessage(
+          "Dirban: Board not available. Please initialize board first.",
+        )
         return
       }
 
@@ -141,14 +136,14 @@ export function activate(context: vscode.ExtensionContext): void {
           label: priority,
           description: priority === config.defaultPriority ? "(Default)" : "",
         })),
-        { placeHolder: "Select task priority" }
+        { placeHolder: "Select task priority" },
       )
 
       const selectedPriority = priorityPick ? priorityPick.label : config.defaultPriority
 
       const createRes = createTask(board, {
         title: title.trim(),
-        priority: selectedPriority as any,
+        priority: selectedPriority as typeof config.defaultPriority,
         column: "backlog",
       })
 
@@ -158,10 +153,12 @@ export function activate(context: vscode.ExtensionContext): void {
       }
 
       stateManager.refreshImmediate()
-      vscode.window.showInformationMessage(`Created task ${createRes.value.id}: ${createRes.value.filename}`)
+      vscode.window.showInformationMessage(
+        `Created task ${createRes.value.id}: ${createRes.value.filename}`,
+      )
       const doc = await vscode.workspace.openTextDocument(createRes.value.filePath)
       await vscode.window.showTextDocument(doc)
-    })
+    }),
   )
 
   context.subscriptions.push(
@@ -182,12 +179,12 @@ export function activate(context: vscode.ExtensionContext): void {
 
       const task = currentRes.value.task
       await showMarkdownPreviewSmart(task.filePath)
-    })
+    }),
   )
 
   context.subscriptions.push(
     vscode.commands.registerCommand("dirban.previewCurrentTask", async () => {
-      let board = stateManager.getBoard()
+      const board = stateManager.getBoard()
       if (!board) {
         stateManager.refreshImmediate()
       }
@@ -197,12 +194,12 @@ export function activate(context: vscode.ExtensionContext): void {
         return
       }
       await showMarkdownPreviewSmart(activeTask.filePath)
-    })
+    }),
   )
 
   context.subscriptions.push(
     vscode.commands.registerCommand("dirban.editCurrentTask", async () => {
-      let board = stateManager.getBoard()
+      const board = stateManager.getBoard()
       if (!board) {
         stateManager.refreshImmediate()
       }
@@ -213,7 +210,7 @@ export function activate(context: vscode.ExtensionContext): void {
       }
       const doc = await vscode.workspace.openTextDocument(activeTask.filePath)
       await vscode.window.showTextDocument(doc)
-    })
+    }),
   )
 
   context.subscriptions.push(
@@ -236,7 +233,7 @@ export function activate(context: vscode.ExtensionContext): void {
       stateManager.refreshImmediate()
       const id = completed.task.document.id ?? completed.task.filename
       vscode.window.showInformationMessage(`Task ${id} completed and moved to done.`)
-    })
+    }),
   )
 
   context.subscriptions.push(
@@ -258,8 +255,8 @@ export function activate(context: vscode.ExtensionContext): void {
         }
 
         stateManager.refreshImmediate()
-      }
-    )
+      },
+    ),
   )
 }
 

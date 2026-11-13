@@ -6,7 +6,11 @@ export type VcsError =
   | { readonly kind: "WORKTREE_ERROR"; readonly message: string }
   | { readonly kind: "MERGE_ERROR"; readonly message: string }
   | { readonly kind: "COMMAND_ERROR"; readonly message: string }
-  | { readonly kind: "DIRTY_WORKING_TREE"; readonly message: string; readonly dirtyFiles: readonly string[] }
+  | {
+      readonly kind: "DIRTY_WORKING_TREE"
+      readonly message: string
+      readonly dirtyFiles: readonly string[]
+    }
 
 export interface WorktreeEntry {
   readonly path: string
@@ -30,9 +34,15 @@ export interface VersionControlProvider {
   resolveWorktreePath(taskIdOrTarget?: string, cwd?: string): Result<string, VcsError>
   listWorktrees(cwd?: string): Result<readonly WorktreeEntry[], VcsError>
   removeWorktree(targetPath: string, force?: boolean, cwd?: string): Result<void, VcsError>
-  switchOrCreateBranch(branchName: string, cwd?: string): Result<{ readonly alreadyOnBranch: boolean }, VcsError>
+  switchOrCreateBranch(
+    branchName: string,
+    cwd?: string,
+  ): Result<{ readonly alreadyOnBranch: boolean }, VcsError>
   createWorktree(targetPath: string, branchName: string, cwd?: string): Result<void, VcsError>
-  checkWorkingTreeClean(options?: { readonly allowedPathPrefixes?: readonly string[]; readonly cwd?: string }): Result<void, VcsError>
+  checkWorkingTreeClean(options?: {
+    readonly allowedPathPrefixes?: readonly string[]
+    readonly cwd?: string
+  }): Result<void, VcsError>
   commitFile(filePath: string, message: string, cwd?: string): Result<void, VcsError>
   autoMergeAndCleanup(options: {
     readonly taskBranch: string
@@ -42,4 +52,3 @@ export interface VersionControlProvider {
     readonly commitMessage?: string
   }): Result<{ readonly worktreeRemoved: boolean }, VcsError>
 }
-

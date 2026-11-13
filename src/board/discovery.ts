@@ -1,18 +1,12 @@
-import { err, ok, type Result } from "neverthrow"
-import * as path from "node:path"
 import * as fs from "node:fs"
+import * as path from "node:path"
+import { err, ok, type Result } from "neverthrow"
 import type { DirbanConfig } from "../config/types.ts"
 import { parseTaskDocument } from "../okf/parser.ts"
 import { getVcsProvider } from "../vcs/index.ts"
 import { buildWorktreeTaskMap, overlayWorktreeTask } from "./overlay.ts"
 import { filterTasks, sortTasks } from "./sorter.ts"
-import type {
-  Board,
-  BoardError,
-  BoardFilterOptions,
-  BoardTask,
-  Column,
-} from "./types.ts"
+import type { Board, BoardError, BoardFilterOptions, BoardTask, Column } from "./types.ts"
 
 export const discoverBoard = (
   config: DirbanConfig,
@@ -34,10 +28,10 @@ export const discoverBoard = (
     }
   } catch (statErr: unknown) {
     if (
-      typeof statErr === "object" &&
-      statErr != null &&
-      "code" in statErr &&
-      (statErr as { code?: string }).code === "ENOENT"
+      typeof statErr === "object"
+      && statErr != null
+      && "code" in statErr
+      && (statErr as { code?: string }).code === "ENOENT"
     ) {
       return err({
         kind: "DIRECTORY_NOT_FOUND",
@@ -47,9 +41,7 @@ export const discoverBoard = (
     }
     return err({
       kind: "FILE_READ_ERROR",
-      message: statErr instanceof Error
-        ? statErr.message
-        : "Cannot access tasks directory",
+      message: statErr instanceof Error ? statErr.message : "Cannot access tasks directory",
       path: rootDir,
     })
   }
@@ -64,9 +56,7 @@ export const discoverBoard = (
   } catch (readErr) {
     return err({
       kind: "FILE_READ_ERROR",
-      message: readErr instanceof Error
-        ? readErr.message
-        : "Failed to scan tasks directory",
+      message: readErr instanceof Error ? readErr.message : "Failed to scan tasks directory",
       path: rootDir,
     })
   }
@@ -90,10 +80,10 @@ export const discoverBoard = (
   const unlistedCols = discoveredDirNames
     .filter(
       (name) =>
-        !config.columns.includes(name) &&
-        !orderedColNames.includes(name) &&
-        name.toLowerCase() !== "archive" &&
-        !name.toLowerCase().endsWith("-archive"),
+        !config.columns.includes(name)
+        && !orderedColNames.includes(name)
+        && name.toLowerCase() !== "archive"
+        && !name.toLowerCase().endsWith("-archive"),
     )
     .sort((a, b) => a.localeCompare(b))
 
@@ -102,8 +92,8 @@ export const discoverBoard = (
   // 4. Archive always on the far right (if present in discovered directories)
   const archiveDirs = discoveredDirNames.filter(
     (name) =>
-      (name.toLowerCase() === "archive" || name.toLowerCase().endsWith("-archive")) &&
-      !orderedColNames.includes(name),
+      (name.toLowerCase() === "archive" || name.toLowerCase().endsWith("-archive"))
+      && !orderedColNames.includes(name),
   )
   orderedColNames.push(...archiveDirs)
 
@@ -158,26 +148,26 @@ export const discoverBoard = (
     }
 
     const filtered = filterTasks(taskList, options)
-    const sorted = sortTasks(
-      filtered,
-      options?.sortMode ?? "priority",
-      config.priorities,
-    )
+    const sorted = sortTasks(filtered, options?.sortMode ?? "priority", config.priorities)
 
     totalTasks += sorted.length
-    columns.push(Object.freeze({
-      name: colName,
-      path: colPath,
-      orderIndex: i,
-      tasks: Object.freeze(sorted),
-    }))
+    columns.push(
+      Object.freeze({
+        name: colName,
+        path: colPath,
+        orderIndex: i,
+        tasks: Object.freeze(sorted),
+      }),
+    )
   }
 
-  return ok(Object.freeze({
-    rootDir,
-    columns: Object.freeze(columns),
-    totalTasks,
-  }))
+  return ok(
+    Object.freeze({
+      rootDir,
+      columns: Object.freeze(columns),
+      totalTasks,
+    }),
+  )
 }
 
 export type LookupMatchResult =
@@ -185,7 +175,7 @@ export type LookupMatchResult =
   | { readonly kind: "NOT_FOUND" }
   | { readonly kind: "AMBIGUOUS"; readonly matches: readonly BoardTask[] }
 
-const TASK_SUFFIX_REGEX = /(?:^|[\.-])(\d{1,4})(?:\.md)?$/
+const TASK_SUFFIX_REGEX = /(?:^|[.-])(\d{1,4})(?:\.md)?$/
 
 /**
  * Checks if a task matches an exact identifier (ID, frontmatter ID, filename, or filepath).
@@ -198,11 +188,11 @@ export const isTaskExactMatch = (task: BoardTask, query: string): boolean => {
   const filePath = task.filePath.toLowerCase()
 
   return (
-    taskId === normalizedQuery ||
-    filename === normalizedQuery ||
-    fileStem === normalizedQuery ||
-    filePath.endsWith(`/${normalizedQuery}`) ||
-    filePath.endsWith(`/${normalizedQuery}.md`)
+    taskId === normalizedQuery
+    || filename === normalizedQuery
+    || fileStem === normalizedQuery
+    || filePath.endsWith(`/${normalizedQuery}`)
+    || filePath.endsWith(`/${normalizedQuery}.md`)
   )
 }
 
@@ -250,11 +240,12 @@ export const findTaskByQuery = (
   query: string,
   options?: TaskQueryOptions,
 ): LookupMatchResult => {
-  const scopedTasks = options?.column != null
-    ? Array.isArray(options.column)
-      ? tasks.filter((t) => (options.column as readonly string[]).includes(t.column))
-      : tasks.filter((t) => t.column === options.column)
-    : tasks
+  const scopedTasks =
+    options?.column != null
+      ? Array.isArray(options.column)
+        ? tasks.filter((t) => (options.column as readonly string[]).includes(t.column))
+        : tasks.filter((t) => t.column === options.column)
+      : tasks
 
   // Tier 1: Exact Match
   const exact = scopedTasks.find((t) => isTaskExactMatch(t, query))
@@ -307,10 +298,7 @@ export const getAllBoardTasks = (board: Board): readonly BoardTask[] =>
  * - Exact file stem without extension (e.g., "26-001-fix-auth")
  * - Exact relative or absolute file path
  */
-export const findTaskExact = (
-  board: Board,
-  idOrPath: string,
-): BoardTask | null => {
+export const findTaskExact = (board: Board, idOrPath: string): BoardTask | null => {
   const allTasks = getAllBoardTasks(board)
   const match = allTasks.find((t) => isTaskExactMatch(t, idOrPath))
   return match ?? null
@@ -320,10 +308,7 @@ export const findTaskExact = (
  * Resolves a task for read-only operations (e.g., `view`).
  * Uses findTaskByQuery with fuzzy matching enabled across the entire board.
  */
-export const findTaskWithFuzzy = (
-  board: Board,
-  query: string,
-): LookupMatchResult => {
+export const findTaskWithFuzzy = (board: Board, query: string): LookupMatchResult => {
   const allTasks = getAllBoardTasks(board)
   return findTaskByQuery(allTasks, query, { enableFuzzy: true })
 }
@@ -332,10 +317,7 @@ export const findTaskWithFuzzy = (
  * Backward-compatible exact task lookup. Supports Tier 1 and Tier 2 resolution
  * across all board columns.
  */
-export const findTaskByIdOrName = (
-  board: Board,
-  idOrPath: string,
-): BoardTask | null => {
+export const findTaskByIdOrName = (board: Board, idOrPath: string): BoardTask | null => {
   const allTasks = getAllBoardTasks(board)
   const res = findTaskByQuery(allTasks, idOrPath)
   return res.kind === "FOUND" ? res.task : null

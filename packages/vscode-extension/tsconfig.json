@@ -20,9 +20,5 @@
       "@dirban/core/*": ["../../src/*"]
     }
   },
-  "include": [
-    "src/**/*",
-    "build.extension.ts",
-    "vite.config.ts"
-  ]
+  "include": ["src/**/*", "build.extension.ts", "vite.config.ts"]
 }

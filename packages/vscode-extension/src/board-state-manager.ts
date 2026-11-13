@@ -1,14 +1,14 @@
-import * as vscode from "vscode"
-import { loadConfig } from "@dirban/core/config/config.ts"
 import { discoverBoard } from "@dirban/core/board/discovery.ts"
+import type { Board, BoardTask } from "@dirban/core/board/types.ts"
+import { loadConfig } from "@dirban/core/config/config.ts"
+import type { DirbanConfig } from "@dirban/core/config/types.ts"
 import { resolveCurrentTask } from "@dirban/core/tasks/lifecycle/current.ts"
 import { getVcsProvider } from "@dirban/core/vcs/index.ts"
-import type { Board, BoardTask } from "@dirban/core/board/types.ts"
-import type { DirbanConfig } from "@dirban/core/config/types.ts"
-import type { DirbanTreeDataProvider } from "./tree-provider.ts"
+import type * as vscode from "vscode"
+import { DirbanBoardWebviewPanel } from "./board-panel.ts"
 import type { DirbanFocusViewProvider } from "./focus-provider.ts"
 import type { DirbanStatusBarController } from "./status-bar.ts"
-import { DirbanBoardWebviewPanel } from "./board-panel.ts"
+import type { DirbanTreeDataProvider } from "./tree-provider.ts"
 
 const REFRESH_DEBOUNCE_MS = 100
 
@@ -22,7 +22,7 @@ export class BoardStateManager implements vscode.Disposable {
     private readonly workspaceRoot: string,
     private readonly treeProvider: DirbanTreeDataProvider,
     private readonly focusProvider: DirbanFocusViewProvider,
-    private readonly statusBar: DirbanStatusBarController
+    private readonly statusBar: DirbanStatusBarController,
   ) {
     const configRes = loadConfig(workspaceRoot)
     this.config = configRes.isOk() ? configRes.value : ({} as DirbanConfig)
@@ -60,7 +60,7 @@ export class BoardStateManager implements vscode.Disposable {
           name: c.name,
           tasks: c.tasks,
         })),
-        this.config
+        this.config,
       )
 
       // Resolve current active task
@@ -72,8 +72,9 @@ export class BoardStateManager implements vscode.Disposable {
         this.activeFocusedTask = currentRes.value.task
         const taskId = this.activeFocusedTask.document.id || this.activeFocusedTask.filename
         const isWorktree = Boolean(
-          vcsContext.isWorktree ||
-            (vcsContext.repoRoot && this.workspaceRoot.toLowerCase().includes(taskId.toLowerCase()))
+          vcsContext.isWorktree
+            || (vcsContext.repoRoot
+              && this.workspaceRoot.toLowerCase().includes(taskId.toLowerCase())),
         )
 
         this.focusProvider.updateFocus(
@@ -81,13 +82,13 @@ export class BoardStateManager implements vscode.Disposable {
           this.config,
           vcsContext.currentBranch,
           undefined,
-          isWorktree
+          isWorktree,
         )
         this.statusBar.update(
           this.activeFocusedTask,
           vcsContext.currentBranch,
           this.config?.branchStrategy,
-          isWorktree
+          isWorktree,
         )
       } else {
         this.activeFocusedTask = null
@@ -95,7 +96,7 @@ export class BoardStateManager implements vscode.Disposable {
           null,
           this.config,
           vcsContext.currentBranch,
-          currentRes.error.message
+          currentRes.error.message,
         )
         this.statusBar.update(null)
       }

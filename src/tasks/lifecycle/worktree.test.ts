@@ -74,10 +74,26 @@ describe("Worktree Audit & Prune Tests", () => {
     const vcs = createMockVcs(
       [
         { path: "/tmp/repo", branchRef: "refs/heads/main", taskId: null },
-        { path: "/tmp/repo/.worktrees/26-001", branchRef: "refs/heads/task/26-001", taskId: "26-001" },
-        { path: "/tmp/repo/.worktrees/26-002", branchRef: "refs/heads/task/26-002", taskId: "26-002" },
-        { path: "/tmp/repo/.worktrees/26-003", branchRef: "refs/heads/task/26-003", taskId: "26-003" },
-        { path: "/tmp/repo/.worktrees/26-999", branchRef: "refs/heads/task/26-999", taskId: "26-999" },
+        {
+          path: "/tmp/repo/.worktrees/26-001",
+          branchRef: "refs/heads/task/26-001",
+          taskId: "26-001",
+        },
+        {
+          path: "/tmp/repo/.worktrees/26-002",
+          branchRef: "refs/heads/task/26-002",
+          taskId: "26-002",
+        },
+        {
+          path: "/tmp/repo/.worktrees/26-003",
+          branchRef: "refs/heads/task/26-003",
+          taskId: "26-003",
+        },
+        {
+          path: "/tmp/repo/.worktrees/26-999",
+          branchRef: "refs/heads/task/26-999",
+          taskId: "26-999",
+        },
       ],
       new Set(["/tmp/repo/.worktrees/26-003"]),
     )
@@ -105,9 +121,21 @@ describe("Worktree Audit & Prune Tests", () => {
     const vcs = createMockVcs(
       [
         { path: "/tmp/repo", branchRef: "refs/heads/main", taskId: null },
-        { path: "/tmp/repo/.worktrees/26-001", branchRef: "refs/heads/task/26-001", taskId: "26-001" },
-        { path: "/tmp/repo/.worktrees/26-003", branchRef: "refs/heads/task/26-003", taskId: "26-003" },
-        { path: "/tmp/repo/.worktrees/26-999", branchRef: "refs/heads/task/26-999", taskId: "26-999" },
+        {
+          path: "/tmp/repo/.worktrees/26-001",
+          branchRef: "refs/heads/task/26-001",
+          taskId: "26-001",
+        },
+        {
+          path: "/tmp/repo/.worktrees/26-003",
+          branchRef: "refs/heads/task/26-003",
+          taskId: "26-003",
+        },
+        {
+          path: "/tmp/repo/.worktrees/26-999",
+          branchRef: "refs/heads/task/26-999",
+          taskId: "26-999",
+        },
       ],
       new Set(["/tmp/repo/.worktrees/26-003"]),
       removedPaths,
@@ -132,7 +160,11 @@ describe("Worktree Audit & Prune Tests", () => {
     const vcs = createMockVcs(
       [
         { path: "/tmp/repo", branchRef: "refs/heads/main", taskId: null },
-        { path: "/tmp/repo/.worktrees/26-003", branchRef: "refs/heads/task/26-003", taskId: "26-003" },
+        {
+          path: "/tmp/repo/.worktrees/26-003",
+          branchRef: "refs/heads/task/26-003",
+          taskId: "26-003",
+        },
       ],
       new Set(["/tmp/repo/.worktrees/26-003"]),
       removedPaths,

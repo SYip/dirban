@@ -6,7 +6,6 @@ import { discoverBoard } from "../../board/discovery.ts"
 import { DEFAULT_CONFIG } from "../../config/config.ts"
 import { createTask } from "../mutation/create.ts"
 import { initializeBoard } from "../project/init.ts"
-import { moveTask } from "../mutation/move.ts"
 import { resolveCurrentTask } from "./current.ts"
 
 describe("Current Task Resolution (resolveCurrentTask)", () => {

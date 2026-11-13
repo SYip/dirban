@@ -1,7 +1,7 @@
-import { discoverBoard } from "../../board/discovery.ts"
-import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
 import pc from "picocolors"
+import { discoverBoard } from "../../board/discovery.ts"
 import { toRelativePath } from "../../cli/formatters.ts"
+import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
 import { archiveTasks } from "./archive.ts"
 
 export const handleArchive: CommandHandler = (ctx) => {
@@ -24,11 +24,7 @@ export const handleArchive: CommandHandler = (ctx) => {
     const singleTask = archivedTasks[0]
     const taskIdDisplay = singleTask.document.id ?? singleTask.filename
     const relPath = toRelativePath(singleTask.filePath, ctx.cwd)
-    console.log(
-      pc.green(
-        `✔ Archived task ${taskIdDisplay}: ${pc.cyan(relPath)}`,
-      ),
-    )
+    console.log(pc.green(`✔ Archived task ${taskIdDisplay}: ${pc.cyan(relPath)}`))
   } else {
     const relTargetDir = toRelativePath(archiveRes.value.targetDirectory, ctx.cwd)
     console.log(
@@ -45,10 +41,7 @@ export const archiveCommand: CommandDefinition = {
   summary: "Archive completed tasks directly to archive/",
   usage: "dirban archive [<id>|all]",
   options: [],
-  examples: [
-    "dirban archive all",
-    "dirban archive 26-001",
-  ],
+  examples: ["dirban archive all", "dirban archive 26-001"],
   requiresTasksDir: true,
   execute: handleArchive,
 }

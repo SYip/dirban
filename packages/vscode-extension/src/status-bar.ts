@@ -1,5 +1,5 @@
-import * as vscode from "vscode"
 import type { BoardTask } from "@dirban/core/board/types.ts"
+import * as vscode from "vscode"
 
 const MAX_STATUS_BAR_TITLE_LENGTH = 25
 const TRUNCATION_SLICE_LENGTH = 22
@@ -8,10 +8,7 @@ export class DirbanStatusBarController implements vscode.Disposable {
   private readonly statusBarItem: vscode.StatusBarItem
 
   constructor() {
-    this.statusBarItem = vscode.window.createStatusBarItem(
-      vscode.StatusBarAlignment.Left,
-      100
-    )
+    this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100)
     this.statusBarItem.command = "dirban.focusCurrentTask"
   }
 
@@ -19,7 +16,7 @@ export class DirbanStatusBarController implements vscode.Disposable {
     task: BoardTask | null,
     vcsBranch?: string,
     branchStrategy?: string,
-    isWorktree?: boolean
+    isWorktree?: boolean,
   ): void {
     if (!task) {
       this.statusBarItem.hide()
@@ -59,7 +56,7 @@ export class DirbanStatusBarController implements vscode.Disposable {
 
     this.statusBarItem.text = `$(checklist) ${id} ${truncatedTitle} ${countPart}`.trim()
     this.statusBarItem.tooltip = new vscode.MarkdownString(
-      `**Dirban Active Task: ${id}**\n\n${title}\n\nStatus: \`${task.column}\` | Priority: \`${task.document.priority ?? "p2"}\`${branchColorWarning}\n\n*Click to focus task / open preview*`
+      `**Dirban Active Task: ${id}**\n\n${title}\n\nStatus: \`${task.column}\` | Priority: \`${task.document.priority ?? "p2"}\`${branchColorWarning}\n\n*Click to focus task / open preview*`,
     )
     this.statusBarItem.show()
   }

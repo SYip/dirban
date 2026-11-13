@@ -3,9 +3,7 @@ import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
 
 export const printHelp = (): void => {
   console.log(`
-${
-    pc.bold(pc.cyan("Dirban (dirban)"))
-  } - Zero-Database, Agent-Native Kanban Backed by Git & OKF
+${pc.bold(pc.cyan("Dirban (dirban)"))} - Zero-Database, Agent-Native Kanban Backed by Git & OKF
 
 ${pc.bold("USAGE:")}
   dirban [command] [options]
@@ -89,11 +87,7 @@ export const helpCommand: CommandDefinition = {
   summary: "Show general help or command-specific usage",
   usage: "dirban help [command]\n       dirban <command> --help",
   options: [],
-  examples: [
-    "dirban help",
-    "dirban help plan",
-    "dirban start --help",
-  ],
+  examples: ["dirban help", "dirban help plan", "dirban start --help"],
   requiresTasksDir: false,
   execute: handleHelp,
 }

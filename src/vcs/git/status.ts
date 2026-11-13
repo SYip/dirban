@@ -1,7 +1,7 @@
-import { err, ok, type Result } from "neverthrow"
 import { spawnSync } from "node:child_process"
-import { LINE_SPLIT_REGEX } from "./git.ts"
+import { err, ok, type Result } from "neverthrow"
 import type { VcsContext, VcsError } from "../types.ts"
+import { LINE_SPLIT_REGEX } from "./git.ts"
 
 export interface CheckCleanOptions {
   readonly allowedPathPrefixes?: readonly string[]
@@ -22,11 +22,11 @@ export const checkGitWorkingTreeClean = (
   }
 
   try {
-    const statusRes = spawnSync(
-      "git",
-      ["status", "--porcelain=v1", "-uall"],
-      { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
-    )
+    const statusRes = spawnSync("git", ["status", "--porcelain=v1", "-uall"], {
+      cwd,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    })
 
     if (statusRes.status !== 0) {
       return err({
@@ -46,7 +46,7 @@ export const checkGitWorkingTreeClean = (
     for (const line of lines) {
       const rawPath = line.slice(3).trim()
       const filePath = rawPath.includes(" -> ")
-        ? rawPath.split(" -> ")[1]?.trim() ?? rawPath
+        ? (rawPath.split(" -> ")[1]?.trim() ?? rawPath)
         : rawPath
 
       const isAllowed = allowed.some((prefix) => filePath.startsWith(prefix))

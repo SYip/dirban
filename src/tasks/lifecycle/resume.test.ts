@@ -2,15 +2,18 @@ import { describe, expect, it } from "bun:test"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
-import { ok, err } from "neverthrow"
+import { err, ok } from "neverthrow"
 import { discoverBoard } from "../../board/discovery.ts"
 import { DEFAULT_CONFIG } from "../../config/config.ts"
+import type { VersionControlProvider } from "../../vcs/types.ts"
 import { createTask } from "../mutation/create.ts"
 import { blockTask } from "../planning/block.ts"
 import { resumeTask } from "./resume.ts"
-import type { VersionControlProvider, VcsContext, VcsError } from "../../vcs/types.ts"
 
-const createMockVcs = (tempDir: string, overrides?: Partial<VersionControlProvider>): VersionControlProvider => ({
+const createMockVcs = (
+  tempDir: string,
+  overrides?: Partial<VersionControlProvider>,
+): VersionControlProvider => ({
   name: "mock-vcs",
   getContext: () => ({ isAvailable: true, repoRoot: tempDir, currentBranch: "main" }),
   extractTaskId: () => null,
@@ -111,11 +114,12 @@ describe("Resume Task Operations (resumeTask)", () => {
     const boardWithTask = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
 
     const dirtyVcs = createMockVcs(tempDir, {
-      checkWorkingTreeClean: () => err({
-        kind: "DIRTY_WORKING_TREE",
-        message: "Working directory has dirty files",
-        dirtyFiles: ["src/index.ts"],
-      }),
+      checkWorkingTreeClean: () =>
+        err({
+          kind: "DIRTY_WORKING_TREE",
+          message: "Working directory has dirty files",
+          dirtyFiles: ["src/index.ts"],
+        }),
     })
 
     const resumeRes = resumeTask(boardWithTask, DEFAULT_CONFIG, task.id, {

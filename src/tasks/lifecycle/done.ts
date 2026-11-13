@@ -1,19 +1,22 @@
-import { ok, err, type Result } from "neverthrow"
-import type { Board, BoardTask } from "../../board/types.ts"
+import { err, ok, type Result } from "neverthrow"
 import { findTaskByIdOrName, findTaskExact } from "../../board/discovery.ts"
+import type { Board, BoardTask } from "../../board/types.ts"
+import {
+  resolveFocusColumn,
+  resolveNextColumn,
+  resolvePreviousColumn,
+} from "../../config/config.ts"
 import type { DirbanConfig } from "../../config/types.ts"
-import { resolveFocusColumn, resolveNextColumn, resolvePreviousColumn } from "../../config/config.ts"
-import { moveTask } from "../mutation/move.ts"
-import { archiveTasks } from "../mutation/archive.ts"
-import { resolveCurrentTask } from "./current.ts"
 import { getVcsProvider, type VersionControlProvider } from "../../vcs/index.ts"
 import {
   detectWorkspaceDoneStrategy,
   type LifecycleStrategyType,
-  type WorkspaceLifecycleStrategy,
   type WorkspaceDoneResult,
+  type WorkspaceLifecycleStrategy,
 } from "../../workspace/index.ts"
-import type { OperationError } from "../types.ts"
+import { archiveTasks } from "../mutation/archive.ts"
+import { moveTask } from "../mutation/move.ts"
+import { resolveCurrentTask } from "./current.ts"
 
 export interface DoneTaskSuccess {
   readonly task: BoardTask
@@ -86,8 +89,9 @@ export const doneTask = (
     if (focusColName != null && taskToDone.column !== focusColName) {
       const displayId = taskToDone.document.id ?? taskToDone.filename
       const isCompleted =
-        taskToDone.column === "archive" ||
-        (config.columns.length > 0 && taskToDone.column === config.columns[config.columns.length - 1])
+        taskToDone.column === "archive"
+        || (config.columns.length > 0
+          && taskToDone.column === config.columns[config.columns.length - 1])
 
       if (isCompleted) {
         return err({
@@ -146,7 +150,12 @@ export const doneTask = (
   let updatedTask: BoardTask = taskToDone
 
   if (focusColName == null) {
-    const archiveResult = archiveTasks(board, config, taskToDone.document.id ?? taskToDone.filename, cwd)
+    const archiveResult = archiveTasks(
+      board,
+      config,
+      taskToDone.document.id ?? taskToDone.filename,
+      cwd,
+    )
     if (archiveResult.isErr()) {
       return err({
         kind: "MOVE_ERROR",
@@ -179,8 +188,8 @@ export const doneTask = (
   // 4. VCS branch & worktree auto-merge delegated to lifecycle strategy (with automatic runtime detection)
   const vcsCtx = vcs.getContext(cwd)
   const strategy =
-    options?.workspaceStrategy ??
-    detectWorkspaceDoneStrategy(updatedTask, options, vcsCtx, vcs, config, cwd)
+    options?.workspaceStrategy
+    ?? detectWorkspaceDoneStrategy(updatedTask, options, vcsCtx, vcs, config, cwd)
   const workspaceCtx = { vcs, vcsCtx, config, cwd }
 
   const doneResult = strategy.onDone(updatedTask, workspaceCtx, options)

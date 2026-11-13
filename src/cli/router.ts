@@ -1,86 +1,29 @@
 import pc from "picocolors"
-import type { CliContext, CommandDefinition, CommandHandler } from "./types.ts"
-import {
-  currentCommand,
-  handleCurrent,
-} from "../tasks/lifecycle/current.cli.ts"
-import {
-  doneCommand,
-  handleDone,
-} from "../tasks/lifecycle/done.cli.ts"
-import {
-  handleNext,
-  nextCommand,
-} from "../tasks/lifecycle/next.cli.ts"
-import {
-  handlePath,
-  pathCommand,
-} from "../tasks/lifecycle/path.cli.ts"
-import {
-  handleStart,
-  startCommand,
-} from "../tasks/lifecycle/start.cli.ts"
-import {
-  handleResume,
-  resumeCommand,
-} from "../tasks/lifecycle/resume.cli.ts"
-import {
-  pruneCommand,
-  worktreeCommand,
-} from "../tasks/lifecycle/worktree.cli.ts"
-import {
-  handleReady,
-  readyCommand,
-} from "../tasks/lifecycle/ready.cli.ts"
-import {
-  archiveCommand,
-  handleArchive,
-} from "../tasks/mutation/archive.cli.ts"
-import {
-  checkCommand,
-  handleCheck,
-} from "../tasks/mutation/check.cli.ts"
-import {
-  handleNew,
-  newCommand,
-} from "../tasks/mutation/create.cli.ts"
-import {
-  handleMove,
-  moveCommand,
-} from "../tasks/mutation/move.cli.ts"
-import {
-  handleSet,
-  setCommand,
-} from "../tasks/mutation/set.cli.ts"
-import { boardCommand, handleBoard, handleView, viewCommand } from "../board/board.cli.ts"
-import {
-  handleNextId,
-  nextIdCommand,
-} from "../tasks/mutation/next-id.cli.ts"
-import {
-  handleHelp,
-  helpCommand,
-  printHelp,
-} from "../tasks/project/help.cli.ts"
-import {
-  handleInit,
-  initCommand,
-} from "../tasks/project/init.cli.ts"
-import {
-  handlePriorities,
-  prioritiesCommand,
-} from "../tasks/project/priorities.cli.ts"
+import { boardCommand, viewCommand } from "../board/board.cli.ts"
+import { validateConfig } from "../config/config.ts"
+import { currentCommand, } from "../tasks/lifecycle/current.cli.ts"
+import { doneCommand, } from "../tasks/lifecycle/done.cli.ts"
+import { nextCommand } from "../tasks/lifecycle/next.cli.ts"
+import { pathCommand } from "../tasks/lifecycle/path.cli.ts"
+import { readyCommand } from "../tasks/lifecycle/ready.cli.ts"
+import { resumeCommand } from "../tasks/lifecycle/resume.cli.ts"
+import { startCommand } from "../tasks/lifecycle/start.cli.ts"
+import { pruneCommand, worktreeCommand } from "../tasks/lifecycle/worktree.cli.ts"
+import { archiveCommand, } from "../tasks/mutation/archive.cli.ts"
+import { checkCommand, } from "../tasks/mutation/check.cli.ts"
+import { newCommand } from "../tasks/mutation/create.cli.ts"
+import { moveCommand } from "../tasks/mutation/move.cli.ts"
+import { nextIdCommand } from "../tasks/mutation/next-id.cli.ts"
+import { setCommand } from "../tasks/mutation/set.cli.ts"
 import {
   blockCommand,
-  handleBlock,
-  handleUnblock,
   unblockCommand,
 } from "../tasks/planning/block.cli.ts"
-import {
-  handlePlan,
-  planCommand,
-} from "../tasks/planning/plan.cli.ts"
-import { validateConfig } from "../config/config.ts"
+import { planCommand } from "../tasks/planning/plan.cli.ts"
+import { helpCommand, } from "../tasks/project/help.cli.ts"
+import { initCommand } from "../tasks/project/init.cli.ts"
+import { prioritiesCommand } from "../tasks/project/priorities.cli.ts"
+import type { CliContext, CommandDefinition, } from "./types.ts"
 
 export const ALL_COMMANDS: readonly CommandDefinition[] = Object.freeze([
   initCommand,
@@ -117,7 +60,7 @@ export const findCommandDefinition = (nameOrAlias: string): CommandDefinition | 
 }
 
 export const printCommandHelp = (cmd: CommandDefinition): void => {
-  console.log(`\n${pc.bold(pc.cyan("dirban " + cmd.name))} - ${cmd.summary}\n`)
+  console.log(`\n${pc.bold(pc.cyan(`dirban ${cmd.name}`))} - ${cmd.summary}\n`)
 
   console.log(`${pc.bold("USAGE:")}`)
   for (const line of cmd.usage.split("\n")) {
@@ -156,9 +99,8 @@ ${pc.bold("COMMANDS:")}`)
 
   for (const cmd of ALL_COMMANDS) {
     if (cmd.name === "help") continue
-    const aliasStr = cmd.aliases != null && cmd.aliases.length > 0
-      ? ` (aliases: ${cmd.aliases.join(", ")})`
-      : ""
+    const aliasStr =
+      cmd.aliases != null && cmd.aliases.length > 0 ? ` (aliases: ${cmd.aliases.join(", ")})` : ""
     console.log(`  ${pc.yellow(cmd.name.padEnd(16))} ${cmd.summary}${pc.gray(aliasStr)}`)
   }
 
@@ -167,10 +109,7 @@ Run "${pc.cyan("dirban <command> --help")}" or "${pc.cyan("dirban help <command>
 `)
 }
 
-export const dispatchCommand = async (
-  commandName: string,
-  ctx: CliContext,
-): Promise<number> => {
+export const dispatchCommand = async (commandName: string, ctx: CliContext): Promise<number> => {
   // Support 'worktree add' compound command as an alias to 'start'
   if (commandName === "worktree" && ctx.positionals[1] === "add") {
     return dispatchCommand("start", ctx)
@@ -193,9 +132,7 @@ export const dispatchCommand = async (
   const cmdDef = findCommandDefinition(commandName)
   if (cmdDef == null) {
     console.error(
-      pc.red(
-        `Unknown command: ${commandName}. Run "dirban --help" for available commands.`,
-      ),
+      pc.red(`Unknown command: ${commandName}. Run "dirban --help" for available commands.`),
     )
     return 1
   }
@@ -230,4 +167,3 @@ export const dispatchCommand = async (
 }
 
 export { printGlobalHelp as printHelp }
-
