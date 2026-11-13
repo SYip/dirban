@@ -8,8 +8,7 @@ import { initializeBoard } from "../tasks/project/init.ts"
 import { dispatchCommand } from "./router.ts"
 import type { CliContext } from "./types.ts"
 
-const ANSI_ESCAPE_REGEX = /\x1b\[[0-9;]*m/g
-const stripAnsi = (str: string): string => str.replace(ANSI_ESCAPE_REGEX, "")
+const stripAnsi = (str: string): string => Bun.stripANSI(str)
 
 const MOCK_CONFIG: DirbanConfig = {
   tasksDir: "docs/tasks",
@@ -462,7 +461,9 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const archiveExit = await dispatchCommand("archive", archiveCtx)
       expect(archiveExit).toBe(0)
-      expect(stripAnsi(output)).toContain("✔ Archived task 26-001: archive/26-001-standardize-path-test.md")
+      expect(stripAnsi(output)).toContain(
+        "✔ Archived task 26-001: archive/26-001-standardize-path-test.md",
+      )
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
       console.log = origLog
