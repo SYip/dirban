@@ -72,7 +72,7 @@ const commitStartMoveToTarget = (
   const commitMsg = `chore(task): start ${displayId} ${taskTitle}`.trim()
   const commitRes = vcs.commitFile(filePath, commitMsg, cwd)
 
-  if (commitRes.isErr() && commitRes.error.kind === "BRANCH_CONFLICT") {
+  if (commitRes.isErr()) {
     return err({
       kind: "GIT_CONFLICT",
       message: commitRes.error.message,

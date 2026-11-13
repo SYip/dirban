@@ -51,6 +51,7 @@ description: "TypeScript standards: strict typing, no semicolons, pure functions
 ## 7. Robust Error Handling with `neverthrow`
 * **Explicit Result Types**: Avoid throwing unexpected exceptions in domain logic.
 * Use `neverthrow` (`Result<T, E>`, `ok`, `err`) to make success and failure branches explicit and force callers to handle errors at compile time.
+* **No Silent Errors**: Do not swallow errors or fall back to `ok(...)` when an operation fails, unless explicitly required by design (in which case document the rationale).
 
 ## 8. Guard Clauses, Equality & Control Flow
 * **Null & Undefined Checks**: Prefer using `== null` (and `!= null`) to check for both `null` and `undefined` simultaneously, unless they explicitly need to be differentiated and checked separately (in which case use `=== null` or `=== undefined`).
