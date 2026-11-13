@@ -6,7 +6,11 @@ import type {
   VcsContext,
   VcsError,
   VersionControlProvider,
-} from "./types.ts"
+  WorktreeEntry,
+} from "../types.ts"
+
+import { checkGitWorkingTreeClean } from "./status.ts"
+import { commitSingleGitFile } from "./commit.ts"
 
 export const TASK_ID_EXTRACT_REGEX = /(?:^|\/)(?:task\/)?([0-9]{2}-[0-9]+)(?:-[^/]*)?$/
 export const SLUG_CLEANUP_REGEX = /[^a-z0-9]+/g
@@ -210,6 +214,71 @@ export class GitVcsProvider implements VersionControlProvider {
     })
   }
 
+  listWorktrees(cwd: string = process.cwd()): Result<readonly WorktreeEntry[], VcsError> {
+    const ctx = this.getContext(cwd)
+    if (!ctx.isAvailable || ctx.repoRoot == null) {
+      return err({
+        kind: "VCS_NOT_AVAILABLE",
+        message: "Git repository not detected",
+      })
+    }
+
+    const worktreeListResult = spawnSync(
+      "git",
+      ["worktree", "list", "--porcelain"],
+      { cwd: ctx.repoRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
+    )
+
+    if (worktreeListResult.status !== 0) {
+      return err({
+        kind: "WORKTREE_ERROR",
+        message: `Failed to list worktrees: ${worktreeListResult.stderr.trim()}`,
+      })
+    }
+
+    const rawEntries = parseGitWorktreeListPorcelain(worktreeListResult.stdout)
+    const entries: WorktreeEntry[] = rawEntries.map((entry) => ({
+      path: entry.path,
+      branchRef: entry.branchRef,
+      taskId: entry.branchRef != null ? this.extractTaskId(entry.branchRef) : null,
+    }))
+
+    return ok(entries)
+  }
+
+  removeWorktree(
+    targetPath: string,
+    force: boolean = false,
+    cwd: string = process.cwd(),
+  ): Result<void, VcsError> {
+    const ctx = this.getContext(cwd)
+    if (!ctx.isAvailable || ctx.repoRoot == null) {
+      return err({
+        kind: "VCS_NOT_AVAILABLE",
+        message: "Git repository not detected",
+      })
+    }
+
+    const args = force
+      ? ["worktree", "remove", "--force", targetPath]
+      : ["worktree", "remove", targetPath]
+
+    const removeResult = spawnSync("git", args, {
+      cwd: ctx.repoRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    })
+
+    if (removeResult.status !== 0) {
+      return err({
+        kind: "WORKTREE_ERROR",
+        message: `Failed to remove worktree '${targetPath}': ${removeResult.stderr.trim()}`,
+      })
+    }
+
+    return ok(undefined)
+  }
+
   switchOrCreateBranch(
     branchName: string,
     cwd: string = process.cwd(),
@@ -300,6 +369,21 @@ export class GitVcsProvider implements VersionControlProvider {
     }
 
     return ok(undefined)
+  }
+
+  checkWorkingTreeClean(options?: {
+    readonly allowedPathPrefixes?: readonly string[]
+    readonly cwd?: string
+  }): Result<void, VcsError> {
+    const cwd = options?.cwd ?? process.cwd()
+    const ctx = this.getContext(cwd)
+    return checkGitWorkingTreeClean(ctx, options)
+  }
+
+  commitFile(filePath: string, message: string, cwd?: string): Result<void, VcsError> {
+    const workingDir = cwd ?? process.cwd()
+    const ctx = this.getContext(workingDir)
+    return commitSingleGitFile(ctx, filePath, message, workingDir)
   }
 
   autoMergeAndCleanup(options: {

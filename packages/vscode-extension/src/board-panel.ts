@@ -9,6 +9,8 @@ import { checkTaskItem } from "@dirban/core/tasks/mutation/check.ts"
 import { createTask } from "@dirban/core/tasks/mutation/create.ts"
 import { promoteTasks } from "@dirban/core/tasks/planning/plan.ts"
 import { startTask } from "@dirban/core/tasks/lifecycle/start.ts"
+import { resumeTask } from "@dirban/core/tasks/lifecycle/resume.ts"
+import { blockTask } from "@dirban/core/tasks/planning/block.ts"
 import { doneTask } from "@dirban/core/tasks/lifecycle/done.ts"
 import { archiveTasks } from "@dirban/core/tasks/mutation/archive.ts"
 import { resolveCurrentTask } from "@dirban/core/tasks/lifecycle/current.ts"
@@ -198,12 +200,25 @@ export class DirbanBoardWebviewPanel {
     }
   }
 
-  private _handleLifecycleAction(
+  private _promptOpenWorktree(worktreePath?: string): void {
+    if (worktreePath == null) {
+      return
+    }
+    vscode.window
+      .showInformationMessage(`Worktree ready at ${worktreePath}`, "Open Worktree in VS Code")
+      .then((choice) => {
+        if (choice === "Open Worktree in VS Code") {
+          vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(worktreePath), true)
+        }
+      })
+  }
+
+  private async _handleLifecycleAction(
     board: Board,
     config: DirbanConfig,
-    action: "ready" | "start" | "done" | "archive",
+    action: "ready" | "start" | "done" | "archive" | "block" | "resume",
     taskId: string
-  ): void {
+  ): Promise<void> {
     const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd()
 
     switch (action) {
@@ -228,6 +243,42 @@ export class DirbanBoardWebviewPanel {
           const val = startRes.value
           const branchMsg = val.branchName ? ` (branch: ${val.branchName})` : ""
           vscode.window.showInformationMessage(`Dirban: Started task ${taskId}${branchMsg}`)
+          this._promptOpenWorktree(val.worktreePath)
+          this._onBoardMutation()
+        }
+        break
+      }
+
+      case "resume": {
+        const resumeRes = resumeTask(board, config, taskId, { cwd: root })
+        if (resumeRes.isErr()) {
+          vscode.window.showErrorMessage(`Dirban Resume Failed: ${resumeRes.error.message}`)
+        } else {
+          const val = resumeRes.value
+          const branchMsg = val.branchName ? ` (branch: ${val.branchName})` : ""
+          vscode.window.showInformationMessage(`Dirban: Resumed task ${taskId}${branchMsg}`)
+          this._promptOpenWorktree(val.worktreePath)
+          this._onBoardMutation()
+        }
+        break
+      }
+
+      case "block": {
+        const reason = await vscode.window.showInputBox({
+          prompt: `Block reason for task ${taskId} (optional)`,
+          placeHolder: "e.g. Waiting on API spec",
+        })
+        if (reason === undefined) {
+          break
+        }
+        const trimmedReason = reason.trim()
+        const blockRes = blockTask(board, taskId, trimmedReason ? [trimmedReason] : [], {
+          cwd: root,
+        })
+        if (blockRes.isErr()) {
+          vscode.window.showErrorMessage(`Dirban Block Failed: ${blockRes.error.message}`)
+        } else {
+          vscode.window.showInformationMessage(`Dirban: Blocked task ${taskId}`)
           this._onBoardMutation()
         }
         break

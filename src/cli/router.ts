@@ -21,6 +21,14 @@ import {
   startCommand,
 } from "../tasks/lifecycle/start.cli.ts"
 import {
+  handleResume,
+  resumeCommand,
+} from "../tasks/lifecycle/resume.cli.ts"
+import {
+  pruneCommand,
+  worktreeCommand,
+} from "../tasks/lifecycle/worktree.cli.ts"
+import {
   handleReady,
   readyCommand,
 } from "../tasks/lifecycle/ready.cli.ts"
@@ -81,7 +89,10 @@ export const ALL_COMMANDS: readonly CommandDefinition[] = Object.freeze([
   currentCommand,
   readyCommand,
   startCommand,
+  resumeCommand,
   doneCommand,
+  worktreeCommand,
+  pruneCommand,
   pathCommand,
   newCommand,
   nextIdCommand,

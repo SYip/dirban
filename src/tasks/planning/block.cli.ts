@@ -35,7 +35,10 @@ export const handleBlock: CommandHandler = (ctx) => {
     return 1
   }
 
-  const blockRes = blockTask(boardRes.value, taskId, reasons)
+  const blockRes = blockTask(boardRes.value, taskId, reasons, {
+    cwd: ctx.cwd,
+    config: ctx.config,
+  })
   if (blockRes.isErr()) {
     console.error(pc.red(`Block Error: ${blockRes.error.message}`))
     return 1

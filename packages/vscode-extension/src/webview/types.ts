@@ -26,7 +26,7 @@ export type WebviewMessageToExtension =
   | { readonly type: "toggleCriterion"; readonly taskId: string; readonly itemIndex: number; readonly checked: boolean }
   | { readonly type: "openFile"; readonly filePath: string }
   | { readonly type: "createTask"; readonly title: string; readonly priority?: string; readonly column?: string }
-  | { readonly type: "lifecycleAction"; readonly action: "ready" | "start" | "done" | "archive"; readonly taskId: string }
+  | { readonly type: "lifecycleAction"; readonly action: "ready" | "start" | "done" | "archive" | "block" | "resume"; readonly taskId: string }
 
 export type ExtensionMessageToWebview =
   | { readonly type: "boardState"; readonly state: WebviewBoardState }

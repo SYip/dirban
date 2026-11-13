@@ -80,6 +80,15 @@
         <span class="btn-icon codicon" :class="lifecycleAction.iconClass"></span>
         <span>{{ lifecycleAction.btnText }}</span>
       </button>
+      <button
+        v-if="canBlockTask"
+        class="btn btn-lifecycle-action btn-block"
+        title="Block task and move to backlog"
+        @click="$emit('triggerLifecycle', 'block', task)"
+      >
+        <span class="btn-icon codicon codicon-circle-slash"></span>
+        <span>Block Task...</span>
+      </button>
     </footer>
   </aside>
 </template>
@@ -98,8 +107,15 @@ defineEmits<{
   (e: "close"): void
   (e: "openFile", filePath: string): void
   (e: "toggleCriterion", task: BoardTask, itemIndex: number, checked: boolean): void
-  (e: "triggerLifecycle", action: "ready" | "start" | "done" | "archive", task: BoardTask): void
+  (e: "triggerLifecycle", action: "ready" | "start" | "done" | "archive" | "block" | "resume", task: BoardTask): void
 }>()
+
+const canBlockTask = computed(() => {
+  const col = props.task.column.toLowerCase()
+  const focusCol = props.boardState.config?.focusColumn?.toLowerCase()
+  const preFocusCol = props.boardState.config?.preFocusColumn?.toLowerCase()
+  return col === focusCol || col === preFocusCol
+})
 
 const strategyLabel = computed(() => {
   const strategy = props.boardState.config?.branchStrategy ?? "checkout"
@@ -109,7 +125,7 @@ const strategyLabel = computed(() => {
 })
 
 interface LifecycleActionInfo {
-  readonly action: "ready" | "start" | "done" | "archive"
+  readonly action: "ready" | "start" | "done" | "archive" | "block" | "resume"
   readonly iconClass: string
   readonly label: string
   readonly description: string
@@ -132,6 +148,18 @@ const lifecycleAction = computed<LifecycleActionInfo | null>(() => {
   const hasTaskInDoing = (props.boardState.activeTasksInDoingCount ?? 0) > 0
 
   if (col === "backlog") {
+    const fm = props.task.document?.frontmatter
+    const isBlocked = Boolean(fm?.blocked_reason) || (fm?.blocked_by?.length ?? 0) > 0
+    if (isBlocked) {
+      return {
+        action: "resume",
+        iconClass: "codicon-play-circle",
+        label: "Resume Task",
+        description: "Unblocks task and resumes it into the active doing column.",
+        btnText: "Resume Task",
+        buttonClass: "btn-start",
+      }
+    }
     return {
       action: "ready",
       iconClass: "codicon-rocket",

@@ -7,9 +7,12 @@
   >
     <div class="card-topline">
       <span class="task-id">{{ task.document?.id || task.filename }}</span>
-      <span class="priority-chip" :class="`priority-${task.document?.priority || 'p2'}`">
-        {{ task.document?.priority || 'p2' }}
-      </span>
+      <div class="card-badges">
+        <span v-if="isBlocked" class="blocked-chip" title="Blocked">Blocked</span>
+        <span class="priority-chip" :class="`priority-${task.document?.priority || 'p2'}`">
+          {{ task.document?.priority || 'p2' }}
+        </span>
+      </div>
     </div>
 
     <h3 class="task-title">{{ task.document?.title || task.filename }}</h3>
@@ -45,6 +48,11 @@ defineEmits<{
   (e: "select", task: BoardTask): void
   (e: "open", filePath: string): void
 }>()
+
+const isBlocked = computed(() => {
+  const fm = props.task.document?.frontmatter
+  return Boolean(fm?.blocked_reason) || (fm?.blocked_by?.length ?? 0) > 0
+})
 
 const checkedCriteriaCount = computed(() => {
   return props.task.document?.acceptanceCriteria?.filter((c) => c.checked).length || 0
@@ -89,6 +97,23 @@ const criteriaPercent = computed(() => {
   font-weight: 600;
   color: var(--vscode-descriptionForeground);
   font-family: monospace;
+}
+
+.card-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.blocked-chip {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  background: var(--vscode-inputValidation-warningBackground, #5c4800);
+  color: var(--vscode-inputValidation-warningForeground, #ffcc00);
+  border: 1px solid var(--vscode-inputValidation-warningBorder, #b89500);
 }
 
 .priority-chip {
