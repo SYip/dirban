@@ -111,7 +111,7 @@ export class DirbanBoardWebviewPanel {
 
     const focusCol = resolveFocusColumn(config) ?? undefined
     const preFocusCol = focusCol
-      ? (resolvePreviousColumn(config, focusCol) ?? config.columns[0])
+      ? (resolvePreviousColumn(config, focusCol) ?? "01-todo")
       : undefined
     const postFocusCol = focusCol ? resolveNextColumn(config, focusCol) : undefined
 

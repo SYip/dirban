@@ -1,6 +1,7 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { err, ok, type Result } from "neverthrow"
+import { DEFAULT_COLUMNS } from "../config/config.ts"
 import type { DirbanConfig } from "../config/types.ts"
 import { parseTaskDocument } from "../okf/parser.ts"
 import { getVcsProvider } from "../vcs/index.ts"
@@ -69,8 +70,8 @@ export const discoverBoard = (
   )
   orderedColNames.push(...backlogDirs)
 
-  // 2. Configured workflow columns in the middle
-  for (const configuredCol of config.columns) {
+  // 2. Standard lifecycle columns in the middle
+  for (const configuredCol of DEFAULT_COLUMNS) {
     if (discoveredDirNames.includes(configuredCol) && !orderedColNames.includes(configuredCol)) {
       orderedColNames.push(configuredCol)
     }
@@ -80,7 +81,7 @@ export const discoverBoard = (
   const unlistedCols = discoveredDirNames
     .filter(
       (name) =>
-        !config.columns.includes(name)
+        !DEFAULT_COLUMNS.includes(name)
         && !orderedColNames.includes(name)
         && name.toLowerCase() !== "archive"
         && !name.toLowerCase().endsWith("-archive"),

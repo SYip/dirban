@@ -79,36 +79,4 @@ describe("Resolve Next Task (dirban next)", () => {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }
   })
-
-  it("Vector 3 (Custom Focus Column Queue Resolution): Resolves queue preceding custom focusColumn", () => {
-    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-next-custom-"))
-    try {
-      const customConfig: DirbanConfig = {
-        ...DEFAULT_CONFIG,
-        columns: ["ready", "develop", "review", "done"],
-        focusColumn: "develop",
-      }
-      for (const col of customConfig.columns) {
-        fs.mkdirSync(path.join(tempDir, "docs/tasks", col), { recursive: true })
-      }
-      const board = discoverBoard(customConfig, tempDir)._unsafeUnwrap()
-
-      const created = createTask(board, {
-        title: "Ready Feature Task",
-        column: "ready",
-        priority: "p1",
-      })._unsafeUnwrap()
-
-      const refreshed = discoverBoard(customConfig, tempDir)._unsafeUnwrap()
-      const nextRes = resolveNextTask(refreshed, customConfig)
-
-      expect(nextRes.isOk()).toBe(true)
-      if (nextRes.isOk()) {
-        expect(nextRes.value.task.document.id).toBe(created.id)
-        expect(nextRes.value.sourceColumn).toBe("ready")
-      }
-    } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true })
-    }
-  })
 })

@@ -36,62 +36,6 @@ describe("Done Task Operations (doneTask)", () => {
     }
   })
 
-  it("Vector 2: Transitions task to focus + 1 in custom workflow ('develop' -> 'test')", () => {
-    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-done-"))
-    try {
-      const customWorkflowConfig: DirbanConfig = {
-        ...DEFAULT_CONFIG,
-        columns: ["todo", "develop", "test", "production"],
-        focusColumn: "develop",
-      }
-      for (const col of customWorkflowConfig.columns) {
-        fs.mkdirSync(path.join(tempDir, "docs/tasks", col), { recursive: true })
-      }
-      const board = discoverBoard(customWorkflowConfig, tempDir)._unsafeUnwrap()
-      const customTask = createTask(board, {
-        title: "In-Progress Feature",
-        column: "develop",
-      })._unsafeUnwrap()
-
-      const boardInDevelop = discoverBoard(customWorkflowConfig, tempDir)._unsafeUnwrap()
-      const doneRes = doneTask(boardInDevelop, customWorkflowConfig, customTask.id, {
-        cwd: tempDir,
-      })
-      expect(doneRes.isOk()).toBe(true)
-      if (doneRes.isOk()) {
-        expect(doneRes.value.task.column).toBe("test")
-      }
-    } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true })
-    }
-  })
-
-  it("Vector 3: Transitions backlog task to archive in zero-column workflow (columns: [])", () => {
-    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-done-"))
-    try {
-      initializeBoard(DEFAULT_CONFIG, tempDir)
-      const zeroColConfig: DirbanConfig = {
-        ...DEFAULT_CONFIG,
-        columns: [],
-        focusColumn: undefined,
-      }
-      const board = discoverBoard(zeroColConfig, tempDir)._unsafeUnwrap()
-      const zeroTask = createTask(board, {
-        title: "Zero Column Task",
-        column: "backlog",
-      })._unsafeUnwrap()
-
-      const boardWithZero = discoverBoard(zeroColConfig, tempDir)._unsafeUnwrap()
-      const doneZeroRes = doneTask(boardWithZero, zeroColConfig, zeroTask.id, { cwd: tempDir })
-      expect(doneZeroRes.isOk()).toBe(true)
-      if (doneZeroRes.isOk()) {
-        expect(doneZeroRes.value.task.column).toContain("archive")
-      }
-    } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true })
-    }
-  })
-
   it("Vector 4: Custom workspace strategy delegation in doneTask", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-done-"))
     try {

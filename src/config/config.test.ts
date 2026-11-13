@@ -29,7 +29,6 @@ describe("Config Module Tests", () => {
     try {
       const customConfig = {
         tasksDir: "custom/tasks",
-        columns: ["todo", "doing", "done"],
         archiveDir: "custom/archive",
         defaultPriority: "p0",
         focusColumn: "doing",
@@ -40,7 +39,6 @@ describe("Config Module Tests", () => {
       expect(result.isOk()).toBe(true)
       if (result.isOk()) {
         expect(result.value.tasksDir).toBe("custom/tasks")
-        expect(result.value.columns).toEqual(["todo", "doing", "done"])
         expect(result.value.archiveDir).toBe("custom/archive")
         expect(result.value.defaultPriority).toBe("p0")
         expect(result.value.focusColumn).toBe("doing")
@@ -74,7 +72,6 @@ describe("Config Module Tests", () => {
       const vscodeSettings = {
         "editor.tabSize": 2,
         "dirban.tasksDir": "ide/tasks",
-        "dirban.columns": ["backlog", "in-dev", "verified"],
         "dirban.defaultPriority": "p1",
       }
 
@@ -88,7 +85,6 @@ describe("Config Module Tests", () => {
       expect(result.isOk()).toBe(true)
       if (result.isOk()) {
         expect(result.value.tasksDir).toBe("ide/tasks")
-        expect(result.value.columns).toEqual(["backlog", "in-dev", "verified"])
         expect(result.value.defaultPriority).toBe("p1")
       }
     } finally {
@@ -146,48 +142,12 @@ describe("Config Module Tests", () => {
     }
   })
 
-  it("Vector 7 (Focus & Next Column Resolution): Handles custom workflows and fallbacks", () => {
-    // 1. Explicit focusColumn
-    const explicitConfig = {
-      ...DEFAULT_CONFIG,
-      columns: ["todo", "develop", "test", "production"],
-      focusColumn: "develop",
-    }
-    expect(resolveFocusColumn(explicitConfig)).toBe("develop")
-    expect(resolveNextColumn(explicitConfig, "develop")).toBe("test")
-    expect(resolveNextColumn(explicitConfig, "test")).toBe("production")
-    expect(resolveNextColumn(explicitConfig, "production")).toBe("production")
-
-    // 2. Positional default: columns[1] when focusColumn is not specified
-    const positionalConfig = {
-      ...DEFAULT_CONFIG,
-      columns: ["open", "working", "resolved"],
-      focusColumn: undefined,
-    }
-    expect(resolveFocusColumn(positionalConfig)).toBe("working")
-    expect(resolveNextColumn(positionalConfig, "working")).toBe("resolved")
-
-    // 3. Single column edge case defaults to columns[0]
-    const singleColConfig = {
-      ...DEFAULT_CONFIG,
-      columns: ["only-column"],
-      focusColumn: undefined,
-    }
-    expect(resolveFocusColumn(singleColConfig)).toBe("only-column")
-    expect(resolveNextColumn(singleColConfig, "only-column")).toBe("only-column")
-
-    // 4. Zero-column workflow: columns: [] yields null focusColumn and advances to "archive"
-    const zeroColConfig = {
-      ...DEFAULT_CONFIG,
-      columns: [],
-      focusColumn: undefined,
-    }
-    expect(resolveFocusColumn(zeroColConfig)).toBe(null)
-    expect(resolveNextColumn(zeroColConfig, "backlog")).toBe("archive")
-
-    // 5. Default configuration preservation
+  it("Vector 7 (Focus & Next Column Resolution): Resolves standard lifecycle columns", () => {
+    // 1. Default configuration preservation
     expect(resolveFocusColumn(DEFAULT_CONFIG)).toBe("02-doing")
+    expect(resolveNextColumn(DEFAULT_CONFIG, "01-todo")).toBe("02-doing")
     expect(resolveNextColumn(DEFAULT_CONFIG, "02-doing")).toBe("03-done")
+    expect(resolveNextColumn(DEFAULT_CONFIG, "03-done")).toBe("03-done")
   })
 
   it("Vector 8 (Config Validation): Validates priorities, unique columns, and tasksDir presence", () => {
@@ -212,21 +172,7 @@ describe("Config Module Tests", () => {
       expect(mismatchRes.error.message).toContain('defaultPriority "non-existent" must be one of')
     }
 
-    // 4. Duplicate columns fail
-    const duplicateCols = { ...DEFAULT_CONFIG, columns: ["todo", "doing", "TODO"] }
-    const duplicateRes = validateConfig(duplicateCols)
-    expect(duplicateRes.isErr()).toBe(true)
-    if (duplicateRes.isErr()) {
-      expect(duplicateRes.error.kind).toBe("VALIDATION_ERROR")
-      expect(duplicateRes.error.message).toContain("duplicate column name")
-    }
-
-    // 5. Empty column name fails
-    const emptyCol = { ...DEFAULT_CONFIG, columns: ["todo", "   "] }
-    const emptyColRes = validateConfig(emptyCol)
-    expect(emptyColRes.isErr()).toBe(true)
-
-    // 6. requireTasksDir verification against disk
+    // 4. requireTasksDir verification against disk
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-val-"))
     try {
       const nonExistentTasksRes = validateConfig(DEFAULT_CONFIG, {

@@ -108,36 +108,6 @@ describe("Start Task Operations (startTask)", () => {
     }
   })
 
-  it("Vector 4: Transitions task to custom focusColumn ('develop')", () => {
-    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-start-"))
-    try {
-      const customWorkflowConfig: DirbanConfig = {
-        ...DEFAULT_CONFIG,
-        columns: ["todo", "develop", "test", "production"],
-        focusColumn: "develop",
-      }
-      for (const col of customWorkflowConfig.columns) {
-        fs.mkdirSync(path.join(tempDir, "docs/tasks", col), { recursive: true })
-      }
-      const boardCustom = discoverBoard(customWorkflowConfig, tempDir)._unsafeUnwrap()
-      const customTask = createTask(boardCustom, {
-        title: "Custom Flow Feature",
-        column: "todo",
-      })._unsafeUnwrap()
-
-      const boardWithCustom = discoverBoard(customWorkflowConfig, tempDir)._unsafeUnwrap()
-      const startCustomRes = startTask(boardWithCustom, customWorkflowConfig, customTask.id, {
-        cwd: tempDir,
-      })
-      expect(startCustomRes.isOk()).toBe(true)
-      if (startCustomRes.isOk()) {
-        expect(startCustomRes.value.task.column).toBe("develop")
-      }
-    } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true })
-    }
-  })
-
   it("Vector 5: Custom workspace strategy delegation in startTask", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-start-"))
     try {

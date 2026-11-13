@@ -1,6 +1,10 @@
 import { err, ok, type Result } from "neverthrow"
 import type { Board, BoardTask } from "../../board/types.ts"
-import { resolveFocusColumn, resolvePreviousColumn } from "../../config/config.ts"
+import {
+  DEFAULT_COLUMNS,
+  resolveFocusColumn,
+  resolvePreviousColumn,
+} from "../../config/config.ts"
 import type { DirbanConfig } from "../../config/types.ts"
 
 export interface ResolveNextTaskSuccess {
@@ -26,7 +30,7 @@ export const resolveNextTask = (
   }
 
   // Find column preceding focus column (e.g. 01-todo if focus is 02-doing)
-  const todoColName = resolvePreviousColumn(config, focusCol) ?? config.columns[0]
+  const todoColName = resolvePreviousColumn(config, focusCol) ?? DEFAULT_COLUMNS[0]
   if (todoColName == null) {
     return err({
       kind: "NO_TODO_COLUMN",
