@@ -135,18 +135,18 @@ Detailed decision records:
     - [x] Implement `dirban worktree list` (or `dirban status --worktrees`) auditing worktrees against board states (active vs. blocked vs. orphaned).
     - [x] Implement `dirban prune` to clean up worktrees for completed or abandoned tasks safely.
 
-- [ ] **Phase 4: VS Code Extension Integration**
-  - [ ] **4.1 Task Card Actions & Context Menu**
-    - [ ] Support `resume` action in `packages/vscode-extension/src/board-panel.ts` for blocked tasks with existing worktrees.
-    - [ ] Add "Block Task..." action in card context menu prompting for blocker reason.
-  - [ ] **4.2 Visual Badges & Worktree Navigation**
-    - [ ] Render visual "Blocked" badge on cards and task drawer in backlog.
-    - [ ] Add quick-pick / action toast on `start` or `resume` with `branchStrategy: "worktree"` to "Open Worktree in VS Code" (`vscode.openFolder`).
-    - [ ] Overlay live checkbox progress in TreeView and Board cards when an active worktree exists.
+- [x] **Phase 4: VS Code Extension Integration**
+  - [x] **4.1 Task Card Actions & Context Menu**
+    - [x] Support `resume` action in `packages/vscode-extension/src/board-panel.ts` for blocked tasks with existing worktrees.
+    - [x] Add "Block Task..." action in card context menu prompting for blocker reason.
+  - [x] **4.2 Visual Badges & Worktree Navigation**
+    - [x] Render visual "Blocked" badge on cards and task drawer in backlog.
+    - [x] Add quick-pick / action toast on `start` or `resume` with `branchStrategy: "worktree"` to "Open Worktree in VS Code" (`vscode.openFolder`).
+    - [x] Overlay live checkbox progress in TreeView and Board cards when an active worktree exists.
 
-- [ ] **Phase 5: Verification & End-to-End Test Suite**
-  - [ ] Add test vectors for dirty state guards in `start`, `block`, and `resume`.
-  - [ ] Add test vectors covering `startTask` target branch commit + worktree creation sequence.
-  - [ ] Add test vectors covering `blockTask` dirty check, worktree retention, and target branch synchronization from both worktree and root.
-  - [ ] Add test vectors covering `resumeTask` unblocking, out-of-band worktree recreation, and workspace reactivation across all 3 strategies (`worktree`, `checkout`, `none`).
-  - [ ] All tests pass (`bun test`) and strict typing passes (`bun run typecheck`).
+- [x] **Phase 5: Verification & End-to-End Test Suite**
+  - [x] Add test vectors for dirty state guards in `start`, `block`, and `resume`.
+  - [x] Add test vectors covering `startTask` target branch commit + worktree creation sequence.
+  - [x] Add test vectors covering `blockTask` dirty check, worktree retention, and target branch synchronization from both worktree and root.
+  - [x] Add test vectors covering `resumeTask` unblocking, out-of-band worktree recreation, and workspace reactivation across all 3 strategies (`worktree`, `checkout`, `none`).
+  - [x] All tests pass (`bun test`) and strict typing passes (`bun run typecheck`).
