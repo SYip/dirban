@@ -309,6 +309,7 @@ export const blockTask = (
 
     if (targetPath !== finalTask.filePath) {
       try {
+        fs.mkdirSync(path.dirname(targetPath), { recursive: true })
         fs.renameSync(finalTask.filePath, targetPath)
         demoted = true
         finalTask = {
