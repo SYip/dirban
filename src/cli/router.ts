@@ -1,29 +1,26 @@
 import pc from "picocolors"
 import { boardCommand, viewCommand } from "../board/board.cli.ts"
 import { validateConfig } from "../config/config.ts"
-import { currentCommand, } from "../tasks/lifecycle/current.cli.ts"
-import { doneCommand, } from "../tasks/lifecycle/done.cli.ts"
+import { currentCommand } from "../tasks/lifecycle/current.cli.ts"
+import { doneCommand } from "../tasks/lifecycle/done.cli.ts"
 import { nextCommand } from "../tasks/lifecycle/next.cli.ts"
 import { pathCommand } from "../tasks/lifecycle/path.cli.ts"
 import { readyCommand } from "../tasks/lifecycle/ready.cli.ts"
 import { resumeCommand } from "../tasks/lifecycle/resume.cli.ts"
 import { startCommand } from "../tasks/lifecycle/start.cli.ts"
 import { pruneCommand, worktreeCommand } from "../tasks/lifecycle/worktree.cli.ts"
-import { archiveCommand, } from "../tasks/mutation/archive.cli.ts"
-import { checkCommand, } from "../tasks/mutation/check.cli.ts"
+import { archiveCommand } from "../tasks/mutation/archive.cli.ts"
+import { checkCommand } from "../tasks/mutation/check.cli.ts"
 import { newCommand } from "../tasks/mutation/create.cli.ts"
 import { moveCommand } from "../tasks/mutation/move.cli.ts"
 import { nextIdCommand } from "../tasks/mutation/next-id.cli.ts"
 import { setCommand } from "../tasks/mutation/set.cli.ts"
-import {
-  blockCommand,
-  unblockCommand,
-} from "../tasks/planning/block.cli.ts"
+import { blockCommand, unblockCommand } from "../tasks/planning/block.cli.ts"
 import { planCommand } from "../tasks/planning/plan.cli.ts"
-import { helpCommand, } from "../tasks/project/help.cli.ts"
+import { helpCommand } from "../tasks/project/help.cli.ts"
 import { initCommand } from "../tasks/project/init.cli.ts"
 import { prioritiesCommand } from "../tasks/project/priorities.cli.ts"
-import type { CliContext, CommandDefinition, } from "./types.ts"
+import type { CliContext, CommandDefinition } from "./types.ts"
 
 export const ALL_COMMANDS: readonly CommandDefinition[] = Object.freeze([
   initCommand,

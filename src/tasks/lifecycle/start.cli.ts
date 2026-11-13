@@ -1,12 +1,7 @@
 import { err, ok } from "neverthrow"
 import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
-import {
-  logError,
-  logTip,
-  logWarning,
-  toRelativePath,
-} from "../../cli/formatters.ts"
+import { logError, logTip, logWarning, toRelativePath } from "../../cli/formatters.ts"
 import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import type { LifecycleStrategyType } from "../../workspace/types.ts"
 import { type StartTaskError, startTask } from "./start.ts"

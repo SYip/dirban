@@ -1,6 +1,6 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
-import type { Board, } from "@dirban/core/board/types.ts"
+import type { Board } from "@dirban/core/board/types.ts"
 import {
   resolveFocusColumn,
   resolveNextColumn,

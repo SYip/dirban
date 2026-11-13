@@ -35,10 +35,13 @@ git diff HEAD~1..HEAD
 ```
 
 ### Step 2: Check Active Task & Context
-If reviewing work on an active task, inspect its acceptance criteria:
+If reviewing work on an active task, inspect its acceptance criteria and run lint, typecheck, and unit tests:
 
 ```bash
 dirban current --raw
+bun run check
+bun run typecheck
+bun test
 ```
 
 ---
@@ -139,7 +142,7 @@ A concise 1-2 sentence overview of the changeset and overall health.
 Issues that cause bugs, break invariants, or fail tests. Include file link and line numbers.
 
 ### 🟡 Complexity & Algorithmic Improvements (Big-O & Performance)
-Identified O(n²) or quadratic patterns, unnecessary nested lookups, unindexed scans, or recommendations to pre-index into Set/Map.
+Inefficient logic, redundant passes, unnecessary allocations or copying, unindexed lookups (e.g., pre-indexing into `Set`/`Map`), or O(n²) / quadratic patterns.
 
 ### 🟡 Design Patterns & Architectural Improvements
 Concrete design pattern suggestions (e.g. Strategy, Adapter, Dispatch Map, Pipeline) that simplify conditionals, decouple dependencies, or improve testability.

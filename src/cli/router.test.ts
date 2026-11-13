@@ -5,7 +5,7 @@ import * as path from "node:path"
 import { runCli } from "../../main.ts"
 import type { DirbanConfig } from "../config/types.ts"
 import { initializeBoard } from "../tasks/project/init.ts"
-import { dispatchCommand, } from "./router.ts"
+import { dispatchCommand } from "./router.ts"
 import type { CliContext } from "./types.ts"
 
 const MOCK_CONFIG: DirbanConfig = {

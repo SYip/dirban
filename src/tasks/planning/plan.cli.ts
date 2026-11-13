@@ -3,11 +3,7 @@ import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
 import { formatPlanView } from "../../cli/formatters.ts"
 import { startInteractivePlanTui } from "../../cli/plan-tui.ts"
-import type {
-  CommandDefinition,
-  CommandHandler,
-  CommandParser,
-} from "../../cli/types.ts"
+import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
 import { partitionBacklog } from "./plan.ts"
 
 export interface PlanCommandParams {

@@ -1,4 +1,3 @@
-
 import type { BoardTask } from "@dirban/core/board/types.ts"
 import type { DirbanConfig } from "@dirban/core/config/types.ts"
 import * as vscode from "vscode"

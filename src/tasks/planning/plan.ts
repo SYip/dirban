@@ -109,7 +109,7 @@ export interface BatchPromoteResult {
 
 export const promoteTasks = (
   board: Board,
-  config: DirbanConfig,
+  _config: DirbanConfig,
   taskIdsOrPaths: readonly string[],
   targetColumnOverride?: string,
 ): BatchPromoteResult => {
@@ -198,7 +198,7 @@ export const promoteTasks = (
 
 export const promoteTask = (
   board: Board,
-  config: DirbanConfig,
+  _config: DirbanConfig,
   taskIdOrPath: string,
   targetColumnOverride?: string,
 ): Result<PromoteTaskResult, OperationError> => {

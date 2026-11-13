@@ -185,8 +185,7 @@ export class GitVcsProvider implements VersionControlProvider {
       const entries = parseGitWorktreeListPorcelain(worktreeListResult.stdout)
       const matchingEntry = entries.find((entry) => {
         const pathMatches = entry.path.toLowerCase().includes(trimmedTarget)
-        const branchMatches =
-          entry.branchRef?.toLowerCase().includes(trimmedTarget)
+        const branchMatches = entry.branchRef?.toLowerCase().includes(trimmedTarget)
         return pathMatches || branchMatches
       })
 

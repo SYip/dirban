@@ -1,7 +1,13 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.6.7/schema.json",
   "files": {
-    "includes": ["src/**", "packages/**", "!**/dist", "!**/node_modules", "!packages/vscode-extension/resources"]
+    "includes": [
+      "src/**",
+      "packages/**",
+      "!**/dist",
+      "!**/node_modules",
+      "!packages/vscode-extension/resources"
+    ]
   },
   "formatter": {
     "enabled": true,
