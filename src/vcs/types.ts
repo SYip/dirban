@@ -6,6 +6,7 @@ export type VcsError =
   | { readonly kind: "WORKTREE_ERROR"; readonly message: string }
   | { readonly kind: "MERGE_ERROR"; readonly message: string }
   | { readonly kind: "COMMAND_ERROR"; readonly message: string }
+  | { readonly kind: "DIRTY_WORKING_TREE"; readonly message: string; readonly dirtyFiles: readonly string[] }
 
 export interface VcsContext {
   readonly isAvailable: boolean
@@ -23,6 +24,8 @@ export interface VersionControlProvider {
   resolveWorktreePath(taskIdOrTarget?: string, cwd?: string): Result<string, VcsError>
   switchOrCreateBranch(branchName: string, cwd?: string): Result<{ readonly alreadyOnBranch: boolean }, VcsError>
   createWorktree(targetPath: string, branchName: string, cwd?: string): Result<void, VcsError>
+  checkWorkingTreeClean(options?: { readonly allowedPathPrefixes?: readonly string[]; readonly cwd?: string }): Result<void, VcsError>
+  commitFile(filePath: string, message: string, cwd?: string): Result<void, VcsError>
   autoMergeAndCleanup(options: {
     readonly taskBranch: string
     readonly baseBranch: string

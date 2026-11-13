@@ -1,6 +1,6 @@
 import { err, ok, type Result } from "neverthrow"
 import * as path from "node:path"
-import { SLUG_CLEANUP_REGEX, SLUG_TRIM_HYPHENS_REGEX } from "./git.ts"
+import { SLUG_CLEANUP_REGEX, SLUG_TRIM_HYPHENS_REGEX } from "./git/index.ts"
 import type {
   VcsContext,
   VcsError,
@@ -81,6 +81,20 @@ export class NoopVcsProvider implements VersionControlProvider {
       kind: "VCS_NOT_AVAILABLE",
       message: "Version control not available in this workspace",
     })
+  }
+
+  checkWorkingTreeClean(
+    _options?: { readonly allowedPathPrefixes?: readonly string[]; readonly cwd?: string },
+  ): Result<void, VcsError> {
+    return ok(undefined)
+  }
+
+  commitFile(
+    _filePath: string,
+    _message: string,
+    _cwd?: string,
+  ): Result<void, VcsError> {
+    return ok(undefined)
   }
 
   autoMergeAndCleanup(_options: {

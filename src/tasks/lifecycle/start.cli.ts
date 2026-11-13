@@ -68,6 +68,11 @@ export const printStartError = (err: StartTaskError): void => {
       break
     case "ALREADY_STARTED":
       logWarning(err.message)
+      logTip(`Run 'dirban resume <id>' to re-enter this task workspace.`)
+      break
+    case "DIRTY_WORKING_TREE":
+      logError(err.message, "Dirty Working Tree")
+      logTip("Stash or commit changes with 'git stash' before starting a new task.")
       break
     default:
       logError(err.message, "Start")

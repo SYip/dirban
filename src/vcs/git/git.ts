@@ -6,7 +6,10 @@ import type {
   VcsContext,
   VcsError,
   VersionControlProvider,
-} from "./types.ts"
+} from "../types.ts"
+
+import { checkGitWorkingTreeClean } from "./status.ts"
+import { commitSingleGitFile } from "./commit.ts"
 
 export const TASK_ID_EXTRACT_REGEX = /(?:^|\/)(?:task\/)?([0-9]{2}-[0-9]+)(?:-[^/]*)?$/
 export const SLUG_CLEANUP_REGEX = /[^a-z0-9]+/g
@@ -300,6 +303,21 @@ export class GitVcsProvider implements VersionControlProvider {
     }
 
     return ok(undefined)
+  }
+
+  checkWorkingTreeClean(options?: {
+    readonly allowedPathPrefixes?: readonly string[]
+    readonly cwd?: string
+  }): Result<void, VcsError> {
+    const cwd = options?.cwd ?? process.cwd()
+    const ctx = this.getContext(cwd)
+    return checkGitWorkingTreeClean(ctx, options)
+  }
+
+  commitFile(filePath: string, message: string, cwd?: string): Result<void, VcsError> {
+    const workingDir = cwd ?? process.cwd()
+    const ctx = this.getContext(workingDir)
+    return commitSingleGitFile(ctx, filePath, message, workingDir)
   }
 
   autoMergeAndCleanup(options: {

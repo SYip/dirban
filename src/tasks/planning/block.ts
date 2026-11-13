@@ -9,6 +9,15 @@ import type { TaskRelationships } from "../../okf/types.ts"
 import { getIsoDate } from "../mutation/move.ts"
 import type { OperationError } from "../types.ts"
 import { isTaskId } from "../../board/dependencies.ts"
+import { getVcsProvider, type VersionControlProvider } from "../../vcs/index.ts"
+import type { DirbanConfig } from "../../config/types.ts"
+
+export interface BlockTaskOptions {
+  readonly cwd?: string
+  readonly config?: DirbanConfig
+  readonly vcsProvider?: VersionControlProvider
+  readonly force?: boolean
+}
 
 const FRONTMATTER_DELIMITER = "---"
 const COMMA_SPLIT_REGEX = /\s*,\s*/
@@ -160,11 +169,77 @@ export interface BlockTaskResult {
   readonly demotedToBacklog: boolean
 }
 
+const validateWorktreeClean = (
+  vcs: VersionControlProvider,
+  vcsCtx: { readonly isAvailable: boolean; readonly isWorktree?: boolean },
+  worktreePath: string | undefined,
+  effectiveId: string,
+  cwd: string,
+  options?: BlockTaskOptions,
+): Result<void, OperationError> => {
+  if (!vcsCtx.isAvailable || options?.force) {
+    return ok(undefined)
+  }
+
+  const targetDir = worktreePath ?? (vcsCtx.isWorktree ? cwd : undefined)
+  if (targetDir == null) {
+    return ok(undefined)
+  }
+
+  const cleanCheck = vcs.checkWorkingTreeClean({
+    allowedPathPrefixes: [options?.config?.tasksDir ?? "docs/tasks"],
+    cwd: targetDir,
+  })
+
+  if (cleanCheck.isOk()) {
+    return ok(undefined)
+  }
+
+  if (cleanCheck.error.kind === "DIRTY_WORKING_TREE") {
+    return err({
+      kind: "INVALID_MUTATION",
+      message: `Cannot block task ${effectiveId}: worktree has uncommitted code changes (${cleanCheck.error.dirtyFiles.length} file(s)). Commit or stash code changes before blocking.`,
+    })
+  }
+
+  return err({
+    kind: "INVALID_MUTATION",
+    message: cleanCheck.error.message,
+  })
+}
+
+const syncBlockedTaskToRoot = (
+  taskFile: string,
+  rootOldPath: string,
+  repoRoot: string,
+  tasksDir: string,
+  taskFilename: string,
+  effectiveId: string,
+  blockers: readonly string[],
+  vcs: VersionControlProvider,
+): void => {
+  const rootTarget = path.join(repoRoot, tasksDir, BACKLOG_COLUMN, taskFilename)
+  try {
+    fs.mkdirSync(path.dirname(rootTarget), { recursive: true })
+    fs.copyFileSync(taskFile, rootTarget)
+    if (rootOldPath !== rootTarget && fs.existsSync(rootOldPath)) {
+      fs.unlinkSync(rootOldPath)
+    }
+    const commitMsg = `chore(task): block ${effectiveId} (${blockers.join(", ")})`
+    vcs.commitFile(rootTarget, commitMsg, repoRoot)
+  } catch {
+    // Non-fatal if target sync fails gracefully
+  }
+}
+
 export const blockTask = (
   board: Board,
   taskIdOrPath: string,
   reasons: readonly string[],
+  options?: BlockTaskOptions,
 ): Result<BlockTaskResult, OperationError> => {
+  const cwd = options?.cwd ?? process.cwd()
+  const vcs = options?.vcsProvider ?? getVcsProvider(cwd)
   const task = findTaskByIdOrName(board, taskIdOrPath)
   if (task == null) {
     return err({
@@ -172,6 +247,17 @@ export const blockTask = (
       message: `Task not found: ${taskIdOrPath}`,
       id: taskIdOrPath,
     })
+  }
+
+  const effectiveId = task.document.id ?? task.filename
+  const vcsCtx = vcs.getContext(cwd)
+  const wtRes = vcsCtx.isAvailable ? vcs.resolveWorktreePath(effectiveId, cwd) : undefined
+  const worktreePath = wtRes?.isOk() ? wtRes.value : undefined
+
+  // Zero-loss guard: ensure worktree has no uncommitted code changes
+  const guardRes = validateWorktreeClean(vcs, vcsCtx, worktreePath, effectiveId, cwd, options)
+  if (guardRes.isErr()) {
+    return err(guardRes.error)
   }
 
   const normalizedBlockers = parseBlockerReasons(reasons, board)
@@ -183,12 +269,12 @@ export const blockTask = (
   }
 
   const existingDeps = task.document.frontmatter.relationships?.depends_on ?? []
-  const existingSet = new Set(existingDeps)
+  const seenSet = new Set(existingDeps)
   const newlyAdded: string[] = []
 
   for (const blocker of normalizedBlockers) {
-    if (!existingSet.has(blocker)) {
-      existingSet.add(blocker)
+    if (!seenSet.has(blocker)) {
+      seenSet.add(blocker)
       newlyAdded.push(blocker)
     }
   }
@@ -199,7 +285,17 @@ export const blockTask = (
     related_to: task.document.frontmatter.relationships?.related_to ?? [],
   }
 
-  const writeResult = writeTaskRelationships(task, updatedRelationships)
+  // If a worktree exists, prioritize reading and writing the task file in the worktree first
+  let primaryTask: BoardTask = task
+  if (worktreePath != null) {
+    const relTaskPath = path.relative(vcsCtx.repoRoot ?? cwd, task.filePath)
+    const worktreeTaskFile = path.join(worktreePath, relTaskPath)
+    if (fs.existsSync(worktreeTaskFile)) {
+      primaryTask = { ...task, filePath: worktreeTaskFile }
+    }
+  }
+
+  const writeResult = writeTaskRelationships(primaryTask, updatedRelationships)
   if (writeResult.isErr()) {
     return err(writeResult.error)
   }
@@ -209,12 +305,12 @@ export const blockTask = (
 
   // Demote task to backlog if it is currently in an active workflow column
   if (task.column !== BACKLOG_COLUMN) {
-    const parentDir = path.dirname(path.dirname(task.filePath))
-    const targetPath = path.join(parentDir, BACKLOG_COLUMN, task.filename)
+    const parentDir = path.dirname(path.dirname(finalTask.filePath))
+    const targetPath = path.join(parentDir, BACKLOG_COLUMN, finalTask.filename)
 
-    if (targetPath !== task.filePath) {
+    if (targetPath !== finalTask.filePath) {
       try {
-        fs.renameSync(task.filePath, targetPath)
+        fs.renameSync(finalTask.filePath, targetPath)
         demoted = true
         finalTask = {
           ...finalTask,
@@ -224,11 +320,22 @@ export const blockTask = (
       } catch (renameErr) {
         return err({
           kind: "FS_ERROR",
-          message: renameErr instanceof Error
-            ? renameErr.message
-            : "Failed to demote task to backlog",
+          message: renameErr instanceof Error ? renameErr.message : "Failed to demote task to backlog",
         })
       }
+    }
+
+    if (worktreePath != null && vcsCtx.repoRoot != null) {
+      syncBlockedTaskToRoot(
+        finalTask.filePath,
+        task.filePath,
+        vcsCtx.repoRoot,
+        options?.config?.tasksDir ?? "docs/tasks",
+        task.filename,
+        effectiveId,
+        newlyAdded,
+        vcs,
+      )
     }
   }
 

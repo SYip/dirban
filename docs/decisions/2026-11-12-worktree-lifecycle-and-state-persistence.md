@@ -60,21 +60,35 @@ To balance active in-worktree execution with a consistent repository board state
   2. Moves `docs/tasks/02-doing/<id>.md` to `docs/tasks/03-done/<id>.md` on the target branch.
   3. Commits and safely cleans up the worktree.
 
-### 2. Live In-Flight Progress via Worktree Overlay
+### 2. Dirty Working Tree Halt Rules (Zero-Loss Axiom)
+
+To prevent accidental data loss, corrupted workspaces, or unintentional commits of unrelated work:
+
+1. **On `dirban block`**:
+   - Before blocking a task, Dirban checks the worktree for uncommitted changes in non-task files (dirty source files, untracked code, half-edited tests).
+   - If uncommitted non-task files exist, **Dirban halts immediately**:
+     `Cannot block task <id>: worktree has uncommitted changes. Commit or stash code changes before blocking, or pass --force.`
+   - This prevents silent stashing or context loss. Parity is strictly maintained whether `dirban block` is executed from inside the worktree or from the repository root.
+2. **On `dirban start` & `dirban resume`**:
+   - Dirban inspects the target branch (`main`/`dev`). If the target branch has uncommitted changes in non-task files, **Dirban halts immediately**:
+     `Cannot execute lifecycle operation: target branch '<branch>' has uncommitted changes. Stash or commit them first.`
+   - This ensures Dirban never accidentally bundles unrelated modified files into lifecycle commits.
+
+### 3. Live In-Flight Progress via Worktree Overlay
 
 During active development (between `start` and `done` / `block`), the developer or agent ticks off checkboxes `- [x]` directly in the worktree:
 - No commits are made to the target branch while actively typing or running tests.
 - When `dirban status`, the TUI, or the VS Code extension runs on the target branch, Dirban inspects active worktrees (`git worktree list`) and overlays the live task file content.
 - Result: The board always shows live quantitative progress (e.g. `3/5 criteria checked`) without polluting the target branch commit log.
 
-### 3. Worktree Retention on `dirban block`
+### 4. Worktree Retention on `dirban block`
 
 When a task is blocked:
 - The worktree and its task branch (`task/<id>-<slug>`) are **deliberately kept alive** and intact.
 - Dirban will **not** prune the directory or force stash/commit dirty changes.
 - **Rationale**: In-flight work may be waiting on an external dependency (API token, human review, upstream PR). Retaining the worktree preserves the developer/agent workspace context 100%.
 
-### 4. Distinct `dirban resume` Command Across Workspace Strategies
+### 5. Distinct `dirban resume` Command Across Workspace Strategies
 
 To re-enter a blocked task or a task with an existing worktree/branch, the user/agent invokes:
 ```bash
@@ -95,7 +109,7 @@ dirban resume <id>
   - An optional flag (`--sync`) allows users to explicitly request an upstream merge upon resume.
 - **Guard in `dirban start`**: Strict entry point for new, unstarted tasks in `01-todo/`. If executed on an existing/blocked task, it detects the existing worktree/branch and prompts or delegates to `resume`.
 
-### 5. Worktree Audit and Orphan Management
+### 6. Worktree Audit and Orphan Management
 
 To prevent stale worktrees from accumulating permanently:
 - Introduce `dirban worktree list` (or `dirban status --worktrees`): Audits active Git worktrees against task statuses on the board (e.g. flagging worktrees whose tasks are `backlog`, `done`, or non-existent).

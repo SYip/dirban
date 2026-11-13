@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test"
 import {
   GitVcsProvider,
-  NoopVcsProvider,
   parseGitWorktreeListPorcelain,
 } from "./index.ts"
+import { NoopVcsProvider } from "../noop.ts"
 
 describe("VCS Git Provider Tests", () => {
   it("Vector 9 (Git helper functions & VCS Providers): Derives deterministic branch names, worktree paths, and extracts IDs", () => {

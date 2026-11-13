@@ -32,6 +32,8 @@ export interface CliFlags {
   readonly "no-blocked"?: boolean
   readonly to?: string
   readonly interactive?: boolean
+  readonly force?: boolean
+  readonly sync?: boolean
 }
 
 export type ParseArgsConfig = NonNullable<Parameters<typeof parseArgs>[0]>
@@ -66,6 +68,8 @@ export const CLI_PARSE_OPTIONS: NonNullable<ParseArgsConfig["options"]> = {
   "no-blocked": { type: "boolean" },
   to: { type: "string" },
   interactive: { type: "boolean", short: "i" },
+  force: { type: "boolean", short: "f" },
+  sync: { type: "boolean" },
 }
 
 export interface CliContext {

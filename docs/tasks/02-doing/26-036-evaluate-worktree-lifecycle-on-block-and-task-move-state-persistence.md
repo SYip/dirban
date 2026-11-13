@@ -106,26 +106,26 @@ Detailed decision records:
   - [x] Formulate dirty working tree halt rules (zero-loss axiom) for `start`, `block`, and `resume`.
   - [x] Record formal decision records: `2026-11-12-worktree-lifecycle-and-state-persistence.md` and `2026-11-12-minimal-columns-vs-in-task-workflow.md`.
 
-- [ ] **Phase 2: Core Lifecycle Synchronization (`start`, `block`, `resume`)**
-  - [ ] **2.1 Target Branch Commits on `dirban start`**
-    - [ ] Add dirty working copy guard: halt immediately if target branch has uncommitted non-task files.
-    - [ ] Move task from `01-todo/` to `02-doing/` and commit on target branch (`main`/`targetBranch`) *before* spawning the worktree.
-    - [ ] Spawn task branch/worktree directly from that commit so file paths are identical on both branches.
-  - [ ] **2.2 Task Branch Authority & Sync on `dirban block`**
-    - [ ] Add dirty working copy guard: check worktree for uncommitted non-task changes; halt unless clean or `--force`.
-    - [ ] Ensure execution parity whether run from inside worktree or from repository root (detect active worktree).
-    - [ ] Update task file in the worktree first (preserving in-flight `- [x]` checkboxes, test details, and adding blocker reasons).
-    - [ ] Synchronize and commit updated task file to `docs/tasks/backlog/<id>.md` on the target branch.
-    - [ ] Retain active worktree directory intact without pruning.
-  - [ ] **2.3 Implementation of `dirban resume` Command**
-    - [ ] Implement `resumeTask` core operation in `src/tasks/lifecycle/resume.ts` across `worktree`, `checkout`, and `none` strategies.
-    - [ ] Add `dirban resume <id>` CLI command to router and CLI options.
-    - [ ] Add dirty working copy guard on target branch before resume.
-    - [ ] Move task from `backlog/` to `02-doing/` in the worktree/task branch first, then sync and commit to target branch.
-    - [ ] Handle missing worktree edge case: recreate worktree from existing branch if `.worktrees/task-<id>` was deleted out-of-band.
-    - [ ] Return active worktree path (for `worktree`) or switch branch (for `checkout`).
-    - [ ] Enforce no-auto-merge default (emit advisory if target branch is ahead; optional `--sync` flag for explicit merge).
-    - [ ] Add guard in `dirban start <id>` detecting existing worktrees/branches and guiding users to `dirban resume`.
+- [x] **Phase 2: Core Lifecycle Synchronization (`start`, `block`, `resume`)**
+  - [x] **2.1 Target Branch Commits on `dirban start`**
+    - [x] Add dirty working copy guard: halt immediately if target branch has uncommitted non-task files.
+    - [x] Move task from `01-todo/` to `02-doing/` and commit on target branch (`main`/`targetBranch`) *before* spawning the worktree.
+    - [x] Spawn task branch/worktree directly from that commit so file paths are identical on both branches.
+  - [x] **2.2 Task Branch Authority & Sync on `dirban block`**
+    - [x] Add dirty working copy guard: check worktree for uncommitted non-task changes; halt unless clean or `--force`.
+    - [x] Ensure execution parity whether run from inside worktree or from repository root (detect active worktree).
+    - [x] Update task file in the worktree first (preserving in-flight `- [x]` checkboxes, test details, and adding blocker reasons).
+    - [x] Synchronize and commit updated task file to `docs/tasks/backlog/<id>.md` on the target branch.
+    - [x] Retain active worktree directory intact without pruning.
+  - [x] **2.3 Implementation of `dirban resume` Command**
+    - [x] Implement `resumeTask` core operation in `src/tasks/lifecycle/resume.ts` across `worktree`, `checkout`, and `none` strategies.
+    - [x] Add `dirban resume <id>` CLI command to router and CLI options.
+    - [x] Add dirty working copy guard on target branch before resume.
+    - [x] Move task from `backlog/` to `02-doing/` in the worktree/task branch first, then sync and commit to target branch.
+    - [x] Handle missing worktree edge case: recreate worktree from existing branch if `.worktrees/task-<id>` was deleted out-of-band.
+    - [x] Return active worktree path (for `worktree`) or switch branch (for `checkout`).
+    - [x] Enforce no-auto-merge default (emit advisory if target branch is ahead; optional `--sync` flag for explicit merge).
+    - [x] Add guard in `dirban start <id>` detecting existing worktrees/branches and guiding users to `dirban resume`.
 
 - [ ] **Phase 3: Worktree Discovery, Live Progress Overlay & Hygiene**
   - [ ] **3.1 In-Flight Worktree Progress Overlay**
