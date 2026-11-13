@@ -89,7 +89,6 @@ Configure your board in `.vscode/settings.json` (or `.dirban.json` in your repos
 ```json
 {
   "dirban.tasksDir": "docs/tasks",
-  "dirban.columns": ["01-todo", "02-doing", "03-done"],
   "dirban.focusColumn": "02-doing",
   "dirban.branchStrategy": "checkout",
   "dirban.autoMerge": true,
@@ -101,9 +100,8 @@ Configure your board in `.vscode/settings.json` (or `.dirban.json` in your repos
 | Setting                  | Default                              | Description                                                                        |
 | :----------------------- | :----------------------------------- | :--------------------------------------------------------------------------------- |
 | `dirban.tasksDir`        | `"docs/tasks"`                       | Path to the directory storing task columns.                                        |
-| `dirban.columns`         | `["01-todo", "02-doing", "03-done"]` | Ordered list of active workflow column directories.                                |
 | `dirban.focusColumn`     | `"02-doing"`                         | The designated active execution column tracked by the Focus View.                  |
-| `dirban.archiveDir`      | `"docs/tasks/archive"`               | Destination folder where finished tasks are archived.                              |
+| `dirban.archiveDir`      | `"docs/tasks/04-archive"`            | Destination folder where finished tasks are archived.                              |
 | `dirban.branchStrategy`  | `"checkout"`                         | Workspace strategy when starting a task (`"checkout"`, `"worktree"`, or `"none"`). |
 | `dirban.autoMerge`       | `true`                               | Automatically squash and merge task branch upon task completion.                   |
 | `dirban.priorities`      | `["p0","p1","p2","p3"]`              | Recognized priority tiers.                                                         |

@@ -52,16 +52,16 @@ Below, commands are organized into **Board & Task Management** (shared across al
 | **`dirban board --static`** | Lists all tasks grouped by column | `for col in docs/tasks/*/; do echo "=== $(basename "$col") ==="; ls -1 "$col"*.md 2>/dev/null; done` |
 | **`dirban current`** / **`focus`** | Inspects active task in progress | `ls -1 docs/tasks/02-doing/` |
 | **`dirban next`** | Finds highest priority task from `01-todo` | `grep -rn "priority: \"p0\"" docs/tasks/01-todo/ \| head -n 1 \| cut -d: -f1` *(fallback to p1, p2)* |
-| **`dirban new "<title>"`** | Creates a new Markdown file with frontmatter | `cat << 'EOF' > docs/tasks/backlog/26-001-my-task.md`<br>`---`<br>`id: "26-001"`<br>`title: "My Task"`<br>`priority: "p2"`<br>`---`<br>`# My Task`<br>`## Acceptance Criteria`<br>`- [ ] Task item`<br>`EOF` |
+| **`dirban new "<title>"`** | Creates a new Markdown file with frontmatter | `cat << 'EOF' > docs/tasks/00-backlog/26-001-my-task.md`<br>`---`<br>`id: "26-001"`<br>`title: "My Task"`<br>`priority: "p2"`<br>`---`<br>`# My Task`<br>`## Acceptance Criteria`<br>`- [ ] Task item`<br>`EOF` |
 | **`dirban next-id`** | Computes the next sequential ID for the year | `printf "%02d-%03d\n" $(date +%y) $(( $(find docs/tasks -name "[0-9][0-9]-[0-9][0-9][0-9]*" \| wc -l) + 1 ))` |
 | **`dirban move <id> <col>`** | Moves a task file into a target column folder | `mv docs/tasks/*/26-001*.md docs/tasks/<col>/` |
-| **`dirban ready <id>`** | Moves task from `backlog` into `01-todo` | `mv docs/tasks/backlog/26-001*.md docs/tasks/01-todo/` |
+| **`dirban ready <id>`** | Moves task from `backlog` into `01-todo` | `mv docs/tasks/00-backlog/26-001*.md docs/tasks/01-todo/` |
 | **`dirban view <id>`** | Renders task metadata, criteria, and body | `cat docs/tasks/*/26-001*.md` |
 | **`dirban check <id> <n>`** | Toggles $n$-th checkbox item to `[x]` | Edit file in editor or via `sed`: `sed -i '' 's/- \[ \]/- \[x\]/1' docs/tasks/*/26-001*.md` |
 | **`dirban set <id> --priority=p1`** | Updates frontmatter variable | Edit file in editor or via `sed -i '' 's/priority: .*/priority: "p1"/' file.md` |
-| **`dirban archive <id>`** | Moves task to historical partitioned archive directory | `mkdir -p docs/tasks/archive/$(date +%Y) && mv docs/tasks/03-done/26-001*.md docs/tasks/archive/$(date +%Y)/` |
-| **`dirban plan`** | Separates backlog tasks by dependency status | `grep -rn "depends_on:" docs/tasks/backlog/` |
-| **`dirban block <id> <reason>`** | Adds blocker reason and moves to `backlog` | Edit `relationships.depends_on` and `mv docs/tasks/*/26-001*.md docs/tasks/backlog/` |
+| **`dirban archive <id>`** | Moves task to historical partitioned archive directory | `mkdir -p docs/tasks/04-archive/$(date +%Y) && mv docs/tasks/03-done/26-001*.md docs/tasks/04-archive/$(date +%Y)/` |
+| **`dirban plan`** | Separates backlog tasks by dependency status | `grep -rn "depends_on:" docs/tasks/00-backlog/` |
+| **`dirban block <id> <reason>`** | Adds blocker reason and moves to `backlog` | Edit `relationships.depends_on` and `mv docs/tasks/*/26-001*.md docs/tasks/00-backlog/` |
 | **`dirban unblock <id> <reason>`** | Removes dependency entry from frontmatter | Edit frontmatter to clear `depends_on` item |
 | **`dirban path <id>`** | Resolves task file path | `find docs/tasks -name "26-001*.md"` |
 
@@ -111,7 +111,7 @@ Ideal for parallel execution, agent sandboxing, and zero-disruption context swit
 
 ```bash
 # 1. Create the task file in backlog
-cat << 'EOF' > docs/tasks/backlog/26-001-user-auth.md
+cat << 'EOF' > docs/tasks/00-backlog/26-001-user-auth.md
 ---
 id: "26-001"
 title: "Implement user auth"
@@ -127,7 +127,7 @@ priority: "p1"
 EOF
 
 # 2. Pick it up and start work
-mv docs/tasks/backlog/26-001-user-auth.md docs/tasks/02-doing/
+mv docs/tasks/00-backlog/26-001-user-auth.md docs/tasks/02-doing/
 git checkout -b task/26-001-user-auth main
 ```
 

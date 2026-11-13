@@ -35,7 +35,7 @@ To customize column names, paths, priority tiers, or Git branching strategies, a
   "$schema": "https://raw.githubusercontent.com/andrew/dirban/main/schema.json",
   "tasksDir": "docs/tasks",
   "focusColumn": "02-doing",
-  "archiveDir": "docs/tasks/archive",
+  "archiveDir": "docs/tasks/04-archive",
   "priorities": ["p0", "p1", "p2", "p3"],
   "defaultPriority": "p2",
   "branchStrategy": "checkout",
@@ -50,7 +50,7 @@ To customize column names, paths, priority tiers, or Git branching strategies, a
 | :--- | :--- | :--- | :--- |
 | `tasksDir` | `string` | `"docs/tasks"` | Relative root folder storing board columns and tasks. |
 | `focusColumn` | `string` | `"02-doing"` | The designated active execution column tracked by `dirban current`. |
-| `archiveDir` | `string` | `"docs/tasks/archive"` | Destination folder where `dirban archive` moves completed tasks. |
+| `archiveDir` | `string` | `"docs/tasks/04-archive"` | Destination folder where `dirban archive` moves completed tasks. |
 | `priorities` | `string[]` | `["p0", "p1", "p2", "p3"]` | Recognized priority tokens, sorted highest to lowest. |
 | `defaultPriority` | `string` | `"p2"` | Fallback priority assigned to tasks without an explicit priority. |
 | `branchStrategy` | `"checkout" \| "worktree" \| "none"` | `"checkout"` | Workspace strategy when starting a task (`checkout` branch, separate `worktree`, or `none`). |

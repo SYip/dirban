@@ -432,4 +432,4 @@ For detailed workflow recipes (Minimalist, Enterprise Multi-Stage, Direct Intake
 | `branchStrategy` | `"checkout" \| "worktree" \| "none"` | `"checkout"` | Workspace strategy when starting a task |
 | `branchPrefix` | `string` | `"task/"` | Prefix applied to Git task branches |
 | `autoMerge` | `boolean` | `true` | Automatically squash and merge the task branch upon `dirban done` |
-| `archiveDir` | `string` | `"docs/tasks/archive"` | Directory where archived tasks are moved |
+| `archiveDir` | `string` | `"docs/tasks/04-archive"` | Directory where archived tasks are moved |
