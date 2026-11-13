@@ -2,6 +2,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { err, ok, type Result } from "neverthrow"
 import type { Board } from "../../board/types.ts"
+import { BACKLOG_COLUMN } from "../../config/config.ts"
 import type { Priority } from "../../okf/types.ts"
 import type { OperationError } from "../types.ts"
 
@@ -99,7 +100,7 @@ export const createTask = (
     })
   }
 
-  const targetColumnName = options.column ?? board.columns[0]?.name ?? "backlog"
+  const targetColumnName = options.column ?? board.columns[0]?.name ?? BACKLOG_COLUMN
 
   const targetCol = board.columns.find(
     (c) =>

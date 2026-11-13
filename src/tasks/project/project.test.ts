@@ -48,7 +48,7 @@ describe("Project and Lifecycle Storage Operations Tests", () => {
         if (archiveRes.isOk()) {
           expect(archiveRes.value.archivedTasks.length).toBe(1)
           const targetDir = archiveRes.value.targetDirectory
-          expect(targetDir.endsWith(path.join("docs", "tasks", "archive"))).toBe(true)
+          expect(targetDir.endsWith(path.join("docs", "tasks", "04-archive"))).toBe(true)
           expect(fs.existsSync(path.join(targetDir, "26-001.md"))).toBe(true)
         }
       }
@@ -142,16 +142,16 @@ describe("Project and Lifecycle Storage Operations Tests", () => {
       expect(initRes.isOk()).toBe(true)
       if (initRes.isOk()) {
         expect(fs.existsSync(path.join(tempDir, "docs/tasks"))).toBe(true)
-        expect(fs.existsSync(path.join(tempDir, "docs/tasks/backlog"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks/00-backlog"))).toBe(true)
         expect(fs.existsSync(path.join(tempDir, "docs/tasks/01-todo"))).toBe(true)
         expect(fs.existsSync(path.join(tempDir, "docs/tasks/02-doing"))).toBe(true)
         expect(fs.existsSync(path.join(tempDir, "docs/tasks/03-done"))).toBe(true)
-        expect(fs.existsSync(path.join(tempDir, "docs/tasks/archive"))).toBe(true)
-        expect(fs.existsSync(path.join(tempDir, "docs/tasks/backlog/.gitkeep"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks/04-archive"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks/00-backlog/.gitkeep"))).toBe(true)
         expect(fs.existsSync(path.join(tempDir, "docs/tasks/01-todo/.gitkeep"))).toBe(true)
         expect(fs.existsSync(path.join(tempDir, "docs/tasks/02-doing/.gitkeep"))).toBe(true)
         expect(fs.existsSync(path.join(tempDir, "docs/tasks/03-done/.gitkeep"))).toBe(true)
-        expect(fs.existsSync(path.join(tempDir, "docs/tasks/archive/.gitkeep"))).toBe(true)
+        expect(fs.existsSync(path.join(tempDir, "docs/tasks/04-archive/.gitkeep"))).toBe(true)
         expect(fs.existsSync(path.join(tempDir, ".dirban.json"))).toBe(true)
       }
     } finally {

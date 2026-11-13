@@ -2,6 +2,8 @@ import { err, ok, type Result } from "neverthrow"
 import { findTaskByIdOrName } from "../../board/discovery.ts"
 import type { Board, BoardTask } from "../../board/types.ts"
 import {
+  ARCHIVE_COLUMN,
+  BACKLOG_COLUMN,
   DEFAULT_COLUMNS,
   resolveFocusColumn,
   resolvePreviousColumn,
@@ -72,7 +74,7 @@ const commitStartMoveToTarget = (
   const commitMsg = `chore(task): start ${displayId} ${taskTitle}`.trim()
   const commitRes = vcs.commitFile(filePath, commitMsg, cwd)
 
-  if (commitRes.isErr() && commitRes.error.kind === "BRANCH_CONFLICT") {
+  if (commitRes.isErr()) {
     return err({
       kind: "GIT_CONFLICT",
       message: commitRes.error.message,
@@ -116,11 +118,11 @@ export const startTask = (
   }
 
   if (expectedPreFocusCol != null && task.column !== expectedPreFocusCol) {
-    if (task.column === "backlog") {
+    if (task.column === BACKLOG_COLUMN || task.column === "backlog") {
       return err({
         kind: "INVALID_COLUMN_TRANSITION",
-        message: `Cannot start task ${displayId}: task is in 'backlog'. Run 'dirban ready ${displayId}' first.`,
-        currentColumn: "backlog",
+        message: `Cannot start task ${displayId}: task is in '${task.column}'. Run 'dirban ready ${displayId}' first.`,
+        currentColumn: task.column,
         expectedColumn: expectedPreFocusCol,
         id: taskId,
         suggestion: `dirban ready ${displayId}`,
@@ -128,7 +130,9 @@ export const startTask = (
     }
 
     const isCompleted =
-      task.column === "archive" || task.column === DEFAULT_COLUMNS[DEFAULT_COLUMNS.length - 1]
+      task.column === ARCHIVE_COLUMN
+      || task.column === "archive"
+      || task.column === DEFAULT_COLUMNS[DEFAULT_COLUMNS.length - 1]
     const message = isCompleted
       ? `Cannot start task ${displayId}: task is already completed in '${task.column}'.`
       : `Cannot start task ${displayId}: task is in '${task.column}' (expected '${expectedPreFocusCol}').`

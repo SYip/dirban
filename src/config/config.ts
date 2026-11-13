@@ -7,8 +7,10 @@ export const CONFIG_FILE_NAME = ".dirban.json" as const
 export const VSCODE_SETTINGS_DIR = ".vscode" as const
 export const VSCODE_SETTINGS_FILE = "settings.json" as const
 export const DEFAULT_TASKS_DIR = "docs/tasks" as const
-export const DEFAULT_BACKLOG_DIR = "docs/tasks/backlog" as const
-export const DEFAULT_ARCHIVE_DIR = "docs/tasks/archive" as const
+export const BACKLOG_COLUMN = "00-backlog" as const
+export const ARCHIVE_COLUMN = "04-archive" as const
+export const DEFAULT_BACKLOG_DIR = `docs/tasks/${BACKLOG_COLUMN}` as const
+export const DEFAULT_ARCHIVE_DIR = `docs/tasks/${ARCHIVE_COLUMN}` as const
 export const DEFAULT_PRIORITY = "p2" as const
 
 export const DEFAULT_BRANCH_STRATEGY = "checkout" as const

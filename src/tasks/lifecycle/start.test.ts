@@ -192,7 +192,7 @@ describe("Start Task Operations (startTask)", () => {
         expect(startBacklogRes.error.kind).toBe("INVALID_COLUMN_TRANSITION")
         expect(startBacklogRes.error.message).toContain("Run 'dirban ready")
         if (startBacklogRes.error.kind === "INVALID_COLUMN_TRANSITION") {
-          expect(startBacklogRes.error.currentColumn).toBe("backlog")
+          expect(startBacklogRes.error.currentColumn).toBe("00-backlog")
           expect(startBacklogRes.error.expectedColumn).toBe("01-todo")
           expect(startBacklogRes.error.suggestion).toBe(`dirban ready ${backlogTask.id}`)
         }

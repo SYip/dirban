@@ -2,6 +2,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { err, ok, type Result } from "neverthrow"
 import {
+  BACKLOG_COLUMN,
   CONFIG_FILE_NAME,
   DEFAULT_COLUMNS,
   DEFAULT_CONFIG,
@@ -42,7 +43,7 @@ export const initializeBoard = (
     ? config.tasksDir
     : path.join(workspaceRoot, config.tasksDir)
 
-  const backlogDir = path.join(rootDir, "backlog")
+  const backlogDir = path.join(rootDir, BACKLOG_COLUMN)
 
   const archiveDir = path.isAbsolute(config.archiveDir)
     ? config.archiveDir
