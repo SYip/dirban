@@ -113,7 +113,6 @@ describe("VS Code Extension Focus and Tree Items", () => {
   const dummyConfig: DirbanConfig = {
     tasksDir: "docs/tasks",
     archiveDir: "docs/tasks/archive",
-    columns: ["01-todo", "02-doing", "03-done"],
     focusColumn: "02-doing",
     priorities: ["p0", "p1", "p2", "p3"],
     defaultPriority: "p2",

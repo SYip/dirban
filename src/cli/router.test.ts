@@ -10,7 +10,6 @@ import type { CliContext } from "./types.ts"
 
 const MOCK_CONFIG: DirbanConfig = {
   tasksDir: "docs/tasks",
-  columns: ["01-todo", "02-doing", "03-done"],
   archiveDir: "archive",
   priorities: ["p0", "p1", "p2", "p3"],
   defaultPriority: "p2",

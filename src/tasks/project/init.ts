@@ -3,6 +3,7 @@ import * as path from "node:path"
 import { err, ok, type Result } from "neverthrow"
 import {
   CONFIG_FILE_NAME,
+  DEFAULT_COLUMNS,
   DEFAULT_CONFIG,
   VSCODE_SETTINGS_DIR,
   VSCODE_SETTINGS_FILE,
@@ -50,7 +51,7 @@ export const initializeBoard = (
   const directoriesToEnsure = [
     rootDir,
     backlogDir,
-    ...config.columns.map((c) => path.join(rootDir, c)),
+    ...DEFAULT_COLUMNS.map((c) => path.join(rootDir, c)),
     archiveDir,
   ]
 
@@ -60,7 +61,7 @@ export const initializeBoard = (
   const GITKEEP_FILE_NAME = ".gitkeep"
   const directoriesForGitkeep = [
     backlogDir,
-    ...config.columns.map((c) => path.join(rootDir, c)),
+    ...DEFAULT_COLUMNS.map((c) => path.join(rootDir, c)),
     archiveDir,
   ]
 
@@ -123,10 +124,6 @@ export const initializeBoard = (
         currentSettings["dirban.tasksDir"] = config.tasksDir
         modified = true
       }
-      if (currentSettings["dirban.columns"] == null) {
-        currentSettings["dirban.columns"] = [...config.columns]
-        modified = true
-      }
       if (currentSettings["dirban.priorities"] == null) {
         currentSettings["dirban.priorities"] = [...config.priorities]
         modified = true
@@ -152,7 +149,6 @@ export const initializeBoard = (
       if (!fs.existsSync(dirbanConfigPath)) {
         const configContent = {
           tasksDir: config.tasksDir,
-          columns: [...config.columns],
           priorities: [...config.priorities],
           defaultPriority: config.defaultPriority,
           archiveDir: config.archiveDir,

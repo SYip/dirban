@@ -125,18 +125,6 @@
           "default": "docs/tasks",
           "description": "Directory where tasks and columns are stored."
         },
-        "dirban.columns": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "default": [
-            "01-todo",
-            "02-doing",
-            "03-done"
-          ],
-          "description": "Ordered active flow columns on the Kanban board."
-        },
         "dirban.focusColumn": {
           "type": "string",
           "default": "02-doing",

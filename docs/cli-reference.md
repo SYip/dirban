@@ -426,8 +426,7 @@ For detailed workflow recipes (Minimalist, Enterprise Multi-Stage, Direct Intake
 | Property | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `tasksDir` | `string` | `"docs/tasks"` | Root directory containing column subdirectories |
-| `columns` | `string[]` | `["01-todo", "02-doing", "03-done"]` | Ordered list of active workflow column folder names (`backlog/` and `archive/` are intrinsic reserved tiers) |
-| `focusColumn` | `string` | `"02-doing"` | Name of the primary in-progress column (defaults to `columns[1]` or `columns[0]`). If `columns: []`, focus is `null` |
+| `focusColumn` | `string` | `"02-doing"` | Name of the primary in-progress column (defaults to `"02-doing"`) |
 | `priorities` | `string[]` | `["p0", "p1", "p2", "p3"]` | Ordered list of priority levels (index 0 is highest priority) |
 | `defaultPriority` | `string` | `"p2"` | Default priority assigned to newly created tasks (must be in `priorities`) |
 | `branchStrategy` | `"checkout" \| "worktree" \| "none"` | `"checkout"` | Workspace strategy when starting a task |

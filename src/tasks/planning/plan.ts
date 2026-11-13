@@ -2,6 +2,7 @@ import { err, ok, type Result } from "neverthrow"
 import { evaluateTaskBlockers, type TaskBlockerEvaluation } from "../../board/dependencies.ts"
 import { findTaskByIdOrName, findTaskByQuery } from "../../board/discovery.ts"
 import type { Board, BoardTask } from "../../board/types.ts"
+import { DEFAULT_COLUMNS } from "../../config/config.ts"
 import type { DirbanConfig } from "../../config/types.ts"
 import { moveTask } from "../mutation/move.ts"
 import type { OperationError } from "../types.ts"
@@ -114,7 +115,7 @@ export const promoteTasks = (
   taskIdsOrPaths: readonly string[],
   targetColumnOverride?: string,
 ): BatchPromoteResult => {
-  const targetColumn = targetColumnOverride ?? config.columns[0]
+  const targetColumn = targetColumnOverride ?? DEFAULT_COLUMNS[0]
   if (targetColumn == null || targetColumn.trim() === "") {
     return {
       promoted: [],
@@ -203,7 +204,7 @@ export const promoteTask = (
   taskIdOrPath: string,
   targetColumnOverride?: string,
 ): Result<PromoteTaskResult, OperationError> => {
-  const targetColumn = targetColumnOverride ?? config.columns[0]
+  const targetColumn = targetColumnOverride ?? DEFAULT_COLUMNS[0]
   if (targetColumn == null || targetColumn.trim() === "") {
     return err({
       kind: "COLUMN_NOT_FOUND",

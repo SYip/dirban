@@ -21,7 +21,6 @@ export const DEFAULT_PRIORITIES: readonly string[] = Object.freeze(["p0", "p1", 
 
 export const DEFAULT_CONFIG: DirbanConfig = Object.freeze({
   tasksDir: DEFAULT_TASKS_DIR,
-  columns: DEFAULT_COLUMNS,
   archiveDir: DEFAULT_ARCHIVE_DIR,
   priorities: DEFAULT_PRIORITIES,
   defaultPriority: DEFAULT_PRIORITY,
@@ -57,27 +56,7 @@ export const validateConfig = (
     })
   }
 
-  // 3. columns must have unique, non-empty names
-  const seenColumns = new Set<string>()
-  for (const col of config.columns) {
-    const trimmed = col.trim()
-    if (trimmed === "") {
-      return err({
-        kind: "VALIDATION_ERROR",
-        message: "Config error: column names cannot be empty strings.",
-      })
-    }
-    const lower = trimmed.toLowerCase()
-    if (seenColumns.has(lower)) {
-      return err({
-        kind: "VALIDATION_ERROR",
-        message: `Config error: duplicate column name detected: "${trimmed}".`,
-      })
-    }
-    seenColumns.add(lower)
-  }
-
-  // 4. If requireTasksDir is requested, verify that tasksDir exists on disk
+  // 3. If requireTasksDir is requested, verify that tasksDir exists on disk
   if (options?.requireTasksDir) {
     const workspaceRoot = options.workspaceRoot ?? process.cwd()
     const resolvedTasksDir = path.isAbsolute(config.tasksDir)
@@ -96,7 +75,7 @@ export const validateConfig = (
 }
 
 export const resolveFocusColumn = (config: DirbanConfig): string | null => {
-  const columns = config.columns
+  const columns = DEFAULT_COLUMNS
   if (columns.length === 0) {
     return null
   }
@@ -117,10 +96,10 @@ export const resolveFocusColumn = (config: DirbanConfig): string | null => {
 }
 
 export const resolvePreviousColumn = (
-  config: DirbanConfig,
+  _config: DirbanConfig,
   currentColumn: string,
 ): string | null => {
-  const columns = config.columns
+  const columns = DEFAULT_COLUMNS
   if (columns.length === 0) {
     return null
   }
@@ -134,8 +113,8 @@ export const resolvePreviousColumn = (
   return columns[currentIndex - 1]!
 }
 
-export const resolveNextColumn = (config: DirbanConfig, currentColumn: string): string => {
-  const columns = config.columns
+export const resolveNextColumn = (_config: DirbanConfig, currentColumn: string): string => {
+  const columns = DEFAULT_COLUMNS
   if (columns.length === 0) {
     return "archive"
   }
@@ -178,12 +157,6 @@ const parseRawConfigObject = (
   const archiveDir =
     typeof archiveDirRaw === "string" && archiveDirRaw.trim() !== ""
       ? archiveDirRaw.trim()
-      : undefined
-
-  const columnsRaw = getVal("columns")
-  const columns =
-    Array.isArray(columnsRaw) && columnsRaw.length > 0
-      ? columnsRaw.filter((c): c is string => typeof c === "string" && c.trim() !== "")
       : undefined
 
   const prioritiesRaw = getVal("priorities")
@@ -233,7 +206,6 @@ const parseRawConfigObject = (
   return {
     tasksDir,
     archiveDir,
-    columns,
     priorities,
     defaultPriority,
     branchStrategy,
@@ -293,7 +265,6 @@ export const loadConfig = (
   return ok(
     Object.freeze({
       tasksDir: parsed.tasksDir ?? DEFAULT_CONFIG.tasksDir,
-      columns: parsed.columns ?? DEFAULT_CONFIG.columns,
       archiveDir: parsed.archiveDir ?? DEFAULT_CONFIG.archiveDir,
       priorities: parsed.priorities ?? DEFAULT_CONFIG.priorities,
       defaultPriority: parsed.defaultPriority ?? DEFAULT_CONFIG.defaultPriority,

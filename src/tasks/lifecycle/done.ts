@@ -2,6 +2,7 @@ import { err, ok, type Result } from "neverthrow"
 import { findTaskByIdOrName, findTaskExact } from "../../board/discovery.ts"
 import type { Board, BoardTask } from "../../board/types.ts"
 import {
+  DEFAULT_COLUMNS,
   resolveFocusColumn,
   resolveNextColumn,
   resolvePreviousColumn,
@@ -90,8 +91,7 @@ export const doneTask = (
       const displayId = taskToDone.document.id ?? taskToDone.filename
       const isCompleted =
         taskToDone.column === "archive"
-        || (config.columns.length > 0
-          && taskToDone.column === config.columns[config.columns.length - 1])
+        || taskToDone.column === DEFAULT_COLUMNS[DEFAULT_COLUMNS.length - 1]
 
       if (isCompleted) {
         return err({
@@ -111,7 +111,7 @@ export const doneTask = (
         })
       }
 
-      const preFocusCol = resolvePreviousColumn(config, focusColName) ?? config.columns[0]
+      const preFocusCol = resolvePreviousColumn(config, focusColName) ?? DEFAULT_COLUMNS[0]
       if (taskToDone.column === preFocusCol) {
         return err({
           kind: "INVALID_COLUMN_TRANSITION",

@@ -1,5 +1,6 @@
 import pc from "picocolors"
 import type { CommandDefinition, CommandHandler } from "../../cli/types.ts"
+import { DEFAULT_COLUMNS } from "../../config/config.ts"
 import { initializeBoard } from "./init.ts"
 
 export const handleInit: CommandHandler = (ctx) => {
@@ -15,7 +16,7 @@ export const handleInit: CommandHandler = (ctx) => {
   console.log(
     pc.bold(pc.green(`✔ Initialized Dirban board in ${pc.cyan(initRes.value.tasksDir)}:`)),
   )
-  for (const col of ctx.config.columns) {
+  for (const col of DEFAULT_COLUMNS) {
     console.log(`  ├── ${pc.yellow(col)}/`)
   }
   console.log(`  └── ${pc.gray("archive/")}`)

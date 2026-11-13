@@ -2,7 +2,6 @@ export type BranchStrategy = "checkout" | "worktree" | "none"
 
 export interface DirbanConfig {
   readonly tasksDir: string
-  readonly columns: readonly string[]
   readonly archiveDir: string
   readonly priorities: readonly string[]
   readonly defaultPriority: string
