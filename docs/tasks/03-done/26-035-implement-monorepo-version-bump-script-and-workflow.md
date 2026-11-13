@@ -37,10 +37,10 @@ Create a local release helper script `scripts/bump.ts` (invoked via `bun run bum
 6. Prints the next push instruction: `git push origin main --tags`.
 
 ## Acceptance Criteria
-- [ ] Create `scripts/bump.ts` supporting `patch`, `minor`, `major`, and explicit semver arguments.
-- [ ] Add `"bump": "bun run scripts/bump.ts"` to root `package.json` scripts.
-- [ ] Synchronously bump both `./package.json` and `./packages/vscode-extension/package.json`.
-- [ ] Run `bun install` programmatically to keep `bun.lock` synchronized.
-- [ ] Support `--dry-run` to preview version changes without writing files.
-- [ ] Support `--no-git` to skip committing/tagging when only file updates are wanted.
-- [ ] Output clear instructions to push tag to trigger `.github/workflows/publish.yml`.
+- [x] Create `scripts/bump.ts` supporting `patch`, `minor`, `major`, and explicit semver arguments.
+- [x] Add `"bump": "bun run scripts/bump.ts"` to root `package.json` scripts.
+- [x] Synchronously bump both `./package.json` and `./packages/vscode-extension/package.json`.
+- [x] Run `bun install` programmatically to keep `bun.lock` synchronized.
+- [x] Support `--dry-run` to preview version changes without writing files.
+- [x] Support `--no-git` to skip committing/tagging when only file updates are wanted.
+- [x] Output clear instructions to push tag to trigger `.github/workflows/publish.yml`.
