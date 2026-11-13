@@ -127,7 +127,7 @@ describe("Phase 5: Worktree Lifecycle E2E Tests", () => {
     // Worktree is retained
     expect(fs.existsSync(wtPath)).toBe(true)
     // Task moved to backlog on target branch
-    expect(fs.existsSync(path.join(repoDir, "docs/tasks/backlog/26-001-e2e-task.md"))).toBe(true)
+    expect(fs.existsSync(path.join(repoDir, "docs/tasks/00-backlog/26-001-e2e-task.md"))).toBe(true)
   })
 
   test("Vector 4: resumeTask unblocks task, recreates missing worktree, and supports checkout & none strategies", () => {
