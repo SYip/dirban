@@ -1,6 +1,6 @@
 {
   "name": "dirban",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Zero-Database, Agent-Native Kanban Engine & TUI Backed by the File System and Google Open Knowledge Format (OKF)",
   "type": "module",
   "main": "./dist/dirban.js",
