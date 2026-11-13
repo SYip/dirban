@@ -1,6 +1,6 @@
 {
   "name": "dirban",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Zero-Database, Agent-Native Kanban Engine & TUI Backed by the File System and Google Open Knowledge Format (OKF)",
   "type": "module",
   "main": "./dist/dirban.js",
@@ -38,6 +38,7 @@
     "watch:extension": "bun --filter dirban-vscode watch",
     "package:extension": "bun --filter dirban-vscode package",
     "build:binaries": "bun run scripts/build-binaries.ts",
+    "bump": "bun run scripts/bump.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit && bun --filter dirban-vscode typecheck",
     "lint": "biome lint",
