@@ -119,6 +119,9 @@ describe("Phase 5: Worktree Lifecycle E2E Tests", () => {
     if (board2.isErr()) return
 
     const blockRes = blockTask(board2.value, "26-001", ["Blocked on dependency"], { cwd: repoDir })
+    if (blockRes.isErr()) {
+      throw new Error(`blockTask failed: ${JSON.stringify(blockRes.error)}`)
+    }
     expect(blockRes.isOk()).toBe(true)
 
     // Worktree is retained
@@ -141,6 +144,9 @@ describe("Phase 5: Worktree Lifecycle E2E Tests", () => {
     const b2 = discoverBoard(config, repoDir)
     if (b2.isErr()) return
     const blk = blockTask(b2.value, "26-001", ["API down"], { cwd: repoDir })
+    if (blk.isErr()) {
+      throw new Error(`blockTask failed: ${JSON.stringify(blk.error)}`)
+    }
     expect(blk.isOk()).toBe(true)
 
     // Simulate out-of-band worktree deletion
