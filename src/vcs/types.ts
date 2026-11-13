@@ -8,6 +8,12 @@ export type VcsError =
   | { readonly kind: "COMMAND_ERROR"; readonly message: string }
   | { readonly kind: "DIRTY_WORKING_TREE"; readonly message: string; readonly dirtyFiles: readonly string[] }
 
+export interface WorktreeEntry {
+  readonly path: string
+  readonly branchRef?: string
+  readonly taskId?: string | null
+}
+
 export interface VcsContext {
   readonly isAvailable: boolean
   readonly currentBranch?: string
@@ -22,6 +28,8 @@ export interface VersionControlProvider {
   deriveBranchName(prefix: string, taskId: string, slug: string): string
   deriveWorktreePath(repoRoot: string, template: string, taskId: string, slug: string): string
   resolveWorktreePath(taskIdOrTarget?: string, cwd?: string): Result<string, VcsError>
+  listWorktrees(cwd?: string): Result<readonly WorktreeEntry[], VcsError>
+  removeWorktree(targetPath: string, force?: boolean, cwd?: string): Result<void, VcsError>
   switchOrCreateBranch(branchName: string, cwd?: string): Result<{ readonly alreadyOnBranch: boolean }, VcsError>
   createWorktree(targetPath: string, branchName: string, cwd?: string): Result<void, VcsError>
   checkWorkingTreeClean(options?: { readonly allowedPathPrefixes?: readonly string[]; readonly cwd?: string }): Result<void, VcsError>

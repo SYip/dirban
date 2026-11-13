@@ -6,6 +6,7 @@ import type {
   VcsContext,
   VcsError,
   VersionControlProvider,
+  WorktreeEntry,
 } from "../types.ts"
 
 import { checkGitWorkingTreeClean } from "./status.ts"
@@ -211,6 +212,71 @@ export class GitVcsProvider implements VersionControlProvider {
       kind: "WORKTREE_ERROR",
       message: `No active Git worktree found matching "${taskIdOrTarget}"`,
     })
+  }
+
+  listWorktrees(cwd: string = process.cwd()): Result<readonly WorktreeEntry[], VcsError> {
+    const ctx = this.getContext(cwd)
+    if (!ctx.isAvailable || ctx.repoRoot == null) {
+      return err({
+        kind: "VCS_NOT_AVAILABLE",
+        message: "Git repository not detected",
+      })
+    }
+
+    const worktreeListResult = spawnSync(
+      "git",
+      ["worktree", "list", "--porcelain"],
+      { cwd: ctx.repoRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
+    )
+
+    if (worktreeListResult.status !== 0) {
+      return err({
+        kind: "WORKTREE_ERROR",
+        message: `Failed to list worktrees: ${worktreeListResult.stderr.trim()}`,
+      })
+    }
+
+    const rawEntries = parseGitWorktreeListPorcelain(worktreeListResult.stdout)
+    const entries: WorktreeEntry[] = rawEntries.map((entry) => ({
+      path: entry.path,
+      branchRef: entry.branchRef,
+      taskId: entry.branchRef != null ? this.extractTaskId(entry.branchRef) : null,
+    }))
+
+    return ok(entries)
+  }
+
+  removeWorktree(
+    targetPath: string,
+    force: boolean = false,
+    cwd: string = process.cwd(),
+  ): Result<void, VcsError> {
+    const ctx = this.getContext(cwd)
+    if (!ctx.isAvailable || ctx.repoRoot == null) {
+      return err({
+        kind: "VCS_NOT_AVAILABLE",
+        message: "Git repository not detected",
+      })
+    }
+
+    const args = force
+      ? ["worktree", "remove", "--force", targetPath]
+      : ["worktree", "remove", targetPath]
+
+    const removeResult = spawnSync("git", args, {
+      cwd: ctx.repoRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    })
+
+    if (removeResult.status !== 0) {
+      return err({
+        kind: "WORKTREE_ERROR",
+        message: `Failed to remove worktree '${targetPath}': ${removeResult.stderr.trim()}`,
+      })
+    }
+
+    return ok(undefined)
   }
 
   switchOrCreateBranch(

@@ -3,6 +3,8 @@ import * as path from "node:path"
 import * as fs from "node:fs"
 import type { DirbanConfig } from "../config/types.ts"
 import { parseTaskDocument } from "../okf/parser.ts"
+import { getVcsProvider } from "../vcs/index.ts"
+import { buildWorktreeTaskMap, overlayWorktreeTask } from "./overlay.ts"
 import { filterTasks, sortTasks } from "./sorter.ts"
 import type {
   Board,
@@ -105,6 +107,9 @@ export const discoverBoard = (
   )
   orderedColNames.push(...archiveDirs)
 
+  const vcs = getVcsProvider(workspaceRoot)
+  const worktreeMap = buildWorktreeTaskMap(vcs, workspaceRoot)
+
   const columns: Column[] = []
   let totalTasks = 0
 
@@ -137,12 +142,14 @@ export const discoverBoard = (
               })
             }
 
-            taskList.push(Object.freeze({
+            const baseTask: BoardTask = {
               filePath,
               filename: entry.name,
               column: colName,
               document: doc,
-            }))
+            }
+
+            taskList.push(overlayWorktreeTask(baseTask, worktreeMap, config.tasksDir))
           }
         }
       }

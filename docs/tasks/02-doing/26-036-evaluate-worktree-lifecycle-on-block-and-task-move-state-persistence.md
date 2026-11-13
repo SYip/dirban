@@ -127,13 +127,13 @@ Detailed decision records:
     - [x] Enforce no-auto-merge default (emit advisory if target branch is ahead; optional `--sync` flag for explicit merge).
     - [x] Add guard in `dirban start <id>` detecting existing worktrees/branches and guiding users to `dirban resume`.
 
-- [ ] **Phase 3: Worktree Discovery, Live Progress Overlay & Hygiene**
-  - [ ] **3.1 In-Flight Worktree Progress Overlay**
-    - [ ] Update board discovery and status readers (`dirban status`, board state managers) to inspect active worktrees (`git worktree list`).
-    - [ ] Overlay live checkbox progress (`- [x]`) from worktree task files without requiring intermediate target branch commits.
-  - [ ] **3.2 Worktree Audit & Cleanup (`dirban worktree list` & `dirban prune`)**
-    - [ ] Implement `dirban worktree list` (or `dirban status --worktrees`) auditing worktrees against board states (active vs. blocked vs. orphaned).
-    - [ ] Implement `dirban prune` to clean up worktrees for completed or abandoned tasks safely.
+- [x] **Phase 3: Worktree Discovery, Live Progress Overlay & Hygiene**
+  - [x] **3.1 In-Flight Worktree Progress Overlay**
+    - [x] Update board discovery and status readers (`dirban status`, board state managers) to inspect active worktrees (`git worktree list`).
+    - [x] Overlay live checkbox progress (`- [x]`) from worktree task files without requiring intermediate target branch commits.
+  - [x] **3.2 Worktree Audit & Cleanup (`dirban worktree list` & `dirban prune`)**
+    - [x] Implement `dirban worktree list` (or `dirban status --worktrees`) auditing worktrees against board states (active vs. blocked vs. orphaned).
+    - [x] Implement `dirban prune` to clean up worktrees for completed or abandoned tasks safely.
 
 - [ ] **Phase 4: VS Code Extension Integration**
   - [ ] **4.1 Task Card Actions & Context Menu**

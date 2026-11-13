@@ -5,6 +5,7 @@ import type {
   VcsContext,
   VcsError,
   VersionControlProvider,
+  WorktreeEntry,
 } from "./types.ts"
 
 export class NoopVcsProvider implements VersionControlProvider {
@@ -56,6 +57,21 @@ export class NoopVcsProvider implements VersionControlProvider {
     _taskIdOrTarget?: string,
     _cwd?: string,
   ): Result<string, VcsError> {
+    return err({
+      kind: "VCS_NOT_AVAILABLE",
+      message: "Version control not available in this workspace",
+    })
+  }
+
+  listWorktrees(_cwd?: string): Result<readonly WorktreeEntry[], VcsError> {
+    return ok([])
+  }
+
+  removeWorktree(
+    _targetPath: string,
+    _force?: boolean,
+    _cwd?: string,
+  ): Result<void, VcsError> {
     return err({
       kind: "VCS_NOT_AVAILABLE",
       message: "Version control not available in this workspace",
