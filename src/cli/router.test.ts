@@ -8,6 +8,9 @@ import { initializeBoard } from "../tasks/project/init.ts"
 import { dispatchCommand } from "./router.ts"
 import type { CliContext } from "./types.ts"
 
+const ANSI_ESCAPE_REGEX = /\x1b\[[0-9;]*m/g
+const stripAnsi = (str: string): string => str.replace(ANSI_ESCAPE_REGEX, "")
+
 const MOCK_CONFIG: DirbanConfig = {
   tasksDir: "docs/tasks",
   archiveDir: "archive",
@@ -37,8 +40,8 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const code = await dispatchCommand("help", ctx)
       expect(code).toBe(0)
-      expect(output).toContain("Dirban (dirban)")
-      expect(output).toContain("COMMANDS")
+      expect(stripAnsi(output)).toContain("Dirban (dirban)")
+      expect(stripAnsi(output)).toContain("COMMANDS")
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
       console.log = origLog
@@ -108,11 +111,11 @@ describe("CLI Router and Modular Command Handlers", () => {
     try {
       const codeVersion = await runCli(["--version"])
       expect(codeVersion).toBe(0)
-      expect(output).toContain("dirban v0.1.0")
+      expect(stripAnsi(output)).toContain("dirban v0.1.0")
 
       const codePriorities = await runCli(["priorities"])
       expect(codePriorities).toBe(0)
-      expect(output).toContain("Available priorities")
+      expect(stripAnsi(output)).toContain("Available priorities")
     } finally {
       console.log = origLog
     }
@@ -171,9 +174,9 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const exitPlanHelp = await dispatchCommand("plan", ctxPlanHelp)
       expect(exitPlanHelp).toBe(0)
-      expect(output).toContain("dirban plan")
-      expect(output).toContain("--unblocked")
-      expect(output).toContain("EXAMPLES:")
+      expect(stripAnsi(output)).toContain("dirban plan")
+      expect(stripAnsi(output)).toContain("--unblocked")
+      expect(stripAnsi(output)).toContain("EXAMPLES:")
 
       output = ""
 
@@ -253,9 +256,9 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const exitNext = await dispatchCommand("next", ctxNext)
       expect(exitNext).toBe(0)
-      expect(output).toContain("Next Recommended Task")
-      expect(output).toContain("26-001")
-      expect(output).toContain("dirban start 26-001")
+      expect(stripAnsi(output)).toContain("Next Recommended Task")
+      expect(stripAnsi(output)).toContain("26-001")
+      expect(stripAnsi(output)).toContain("dirban start 26-001")
 
       // 2. --raw format
       output = ""
@@ -361,7 +364,7 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const newExit = await dispatchCommand("new", newCtx)
       expect(newExit).toBe(0)
-      expect(output).toContain(
+      expect(stripAnsi(output)).toContain(
         "✔ Created task 26-001 in 00-backlog: docs/tasks/00-backlog/26-001-standardize-path-test.md",
       )
 
@@ -375,7 +378,7 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const moveExit = await dispatchCommand("move", moveCtx)
       expect(moveExit).toBe(0)
-      expect(output).toContain(
+      expect(stripAnsi(output)).toContain(
         "✔ Moved task 26-001 to '02-doing': docs/tasks/02-doing/26-001-standardize-path-test.md",
       )
 
@@ -389,7 +392,7 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const blockExit = await dispatchCommand("block", blockCtx)
       expect(blockExit).toBe(0)
-      expect(output).toContain(
+      expect(stripAnsi(output)).toContain(
         "⛔ Blocked task 26-001: docs/tasks/00-backlog/26-001-standardize-path-test.md (added [Waiting on review])",
       )
 
@@ -403,7 +406,7 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const unblockExit = await dispatchCommand("unblock", unblockCtx)
       expect(unblockExit).toBe(0)
-      expect(output).toContain(
+      expect(stripAnsi(output)).toContain(
         "✔ Unblocked task 26-001: docs/tasks/00-backlog/26-001-standardize-path-test.md (removed [Waiting on review])",
       )
 
@@ -417,7 +420,7 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const readyExit = await dispatchCommand("ready", readyCtx)
       expect(readyExit).toBe(0)
-      expect(output).toContain(
+      expect(stripAnsi(output)).toContain(
         "✔ Readied task 26-001: docs/tasks/01-todo/26-001-standardize-path-test.md",
       )
 
@@ -431,7 +434,7 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const startExit = await dispatchCommand("start", startCtx)
       expect(startExit).toBe(0)
-      expect(output).toContain(
+      expect(stripAnsi(output)).toContain(
         "✔ Started task 26-001: docs/tasks/02-doing/26-001-standardize-path-test.md",
       )
 
@@ -445,7 +448,7 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const doneExit = await dispatchCommand("done", doneCtx)
       expect(doneExit).toBe(0)
-      expect(output).toContain(
+      expect(stripAnsi(output)).toContain(
         "✔ Completed task 26-001: docs/tasks/03-done/26-001-standardize-path-test.md",
       )
 
@@ -459,7 +462,7 @@ describe("CLI Router and Modular Command Handlers", () => {
       }
       const archiveExit = await dispatchCommand("archive", archiveCtx)
       expect(archiveExit).toBe(0)
-      expect(output).toContain("✔ Archived task 26-001: archive/26-001-standardize-path-test.md")
+      expect(stripAnsi(output)).toContain("✔ Archived task 26-001: archive/26-001-standardize-path-test.md")
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true })
       console.log = origLog
