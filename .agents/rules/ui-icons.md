@@ -1,10 +1,6 @@
 ---
-trigger:
-  - extension UI components
-  - webview templates
-  - VS Code TreeViews
-  - status bar items
-  - notification messages
+trigger: model_decision
+description: "UI iconography & Codicons standards for extension UI components, webview templates, VS Code TreeViews, status bar items, and notification messages."
 ---
 
 # UI Iconography & Codicons Standards
