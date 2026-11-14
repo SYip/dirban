@@ -97,15 +97,15 @@ Configure your board in `.vscode/settings.json` (or `.dirban.json` in your repos
 }
 ```
 
-| Setting                  | Default                              | Description                                                                        |
-| :----------------------- | :----------------------------------- | :--------------------------------------------------------------------------------- |
-| `dirban.tasksDir`        | `"docs/tasks"`                       | Path to the directory storing task columns.                                        |
-| `dirban.focusColumn`     | `"02-doing"`                         | The designated active execution column tracked by the Focus View.                  |
-| `dirban.archiveDir`      | `"docs/tasks/04-archive"`            | Destination folder where finished tasks are archived.                              |
-| `dirban.branchStrategy`  | `"checkout"`                         | Workspace strategy when starting a task (`"checkout"`, `"worktree"`, or `"none"`). |
-| `dirban.autoMerge`       | `true`                               | Automatically squash and merge task branch upon task completion.                   |
-| `dirban.priorities`      | `["p0","p1","p2","p3"]`              | Recognized priority tiers.                                                         |
-| `dirban.defaultPriority` | `"p2"`                               | Fallback priority assigned to new tasks.                                           |
+| Setting                  | Default                   | Description                                                                        |
+| :----------------------- | :------------------------ | :--------------------------------------------------------------------------------- |
+| `dirban.tasksDir`        | `"docs/tasks"`            | Path to the directory storing task columns.                                        |
+| `dirban.focusColumn`     | `"02-doing"`              | The designated active execution column tracked by the Focus View.                  |
+| `dirban.archiveDir`      | `"docs/tasks/04-archive"` | Destination folder where finished tasks are archived.                              |
+| `dirban.branchStrategy`  | `"checkout"`              | Workspace strategy when starting a task (`"checkout"`, `"worktree"`, or `"none"`). |
+| `dirban.autoMerge`       | `true`                    | Automatically squash and merge task branch upon task completion.                   |
+| `dirban.priorities`      | `["p0","p1","p2","p3"]`   | Recognized priority tiers.                                                         |
+| `dirban.defaultPriority` | `"p2"`                    | Fallback priority assigned to new tasks.                                           |
 
 ---
 
