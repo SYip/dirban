@@ -28,6 +28,10 @@
   ],
   "author": "SYip",
   "license": "MIT",
+  "funding": {
+    "type": "buymeacoffee",
+    "url": "https://buymeacoffee.com/sywong"
+  },
   "scripts": {
     "dirban": "bun run main.ts",
     "build:cli": "bun build ./main.ts --target node --outfile dist/dirban.js",

@@ -7,6 +7,7 @@
 [![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/syip.dirban-vscode?color=blue&label=VS%20Code)](https://marketplace.visualstudio.com/items?itemName=syip.dirban-vscode)
 [![Open VSX](https://img.shields.io/open-vsx/v/syip/dirban-vscode?color=purple&label=Open%20VSX)](https://open-vsx.org/extension/syip/dirban-vscode)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/sywong)
 
 ---
 
@@ -137,6 +138,14 @@ Dirban is under active development. Current focus areas:
 - **Archive & History Search (`dirban archive`)**: Full-text searching across historical tasks, completed date indexing, and archival export options.
 
 Feedback, bug reports, and suggestions are welcome on [GitHub Discussions](https://github.com/SYip/dirban/discussions) and [Issues](https://github.com/SYip/dirban/issues).
+
+---
+
+## Support
+
+If you find Dirban useful, you can support its development:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/sywong)
 
 ---
 

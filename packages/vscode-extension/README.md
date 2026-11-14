@@ -126,6 +126,14 @@ For instructions on building from source, running tests, and debugging with F5, 
 
 ---
 
+## Support
+
+If you find Dirban useful, you can support its development:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/sywong)
+
+---
+
 ## License
 
 [MIT](https://github.com/SYip/dirban/blob/main/LICENSE)
