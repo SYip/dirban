@@ -2,6 +2,7 @@
 import { parseArgs } from "node:util"
 import * as process from "node:process"
 import pc from "picocolors"
+import pkg from "./package.json"
 import { loadConfig } from "./src/config/config.ts"
 import { dispatchCommand, printHelp } from "./src/cli/router.ts"
 import { CLI_PARSE_OPTIONS, type CliFlags } from "./src/cli/types.ts"
@@ -20,7 +21,7 @@ export const runCli = async (args: readonly string[]): Promise<number> => {
   }
 
   if (flags.version) {
-    console.log("dirban v0.1.0 (Phase 1)")
+    console.log(`dirban v${pkg.version}`)
     return 0
   }
 

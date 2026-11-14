@@ -3,6 +3,7 @@ import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
 import { runCli } from "../../main.ts"
+import pkg from "../../package.json"
 import type { DirbanConfig } from "../config/types.ts"
 import { initializeBoard } from "../tasks/project/init.ts"
 import { dispatchCommand } from "./router.ts"
@@ -110,7 +111,7 @@ describe("CLI Router and Modular Command Handlers", () => {
     try {
       const codeVersion = await runCli(["--version"])
       expect(codeVersion).toBe(0)
-      expect(stripAnsi(output)).toContain("dirban v0.1.0")
+      expect(stripAnsi(output)).toContain(`dirban v${pkg.version}`)
 
       const codePriorities = await runCli(["priorities"])
       expect(codePriorities).toBe(0)
