@@ -20,7 +20,7 @@
 ![Dirban Terminal TUI](docs/assets/dirban-cli-tui.jpg)
 
 - **Directories as Columns**: Workflow stages are plain folders (`01-todo/`, `02-doing/`, `03-done/`).
-- **Customizable Workflows**: Tailor column names, staging pipelines, and priority tiers to your exact workflow using [`.dirban.json`](docs/concepts/configuration.md).
+- **Configurable Workspace & Git Automation**: Tailor priority tiers, archive paths, and Git branching/worktree strategies using [`.dirban.json`](docs/concepts/configuration.md).
 - **Isolated Task Files**: Each task is a self-contained Markdown file with an optional priority and checklist (`- [ ]`). Editing one task never collides with another in Git or file sync.
 - **Agent-Ready & Context-Efficient**: AI tools and scripts read only the active task file (`dirban current`), keeping token usage low and focus sharp.
 - **Git is Completely Optional**: While Dirban automates Git branching and worktrees for developers, it works equally well on plain folders (`branchStrategy: "none"`) in Obsidian vaults, Dropbox, or local drives.
@@ -53,11 +53,11 @@ dirban init
 This creates a lightweight task hierarchy under `docs/tasks/`:
 ```text
 docs/tasks/
-├── backlog/       # Staging and future ideas
+├── 00-backlog/    # Staging, future ideas, and blocked tasks
 ├── 01-todo/       # Ready to be picked up
 ├── 02-doing/      # Actively executing tasks (human or AI agent)
 ├── 03-done/       # Completed tasks
-└── archive/       # Historical archive
+└── 04-archive/    # Historical archive (partitioned by year, e.g. 2026/)
 ```
 
 ---
@@ -108,7 +108,7 @@ Dirban maps directly to the questions developers and AI agents ask when executin
 | Question You're Asking | Command | What Dirban Does |
 | :--- | :--- | :--- |
 | **"Where do things stand overall?"** | `dirban board` | Opens the interactive Kanban TUI (or `--static` for stdout) |
-| **"How do I queue up work from the backlog?"** | `dirban ready <id>` | Moves unblocked tasks from `backlog/` into `01-todo/` |
+| **"How do I queue up work from the backlog?"** | `dirban ready <id>` | Moves unblocked tasks from `00-backlog/` into `01-todo/` |
 | **"What should I focus on next?"** | `dirban next` | Recommends the highest-priority unblocked task in `01-todo/` |
 | **"How do I begin working on it?"** | `dirban start <id>` | Moves task to `02-doing/` and creates a matching Git branch or worktree |
 | **"What am I currently doing?"** | `dirban current` | Displays the active task, branch alignment, and criteria checklist |
@@ -123,7 +123,7 @@ Dirban maps directly to the questions developers and AI agents ask when executin
 
 - 📋 **[Technical Specification & Standards (`spec.md`)](spec.md)**: Google OKF schemas, trunk-based branching, state precedence, and engine invariants.
 - 📖 **[Why Dirban: Philosophy & Comparative Positioning](docs/concepts/why-dirban.md)**: Fast agent cycles (minutes) vs cloud tools (weeks), comparison matrix, and trade-offs.
-- ⚙️ **[Configuration Guide (`.dirban.json`)](docs/concepts/configuration.md)**: Custom columns, workflows, semantic priorities, and Git worktrees.
+- ⚙️ **[Configuration Guide (`.dirban.json`)](docs/concepts/configuration.md)**: Semantic priorities, archive paths, and Git branch/worktree strategies.
 - 💻 **[CLI & TUI Reference Manual](docs/cli-reference.md)**: Full command reference, options, and keyboard shortcuts.
 - 🌿 **[Trunk-Based Git Workflow](docs/concepts/git-workflow.md)**: Git branch automation, worktree isolation, and squash merging.
 - 🐚 **[Forget About Dirban](docs/concepts/forget-about-dirban.md)**: Complete mapping of every Dirban command to raw POSIX shell (`ls`, `mv`, `cat`).

@@ -51,7 +51,7 @@ relationships:
 
 ### Task Relationships Invariant (`relationships.depends_on` and `relationships.blocks`)
 - **Use Canonical Task IDs Only**: Always use bare canonical task IDs (e.g., `26-001`, `26-007`) in `depends_on`, `blocks`, and `related_to`.
-- **Prohibit File Paths**: **Never use file paths** (e.g. `docs/tasks/01-todo/26-001.md` or `docs/tasks/backlog/26-007.md`). Because Dirban is a directory-as-state engine, file paths change as tasks transition between `backlog/`, active columns, and `done/`. Hardcoding file paths creates brittle, broken references.
+- **Prohibit File Paths**: **Never use file paths** (e.g. `docs/tasks/01-todo/26-001.md` or `docs/tasks/00-backlog/26-007.md`). Because Dirban is a directory-as-state engine, file paths change as tasks transition between `00-backlog/`, `01-todo/`, `02-doing/`, and `03-done/`. Hardcoding file paths creates brittle, broken references.
 
 ### A. Domain Logic Spec (`domain-logic`)
 

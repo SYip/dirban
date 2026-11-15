@@ -55,7 +55,7 @@ Modern software developers and autonomous AI coding agents (Claude Code, Cursor,
 - **Agent-Native by Design**: AI agents do not require special SDKs or credentials—they read, write, and move tasks using standard filesystem commands (`ls`, `mv`, `cat`).
 - **Markdown-First, OKF-Compatible**: Any valid `.md` file in a column folder is a recognized task. Strict OKF frontmatter is supported for structured teams, but never enforced—tasks will never fail to parse due to missing fields.
 - **Dual Workflow Modalities (Hyper-Flexible)**:
-  - **Macro-Workflow (Directory-Driven)**: Users can model workflow stages as directories (`backlog/` $\rightarrow$ `ready/` $\rightarrow$ `doing/` $\rightarrow$ `done/` $\rightarrow$ `archive/`).
+  - **Macro-Workflow (Directory-Driven)**: Users can model workflow stages as directories (`00-backlog/` $\rightarrow$ `01-todo/` $\rightarrow$ `02-doing/` $\rightarrow$ `03-done/` $\rightarrow$ `04-archive/`).
   - **Micro-Workflow (Document-Driven)**: Users who prefer minimal folder sprawl can keep tasks in a single folder and manage the entire workflow internally via **Markdown sections** (`## Spec`, `## Implementation`, `## Verification`) and **checkbox lists** (`- [ ]`).
   - Both patterns can be combined seamlessly without engine restrictions.
 - **Target Audience: Solo Builders & Small Teams ($\le 5$ people)**:
@@ -79,24 +79,22 @@ Modern software developers and autonomous AI coding agents (Claude Code, Cursor,
 Dirban partitions the workflow into three column tiers:
 
 ```text
-tasks/
-├── backlog/         # Mandatory staging queue (unbounded ideas & future backlog)
-├── 01-ready/        # Configurable active pipeline (default)
-├── 02-doing/        # Configurable active pipeline (default)
-├── 03-done/         # Configurable active pipeline (default)
-└── archive/         # Mandatory terminal storage (flat by default, user-organizable)
+docs/tasks/
+├── 00-backlog/      # Mandatory staging queue (unbounded ideas, future backlog, blocked tasks)
+├── 01-todo/         # Active pipeline: ready to start
+├── 02-doing/        # Active pipeline: currently in progress
+├── 03-done/         # Active pipeline: completed
+└── 04-archive/      # Mandatory terminal storage (partitioned by year, e.g. 04-archive/2026/)
 ```
 
-1. **`backlog/` (Mandatory Queue)**:
-   - Holds unscheduled, prioritized, or raw backlog tasks.
+1. **`00-backlog/` (Mandatory Queue)**:
+   - Holds unscheduled, prioritized, raw backlog, or blocked tasks.
    - May contain hundreds of files without cluttering active WIP boards.
-2. **Active Pipeline Columns (Configurable)**:
-   - Columns represent active work stages.
-   - Default: `["01-ready", "02-doing", "03-done"]` or `["todo", "doing", "done"]`.
-   - Number prefixes are optional (e.g., `ready/` is just as valid as `01-ready/`).
-3. **`archive/` (Mandatory Terminal State)**:
+2. **Active Pipeline Columns**:
+   - Fixed 3-stage workflow: `01-todo/`, `02-doing/`, `03-done/`.
+3. **`04-archive/` (Mandatory Terminal State)**:
    - Completed tasks moved out of the active board are stored here.
-   - Tasks are archived flat by default directly into `archive/`, allowing users to optionally organize them hierarchically (e.g., `archive/2026/`, `archive/milestone/`) if desired.
+   - Tasks are archived by year (e.g., `04-archive/2026/`).
 
 ---
 

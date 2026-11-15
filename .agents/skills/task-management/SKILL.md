@@ -43,214 +43,26 @@ In Dirban, **the physical directory IS the task state**.
 
 ## 2. Priority System
 
-Dirban orders task priorities from highest to lowest urgency:
-- **`p0` (Critical Blocker / Emergency)**: Highest urgency. Reserved for critical blockers or emergencies where other tasks must stop immediately to resolve this first. Not used for normal roadmap tasks.
-- **`p1` (High / Prerequisite First)**: Important foundational tasks or prerequisites that need to be completed before downstream tasks can proceed.
-- **`p2` (Normal / Default)**: The standard workspace default priority for regular feature tasks and roadmap work.
-- **`p3` (Low / Backlog / Later)**: Nice-to-have improvements, future phase items, or low-urgency follow-ups.
-
-Check available priorities and workspace default anytime via CLI:
-```bash
-dirban priorities
-```
+Dirban orders task priorities from highest to lowest urgency (check workspace options anytime with `dirban priorities`):
+- **`p0` (Critical Blocker / Emergency)**: Highest urgency; stop other work to resolve first. Not for normal roadmap tasks.
+- **`p1` (High / Prerequisite First)**: Important foundational tasks or prerequisites for downstream work.
+- **`p2` (Normal / Default)**: Standard default priority for regular feature and roadmap tasks.
+- **`p3` (Low / Backlog / Later)**: Nice-to-have improvements or future follow-ups.
 
 ---
 
-## 3. Standard Agent Workflows
+## 3. Task Markdown & Workflow Rules
 
-### A. Initializing a Workspace
-If the tasks directory does not exist yet:
-
-```bash
-dirban init
-```
-
----
-
-### B. Finding & Picking Up Work
-Before starting work, check the board or inspect ready tasks:
-
-```bash
-# 1. View current active board (static table)
-dirban board --static
-
-# 2. Recommends the next unblocked, highest-priority task ready to work on
-dirban next
-
-# 3. View a specific task's details & criteria
-dirban view 26-001
-
-# 4. If the task is still in 00-backlog/, promote it to 01-todo/ first
-dirban ready 26-001
-
-# 5. Start task execution (requires task in 01-todo/ and clean working tree;
-#    commits `chore(task): start <id>` before provisioning branch/worktree)
-dirban start 26-001
-
-# 6. Check active focus / current task anytime
-dirban current
-
-# Stream active task Markdown to stdout for agent prompting
-dirban current --raw
-```
-
-#### Workspace Strategy Flags (`dirban start <id>`)
-- `--checkout` *(default)*: Creates/checks out `task/<id>-<slug>` branch in-place.
-- `--worktree`: Creates an isolated Git worktree in `../.<repo>.worktrees/<id>-<slug>`.
-- `--current` / `--no-branch`: Stays on the current branch without creating a task branch.
-- `--no-git`: Pure filesystem move without Git operations.
-
-*(Note: `dirban start` requires the task to already be in `01-todo/` and requires a clean Git working tree. Tasks in `00-backlog/` must be promoted first via `dirban ready <id>`, or resumed via `dirban resume <id>` if previously blocked.)*
-
----
-
-### C. Creating a New Task
-When designing a feature, breaking down work, or filing a bug:
-
-```bash
-# Creates a new task in 00-backlog with auto-calculated ID and default priority
-dirban new "Implement JWT token refresh"
-```
-
-New tasks automatically default to the **`00-backlog`** column and use the configured workspace default priority.
-
-#### Optional Parameters
-Override or customize task properties when needed:
-- `--column=<col>`: Target column (defaults to `00-backlog`).
-- `--priority=<p>`: Priority level (defaults to workspace default; check options with `dirban priorities`).
-- `--tags=<t1,t2>`: Comma-separated list of tags.
-- `--assignee=<user>`: Assignee name.
-
-Example with optional parameters:
-```bash
-dirban new "Fix critical token expiry bug" --column=01-todo --priority=p0 --tags=auth,security
-```
-
-This creates a new `.md` file with frontmatter and an `Acceptance Criteria` section. 
-You can then open the file to add detailed criteria:
-```markdown
-## Acceptance Criteria
-- [ ] Add refresh token endpoint
-- [ ] Implement Redis TTL expiration
-- [ ] Unit tests for expired tokens
-```
-
----
-
-### D. Updating Progress & Criteria
-As you complete individual criteria during coding:
-
-```bash
-# Toggle the 1st checkbox item
-dirban check 26-001 1
-
-# Or edit the markdown file directly to mark:
-# - [x] Add refresh token endpoint
-```
-
----
-
-### E. Completing & Archiving a Task
-When all acceptance criteria are checked and verification passes:
-
-```bash
-# 1. Complete active task (auto-detects from current branch/worktree or 02-doing/;
-#    requires task in 02-doing/, commits completion, squash-merges into target branch, and removes worktree)
-dirban done
-
-# Complete a specific task ID
-dirban done 26-001
-
-# 2. (Optional) Archive completed tasks from 03-done/ into 04-archive/YYYY/
-dirban archive 26-001
-dirban archive all
-```
-
-#### Completion Options (`dirban done [id]`)
-- `--merge` *(default)*: Commits completion, squash-merges the task branch into the target branch, and cleans up any task worktree.
-- `--no-merge`: Completes the task in `03-done/` on the task branch without merging into `main`.
-- `--no-git`: Pure directory move without Git operations.
-
----
-
-### F. Handling Blockers, Planning, Unblocking & Resuming
-
-When an active task encounters blockers (e.g. waiting on dependency, upstream PR, or external input):
-1. **Demote & Record Blockers**:
-   ```bash
-   dirban block <id> "<blocker reason or prerequisite task ID>"
-   ```
-   * Automatically normalizes task arguments to canonical task IDs (e.g. `26-001`), adds entries to `relationships.depends_on`, and moves the task from `02-doing/` back to `00-backlog/` to free the active slot.
-   * In Git/worktree mode, syncs the block commit back to the target branch and **retains any existing worktree** so work-in-progress is preserved until you resume.
-   * **Invariant**: Never use file paths in `relationships.depends_on` or `relationships.blocks` (e.g. `docs/tasks/00-backlog/26-001.md`). Always use bare canonical IDs (`26-001`) because physical file paths change continuously as tasks move between columns.
-2. **Record Rationale in `## Execution Journal`**:
-   Add an entry with timestamp and context to the task Markdown file:
-   ```markdown
-   ## Execution Journal
-   - 2026-11-07T21:00:00Z: [BLOCKED] Blocked by 26-001 (database migration needed).
-   ```
-
-When reviewing, scheduling, and resuming work:
-1. **Inspect Backlog Plan**:
-   ```bash
-   # Formatted overview of Ready vs Blocked tasks
-   dirban plan
-
-   # Scriptable flags for agents
-   dirban plan --unblocked
-   dirban plan --blocked
-   ```
-2. **Promote / Ready Unstarted Tasks into Active Queue**:
-   * Promote unblocked task(s) from `00-backlog/` into `01-todo/`:
-     ```bash
-     dirban ready 26-001
-     dirban ready 001 002
-     dirban ready all             # Promotes all unblocked backlog tasks
-     dirban ready 001 --to=01-todo
-     ```
-   * Prerequisite tasks in `relationships.depends_on` resolve automatically once they reach `03-done/` or `04-archive/`.
-   * Clear external blocker strings via:
-     ```bash
-     dirban unblock <id> "<blocker string>"
-     ```
-   * Record unblocking in the task's `## Execution Journal`:
-     ```markdown
-     ## Execution Journal
-     - 2026-11-08T09:00:00Z: [UNBLOCKED] 26-001 merged; resumed work.
-     ```
-3. **Resume a Previously Blocked Task (`dirban resume`)**:
-   * Unlike `dirban ready` (which promotes new/unstarted `00-backlog/` tasks into `01-todo/`), **`dirban resume`** (alias: `continue`) returns a previously blocked task directly from `00-backlog/` into `02-doing/` and reactivates its task branch or worktree:
-     ```bash
-     # Once prerequisites are done or external blockers are cleared via `dirban unblock`:
-     dirban resume 26-001
-
-     # Optional flags:
-     dirban resume 26-001 --sync   # Rebases/merges latest main branch into the task branch/worktree
-     dirban resume 26-001 --force  # Resumes even if unresolved blockers remain
-     ```
-
----
-
-### G. Git Worktree Management & Navigation
-When working with isolated Git worktrees across parallel or blocked tasks:
-
-```bash
-# Audit active, blocked, completed, and orphaned task worktrees
-dirban worktree
-dirban worktree list
-
-# Provision a worktree for a task
-dirban worktree add 26-001
-
-# Resolve the absolute directory path of a task worktree or main repo
-dirban path 26-001
-dirban path main
-cd "$(dirban path 26-001)"
-
-# Prune completed (03-done / 04-archive) or orphaned task worktrees
-dirban prune
-dirban prune --force
-```
+- **Picking Up Work**: Check ready work with `dirban next` or `dirban board --static`. Promote `00-backlog/` tasks via `dirban ready <id>` before running `dirban start <id>`. Inspect the active task with `dirban current [--raw]`.
+- **Workspace Strategies (`dirban start`)**: Defaults to `--checkout` (in-place `task/<id>-<slug>` branch); use `--worktree` for isolated worktrees (`../.<repo>.worktrees/<id>-<slug>`), `--current` / `--no-branch` to stay on the current branch, or `--no-git` for directory-only moves.
+- **Acceptance Criteria**: Track progress under `## Acceptance Criteria` with `- [ ]` and `- [x]` checkboxes (`dirban check <id> <index>` or direct edit).
+- **Blocking, Unblocking & Resuming**:
+  - `dirban block <id> "<reason or task-id>"` moves an active task from `02-doing/` to `00-backlog/`, adds entries to `relationships.depends_on`, syncs to the target branch, and retains any existing worktree.
+  - **Dependency ID Invariant**: Always use bare canonical IDs (`26-001`) in `relationships.depends_on` / `relationships.blocks`, never file paths.
+  - Prerequisite task IDs resolve automatically once they reach `03-done/` or `04-archive/`; clear external string blockers via `dirban unblock <id> "<reason>"`.
+  - Use **`dirban resume <id> [--sync] [--force]`** (not `dirban ready`) to return a previously blocked task from `00-backlog/` directly to `02-doing/` and restore its branch or worktree.
+  - **Execution Journal**: Log block/unblock events in the task Markdown under `## Execution Journal`:
+    `- YYYY-MM-DDTHH:mm:ssZ: [BLOCKED|UNBLOCKED] <context>`
 
 ---
 
@@ -280,3 +92,5 @@ dirban prune --force
 | **Toggle Checkbox** | `dirban check <id> <index>` |
 | **Update Metadata** | `dirban set <id> [--priority=...] [--assignee=...] [--tags=...]` |
 | **Archive Tasks** | `dirban archive <id>` or `dirban archive all` |
+
+Run `dirban <command> --help` for full options and examples.

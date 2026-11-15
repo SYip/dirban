@@ -26,7 +26,7 @@ The `dirban` command provides deterministic, scriptable task and board operation
 
 ```mermaid
 flowchart LR
-    subgraph Backlog ["backlog/"]
+    subgraph Backlog ["00-backlog/"]
         direction TB
         B1["Idea Capture"]
     end
@@ -46,7 +46,7 @@ flowchart LR
         DN1["Merged Trunk"]
     end
 
-    subgraph Archive ["archive/"]
+    subgraph Archive ["04-archive/"]
         direction TB
         A1["Long-term Storage"]
     end
@@ -70,7 +70,7 @@ If run without arguments in an interactive terminal, `dirban` launches the inter
 ### Commands
 
 #### `init`
-Initializes the Kanban board directory structure on disk (`backlog/`, `01-todo/`, `02-doing/`, `03-done/`, and `archive/`) and configures settings.
+Initializes the Kanban board directory structure on disk (`00-backlog/`, `01-todo/`, `02-doing/`, `03-done/`, and `04-archive/`) and configures settings.
 
 - If `.vscode/` exists in the workspace, it automatically adds `"dirban.*"` settings to `.vscode/settings.json`.
 - Otherwise, it creates `.dirban.json`.
@@ -295,7 +295,7 @@ dirban set 26-001 --tags=cli,search,ux
 ```
 
 #### `archive [<id>|all]`
-Moves completed tasks directly into terminal archive storage (`archive/`).
+Moves completed tasks directly into terminal archive storage (`04-archive/YYYY/`).
 
 ```bash
 # Archive a specific completed task
@@ -306,7 +306,7 @@ dirban archive all
 ```
 
 #### `ready <id...> [options]`
-Moves unblocked task(s) from `backlog` into the active queue (`01-todo` or configured first active column). Completes the natural 5-verb lifecycle: `new` -> `ready` -> `start` -> `done` -> `archive`.
+Moves unblocked task(s) from `00-backlog/` into `01-todo/`. Completes the natural 5-verb lifecycle: `new` -> `ready` -> `start` -> `done` -> `archive`.
 
 ```bash
 # Ready a single task by ID or short numeric suffix
@@ -324,7 +324,7 @@ dirban ready 004 --to=01-todo
 ```
 
 #### `plan [options]`
-Displays backlog planning and triage view. Partitions unstarted tasks into **Ready to Schedule** vs. **Blocked / In Limbo** based on dependency resolution against done columns and `archive/`.
+Displays backlog planning and triage view. Partitions unstarted tasks into **Ready to Schedule** vs. **Blocked / In Limbo** based on dependency resolution against `03-done/` and `04-archive/`.
 
 ```bash
 # Formatted static terminal view
@@ -343,7 +343,7 @@ dirban plan -i
 ```
 
 #### `block <id> <reasons...>`
-Records dependencies or blocker reasons on a task (appended to `relationships.depends_on`) and automatically demotes the task from active workflow columns back to `backlog/` to free the active WIP slot.
+Records dependencies or blocker reasons on a task (appended to `relationships.depends_on`) and automatically demotes the task from active workflow columns back to `00-backlog/` to free the active WIP slot.
 
 ```bash
 # Block by another task ID (auto-resolves when that task reaches done/archive)

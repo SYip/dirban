@@ -14,28 +14,20 @@ Dirban stores board state directly on disk as a folder tree:
 
 ```text
 docs/tasks/
-├── backlog/         # Planned tasks waiting for planning or dependency resolution
-├── 01-todo/         # Active staging queue (customizable)
-├── 02-doing/        # Focused / in-progress work (customizable)
-├── 03-done/         # Completed tasks (customizable)
-└── archive/         # Permanent historical record
+├── 00-backlog/      # Planned or blocked tasks waiting for scheduling
+├── 01-todo/         # Active staging queue
+├── 02-doing/        # Focused / in-progress work
+├── 03-done/         # Completed tasks
+└── 04-archive/      # Permanent historical record (e.g. 04-archive/2026/)
 ```
 
-### The Two Mandated Directories
+### Fixed 5-Tier Lifecycle
 
-- **`backlog/`**: Where task specifications live before execution begins. Tasks here can declare dependency blockers (`blocked_by: ["26-001"]`). Dirban's planning tools evaluate readiness and promote unblocked work into your active workflow.
-- **`archive/`**: Where finished tasks are permanently preserved flat. Archiving completed work keeps your daily board fast and uncluttered.
+- **`00-backlog/`**: Where task specifications live before execution begins or when demoted by `dirban block`. Tasks here can declare dependency blockers (`depends_on: ["26-001"]`). Dirban's planning tools evaluate readiness and promote unblocked work into `01-todo/`.
+- **Active Workflow (`01-todo/` → `02-doing/` → `03-done/`)**: Standard 3-stage Kanban board tracked by the Focus View and Webview board.
+- **`04-archive/`**: Where finished tasks are permanently preserved by year (`04-archive/YYYY/`). Archiving completed work keeps your daily board fast and uncluttered.
 
-### Fully Customizable Workflow
-
-Between `backlog/` and `archive/`, the workflow matches your team's convention:
-
-- **Standard 3-Stage (Default)**: `01-todo` → `02-doing` → `03-done`
-- **Linear / Minimal**: `["doing"]`
-- **Software Engineering**: `["ready", "dev", "review", "qa", "done"]`
-- **Zero-Column Triage**: `[]` (tasks flow directly from `backlog/` to `archive/`)
-
-Configure your stages, focus column, and paths in `.dirban.json` or `.vscode/settings.json`.
+Configure your paths, priority tiers, and Git branch/worktree strategies in `.dirban.json` or `.vscode/settings.json`.
 
 ---
 
