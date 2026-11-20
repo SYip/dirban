@@ -24,10 +24,10 @@ Users have identified three key usability and functionality issues in the VS Cod
 3. **Sidebar "All Tasks" TreeView lacks drag-and-drop & inline action buttons**: In the "All Tasks" tree view, tasks cannot be moved between columns without opening the full webview. VS Code's `TreeDragAndDropController` API allows native dragging of tree items between column parent nodes. In addition, task items in the tree view lack inline hover action buttons (e.g., Start/Focus, Mark Done, Preview, Open File).
 
 ## Acceptance Criteria
-- [ ] Replace `prompt()` in Webview with a native VS Code QuickPick / InputBox dialog triggered via message passing (`type: "requestCreateTask"`), or an in-webview modal form supporting title and priority.
-- [ ] Fix the Webview "Refresh" button so it triggers a full board reload from disk (`this._onBoardMutation()` / `stateManager.refreshImmediate()`) rather than re-sending cached state.
-- [ ] Ensure created tasks are placed cleanly in `backlog/` or the first column (`config.columns[0]`), properly written to disk, and the board updates reactively.
-- [ ] Remove `dirban.openBoard` from `dirban.focusView` in `package.json` `menus["view/title"]` so it only appears in `dirban.treeView` (`when: "view == dirban.treeView"`).
-- [ ] Implement `vscode.TreeDragAndDropController` in `DirbanTreeDataProvider` to enable dragging tasks between column folders in the "All Tasks" sidebar tree view.
-- [ ] Add inline action buttons on hover for task tree items in `menus["view/item/context"]` (e.g. Start Task, Mark Done, Open Preview).
-- [ ] Verify with tests and build validation (`bun run build:extension` passes cleanly).
+- [x] Replace `prompt()` in Webview with a native VS Code QuickPick / InputBox dialog triggered via message passing (`type: "requestCreateTask"`), or an in-webview modal form supporting title and priority.
+- [x] Fix the Webview "Refresh" button so it triggers a full board reload from disk (`this._onBoardMutation()` / `stateManager.refreshImmediate()`) rather than re-sending cached state.
+- [x] Ensure created tasks are placed cleanly in `backlog/` or the first column (`config.columns[0]`), properly written to disk, and the board updates reactively.
+- [x] Remove `dirban.openBoard` from `dirban.focusView` in `package.json` `menus["view/title"]` so it only appears in `dirban.treeView` (`when: "view == dirban.treeView"`).
+- [x] Implement `vscode.TreeDragAndDropController` in `DirbanTreeDataProvider` to enable dragging tasks between column folders in the "All Tasks" sidebar tree view.
+- [x] Add inline action buttons on hover for task tree items in `menus["view/item/context"]` (e.g. Start Task, Mark Done, Open Preview).
+- [x] Verify with tests and build validation (`bun run build:extension` passes cleanly).

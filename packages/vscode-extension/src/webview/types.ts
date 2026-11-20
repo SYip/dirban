@@ -21,6 +21,7 @@ export interface WebviewBoardState {
 
 export type WebviewMessageToExtension =
   | { readonly type: "requestBoardState" }
+  | { readonly type: "requestCreateTask" }
   | { readonly type: "moveTask"; readonly taskId: string; readonly targetColumn: string }
   | {
       readonly type: "toggleCriterion"

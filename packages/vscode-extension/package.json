@@ -64,7 +64,7 @@
       "view/title": [
         {
           "command": "dirban.openBoard",
-          "when": "view == dirban.focusView || view == dirban.treeView",
+          "when": "view == dirban.treeView",
           "group": "navigation@0"
         },
         {
@@ -87,6 +87,23 @@
           "when": "view == dirban.focusView || view == dirban.treeView",
           "group": "navigation@4"
         }
+      ],
+      "view/item/context": [
+        {
+          "command": "dirban.startTask",
+          "when": "view == dirban.treeView && viewItem =~ /^dirbanTask:.*todo/",
+          "group": "inline@1"
+        },
+        {
+          "command": "dirban.doneTask",
+          "when": "view == dirban.treeView && viewItem =~ /^dirbanTask:.*doing/",
+          "group": "inline@2"
+        },
+        {
+          "command": "dirban.previewTask",
+          "when": "view == dirban.treeView && viewItem =~ /^dirbanTask:/",
+          "group": "inline@3"
+        }
       ]
     },
     "commands": [
@@ -103,6 +120,21 @@
       {
         "command": "dirban.createTask",
         "title": "Dirban: Create Task"
+      },
+      {
+        "command": "dirban.startTask",
+        "title": "Dirban: Start Task",
+        "icon": "$(play)"
+      },
+      {
+        "command": "dirban.doneTask",
+        "title": "Dirban: Mark Task Done",
+        "icon": "$(check)"
+      },
+      {
+        "command": "dirban.previewTask",
+        "title": "Dirban: Preview Task",
+        "icon": "$(open-preview)"
       },
       {
         "command": "dirban.focusCurrentTask",

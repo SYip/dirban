@@ -12,6 +12,7 @@ export type DirbanTreeItem = ColumnTreeItem | TaskTreeItem
 
 export class ColumnTreeItem extends vscode.TreeItem {
   public readonly contextValue = "dirbanColumn"
+  public readonly targetColumn: string
 
   constructor(
     public readonly columnName: string,
@@ -20,6 +21,7 @@ export class ColumnTreeItem extends vscode.TreeItem {
   ) {
     const collapsibleState = ColumnTreeItem.resolveCollapsibleState(columnName, config)
     super(columnName, collapsibleState)
+    this.targetColumn = columnName
     this.description = `(${taskCount})`
     this.tooltip = `Column: ${columnName} — ${taskCount} tasks`
     this.iconPath = new vscode.ThemeIcon(this.resolveIcon(columnName, config))
@@ -98,7 +100,7 @@ export class ColumnTreeItem extends vscode.TreeItem {
 }
 
 export class TaskTreeItem extends vscode.TreeItem {
-  public readonly contextValue = "dirbanTask"
+  public readonly targetColumn: string
 
   constructor(public readonly task: BoardTask) {
     const id = task.document.id ?? task.document.frontmatter.id ?? task.filename
@@ -108,6 +110,8 @@ export class TaskTreeItem extends vscode.TreeItem {
     const totalCount = task.document.acceptanceCriteria.length
 
     super(`${id}: ${title}`, vscode.TreeItemCollapsibleState.None)
+    this.contextValue = `dirbanTask:${task.column}`
+    this.targetColumn = task.column
 
     this.description =
       totalCount > 0 ? `[${priority}] ${checkedCount}/${totalCount}` : `[${priority}]`
@@ -123,7 +127,14 @@ export class TaskTreeItem extends vscode.TreeItem {
   }
 }
 
-export class DirbanTreeDataProvider implements vscode.TreeDataProvider<DirbanTreeItem> {
+const TREE_DND_MIME_TYPE = "application/vnd.code.tree.dirban"
+
+export class DirbanTreeDataProvider
+  implements vscode.TreeDataProvider<DirbanTreeItem>, vscode.TreeDragAndDropController<DirbanTreeItem>
+{
+  public readonly dropMimeTypes = [TREE_DND_MIME_TYPE]
+  public readonly dragMimeTypes = [TREE_DND_MIME_TYPE]
+
   private readonly _onDidChangeTreeData: vscode.EventEmitter<
     DirbanTreeItem | undefined | null | undefined
   > = new vscode.EventEmitter<DirbanTreeItem | undefined | null | undefined>()
@@ -135,6 +146,8 @@ export class DirbanTreeDataProvider implements vscode.TreeDataProvider<DirbanTre
     readonly tasks: readonly BoardTask[]
   }> = []
   private currentConfig?: DirbanConfig
+
+  constructor(private readonly onMoveTask?: (taskId: string, targetColumn: string) => void) {}
 
   public updateBoard(
     columns: ReadonlyArray<{ readonly name: string; readonly tasks: readonly BoardTask[] }>,
@@ -169,5 +182,43 @@ export class DirbanTreeDataProvider implements vscode.TreeDataProvider<DirbanTre
     }
 
     return []
+  }
+
+  public handleDrag(
+    source: readonly DirbanTreeItem[],
+    dataTransfer: vscode.DataTransfer,
+    _token: vscode.CancellationToken,
+  ): void {
+    const taskItems = source.filter((item): item is TaskTreeItem => item instanceof TaskTreeItem)
+    if (taskItems.length === 0) return
+
+    const taskIds = taskItems.map((item) => item.task.id)
+    dataTransfer.set(TREE_DND_MIME_TYPE, new vscode.DataTransferItem(JSON.stringify(taskIds)))
+  }
+
+  public async handleDrop(
+    target: DirbanTreeItem | undefined,
+    dataTransfer: vscode.DataTransfer,
+    _token: vscode.CancellationToken,
+  ): Promise<void> {
+    if (!target || !this.onMoveTask) return
+
+    const { targetColumn } = target
+
+    const transferItem = dataTransfer.get(TREE_DND_MIME_TYPE)
+    if (!transferItem) return
+
+    const raw = await transferItem.asString()
+    try {
+      const taskIds = JSON.parse(raw) as unknown
+      if (!Array.isArray(taskIds)) return
+      for (const taskId of taskIds) {
+        if (typeof taskId === "string") {
+          this.onMoveTask(taskId, targetColumn)
+        }
+      }
+    } catch {
+      // Ignore malformed drag payload
+    }
   }
 }

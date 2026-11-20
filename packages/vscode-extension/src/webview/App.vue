@@ -117,14 +117,7 @@ function requestRefresh() {
 }
 
 function promptNewTask() {
-  const title = prompt("Enter new task title:")
-  if (title?.trim()) {
-    vscode.postMessage({
-      type: "createTask",
-      title: title.trim(),
-      column: "backlog",
-    })
-  }
+  vscode.postMessage({ type: "requestCreateTask" })
 }
 
 function selectTask(task: BoardTask) {
