@@ -154,7 +154,12 @@ export class DirbanBoardWebviewPanel {
 
     switch (message.type) {
       case "requestBoardState": {
-        this.sendState()
+        this._onBoardMutation()
+        break
+      }
+
+      case "requestCreateTask": {
+        void vscode.commands.executeCommand("dirban.createTask")
         break
       }
 
