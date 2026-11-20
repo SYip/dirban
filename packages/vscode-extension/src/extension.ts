@@ -3,9 +3,9 @@ import type { BoardTask } from "@dirban/core/board/types.ts"
 import { resolveCurrentTask } from "@dirban/core/tasks/lifecycle/current.ts"
 import { doneTask } from "@dirban/core/tasks/lifecycle/done.ts"
 import { startTask } from "@dirban/core/tasks/lifecycle/start.ts"
-import { moveTask } from "@dirban/core/tasks/mutation/move.ts"
 import { checkTaskItem } from "@dirban/core/tasks/mutation/check.ts"
 import { createTask } from "@dirban/core/tasks/mutation/create.ts"
+import { moveTask } from "@dirban/core/tasks/mutation/move.ts"
 import * as vscode from "vscode"
 import { DirbanBoardWebviewPanel } from "./board-panel.ts"
 import { BoardStateManager } from "./board-state-manager.ts"
@@ -270,37 +270,49 @@ export function activate(context: vscode.ExtensionContext): void {
       },
     ),
 
-    vscode.commands.registerCommand("dirban.startTask", (item?: { task?: { document?: { id?: string }; filename?: string } }) => {
-      const taskId = item?.task?.document?.id ?? item?.task?.filename
-      const board = stateManager.getBoard()
-      if (!board || !taskId) return
+    vscode.commands.registerCommand(
+      "dirban.startTask",
+      (item?: { task?: { document?: { id?: string }; filename?: string } }) => {
+        const taskId = item?.task?.document?.id ?? item?.task?.filename
+        const board = stateManager.getBoard()
+        if (!board || !taskId) return
 
-      const res = startTask(board, stateManager.getConfig(), taskId, { cwd: root })
-      if (res.isErr()) {
-        vscode.window.showErrorMessage(`Failed to start task: ${res.error.message}`)
-        return
-      }
-      stateManager.refreshImmediate()
-    }),
+        const res = startTask(board, stateManager.getConfig(), taskId, { cwd: root })
+        if (res.isErr()) {
+          vscode.window.showErrorMessage(`Failed to start task: ${res.error.message}`)
+          return
+        }
+        stateManager.refreshImmediate()
+      },
+    ),
 
-    vscode.commands.registerCommand("dirban.doneTask", (item?: { task?: { document?: { id?: string }; filename?: string } }) => {
-      const taskId = item?.task?.document?.id ?? item?.task?.filename
-      const board = stateManager.getBoard()
-      if (!board || !taskId) return
+    vscode.commands.registerCommand(
+      "dirban.doneTask",
+      (item?: { task?: { document?: { id?: string }; filename?: string } }) => {
+        const taskId = item?.task?.document?.id ?? item?.task?.filename
+        const board = stateManager.getBoard()
+        if (!board || !taskId) return
 
-      const res = doneTask(board, stateManager.getConfig(), taskId, { cwd: root })
-      if (res.isErr()) {
-        vscode.window.showErrorMessage(`Failed to complete task: ${res.error.message}`)
-        return
-      }
-      stateManager.refreshImmediate()
-    }),
+        const res = doneTask(board, stateManager.getConfig(), taskId, { cwd: root })
+        if (res.isErr()) {
+          vscode.window.showErrorMessage(`Failed to complete task: ${res.error.message}`)
+          return
+        }
+        stateManager.refreshImmediate()
+      },
+    ),
 
-    vscode.commands.registerCommand("dirban.previewTask", async (item?: { task?: { filePath?: string } }) => {
-      const filePath = item?.task?.filePath
-      if (!filePath) return
-      await openOrFocusMarkdownPreview(vscode.Uri.file(filePath))
-    }),
+    vscode.commands.registerCommand(
+      "dirban.previewTask",
+      async (item?: { task?: { filePath?: string } }) => {
+        const filePath = item?.task?.filePath
+        if (!filePath) return
+        await vscode.commands.executeCommand(
+          "markdown.showPreviewToSide",
+          vscode.Uri.file(filePath),
+        )
+      },
+    ),
   )
 }
 

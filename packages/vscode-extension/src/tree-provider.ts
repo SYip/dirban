@@ -130,7 +130,9 @@ export class TaskTreeItem extends vscode.TreeItem {
 const TREE_DND_MIME_TYPE = "application/vnd.code.tree.dirban"
 
 export class DirbanTreeDataProvider
-  implements vscode.TreeDataProvider<DirbanTreeItem>, vscode.TreeDragAndDropController<DirbanTreeItem>
+  implements
+    vscode.TreeDataProvider<DirbanTreeItem>,
+    vscode.TreeDragAndDropController<DirbanTreeItem>
 {
   public readonly dropMimeTypes = [TREE_DND_MIME_TYPE]
   public readonly dragMimeTypes = [TREE_DND_MIME_TYPE]
@@ -192,7 +194,7 @@ export class DirbanTreeDataProvider
     const taskItems = source.filter((item): item is TaskTreeItem => item instanceof TaskTreeItem)
     if (taskItems.length === 0) return
 
-    const taskIds = taskItems.map((item) => item.task.id)
+    const taskIds = taskItems.map((item) => item.task.document.id ?? item.task.filename)
     dataTransfer.set(TREE_DND_MIME_TYPE, new vscode.DataTransferItem(JSON.stringify(taskIds)))
   }
 
