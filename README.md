@@ -2,7 +2,7 @@
 
 > **Zero-database, folder-based Kanban board for builders, knowledge workers, and AI agents.**
 
-[![CI](https://github.com/SYip/dirban/actions/workflows/publish.yml/badge.svg)](https://github.com/SYip/dirban/actions)
+[![CI](https://github.com/SYip/dirban/actions/workflows/ci.yml/badge.svg)](https://github.com/SYip/dirban/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/dirban.svg?color=cb3837)](https://www.npmjs.com/package/dirban)
 [![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/syip.dirban-vscode?color=blue&label=VS%20Code)](https://marketplace.visualstudio.com/items?itemName=syip.dirban-vscode)
 [![Open VSX](https://img.shields.io/open-vsx/v/syip/dirban-vscode?color=purple&label=Open%20VSX)](https://open-vsx.org/extension/syip/dirban-vscode)
