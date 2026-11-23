@@ -43,7 +43,7 @@ export interface VersionControlProvider {
     readonly allowedPathPrefixes?: readonly string[]
     readonly cwd?: string
   }): Result<void, VcsError>
-  commitFile(filePath: string, message: string, cwd?: string): Result<void, VcsError>
+  commitFile(filePaths: readonly string[], message: string, cwd?: string): Result<void, VcsError>
   autoMergeAndCleanup(options: {
     readonly taskBranch: string
     readonly baseBranch: string

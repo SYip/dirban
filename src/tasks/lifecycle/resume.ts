@@ -225,7 +225,9 @@ export const resumeTask = (
   if (!isVcsOperationSkipped(vcsCtx, strategy.name, options?.noGit)) {
     const taskTitle = task.document.frontmatter.title ?? effectiveId
     const commitMsg = `chore(task): resume ${effectiveId} ${taskTitle}`.trim()
-    vcs.commitFile(targetFilePath, commitMsg, cwd)
+    const filesToCommit =
+      task.filePath !== targetFilePath ? [task.filePath, targetFilePath] : [targetFilePath]
+    vcs.commitFile(filesToCommit, commitMsg, cwd)
   }
 
   return ok({

@@ -85,7 +85,11 @@ export class NoopVcsProvider implements VersionControlProvider {
     return ok(undefined)
   }
 
-  commitFile(_filePath: string, _message: string, _cwd?: string): Result<void, VcsError> {
+  commitFile(
+    _filePaths: readonly string[],
+    _message: string,
+    _cwd?: string,
+  ): Result<void, VcsError> {
     return ok(undefined)
   }
 

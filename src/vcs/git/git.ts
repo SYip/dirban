@@ -364,10 +364,10 @@ export class GitVcsProvider implements VersionControlProvider {
     return checkGitWorkingTreeClean(ctx, options)
   }
 
-  commitFile(filePath: string, message: string, cwd?: string): Result<void, VcsError> {
+  commitFile(filePaths: readonly string[], message: string, cwd?: string): Result<void, VcsError> {
     const workingDir = cwd ?? process.cwd()
     const ctx = this.getContext(workingDir)
-    return commitSingleGitFile(ctx, filePath, message, workingDir)
+    return commitSingleGitFile(ctx, filePaths, message, workingDir)
   }
 
   autoMergeAndCleanup(options: {
