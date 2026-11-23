@@ -205,4 +205,46 @@ describe("Done Task Operations (doneTask)", () => {
       fs.rmSync(tempDir, { recursive: true, force: true })
     }
   })
+
+  it("Vector 8: Halts auto-merge doneTask from inside a linked worktree, but allows --no-merge", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "dirban-done-wt-"))
+    try {
+      initializeBoard(DEFAULT_CONFIG, tempDir)
+      const board = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+      const task = createTask(board, {
+        title: "Worktree Guard Task",
+        column: "02-doing",
+      })._unsafeUnwrap()
+      const refreshed = discoverBoard(DEFAULT_CONFIG, tempDir)._unsafeUnwrap()
+
+      const mockWtVcs: VersionControlProvider = Object.assign(new NoopVcsProvider(), {
+        getContext: () => ({
+          isAvailable: true,
+          repoRoot: "/repo",
+          currentBranch: "task/26-001-wt",
+          isWorktree: true,
+        }),
+      })
+
+      const blockedRes = doneTask(refreshed, DEFAULT_CONFIG, task.id, {
+        cwd: tempDir,
+        vcsProvider: mockWtVcs,
+      })
+      expect(blockedRes.isErr()).toBe(true)
+      if (blockedRes.isErr()) {
+        expect(blockedRes.error.kind).toBe("GIT_ERROR")
+        expect(blockedRes.error.message).toContain("from inside a linked worktree")
+        expect(blockedRes.error.message).toContain("--no-merge")
+      }
+
+      const noMergeRes = doneTask(refreshed, DEFAULT_CONFIG, task.id, {
+        cwd: tempDir,
+        vcsProvider: mockWtVcs,
+        noMerge: true,
+      })
+      expect(noMergeRes.isOk()).toBe(true)
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
 })

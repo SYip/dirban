@@ -52,6 +52,11 @@ export interface WorkspaceLifecycleStrategy {
     ctx: WorkspaceLifecycleContext,
     options?: WorkspaceStartOptions,
   ): Result<WorkspaceStartResult, WorkspaceStartError>
+  readonly validateDone?: (
+    task: BoardTask,
+    ctx: WorkspaceLifecycleContext,
+    options?: WorkspaceDoneOptions,
+  ) => Result<void, WorkspaceDoneError>
   onDone(
     task: BoardTask,
     ctx: WorkspaceLifecycleContext,
