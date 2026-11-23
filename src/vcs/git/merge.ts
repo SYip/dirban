@@ -175,9 +175,11 @@ export const mergeWorktreeAndCleanup = (
     stdio: ["pipe", "pipe", "pipe"],
   })
 
-  if (strategy === "rebase" || strategy === "squash") {
-    spawnSync("git", ["branch", "-D", options.taskBranch], { cwd: repoRoot, stdio: "ignore" })
-  }
+  const branchDeleteFlag = strategy === "squash" ? "-D" : "-d"
+  spawnSync("git", ["branch", branchDeleteFlag, options.taskBranch], {
+    cwd: repoRoot,
+    stdio: "ignore",
+  })
 
   return ok({ worktreeRemoved: removeResult.status === 0 })
 }

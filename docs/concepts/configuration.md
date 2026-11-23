@@ -40,7 +40,8 @@ To customize column names, paths, priority tiers, or Git branching strategies, a
   "defaultPriority": "p2",
   "branchStrategy": "checkout",
   "branchPrefix": "task/",
-  "autoMerge": true
+  "autoMerge": true,
+  "mergeStrategy": "merge"
 }
 ```
 
@@ -55,7 +56,8 @@ To customize column names, paths, priority tiers, or Git branching strategies, a
 | `defaultPriority` | `string` | `"p2"` | Fallback priority assigned to tasks without an explicit priority. |
 | `branchStrategy` | `"checkout" \| "worktree" \| "none"` | `"checkout"` | Workspace strategy when starting a task (`checkout` branch, separate `worktree`, or `none`). |
 | `branchPrefix` | `string` | `"task/"` | Prefix applied to Git task branches (e.g., `task/26-001-slug`). |
-| `autoMerge` | `boolean` | `true` | Automatically squash and merge the task branch into base branch upon `dirban done`. |
+| `autoMerge` | `boolean` | `true` | Automatically integrate the task branch into base branch upon `dirban done`. |
+| `mergeStrategy` | `"merge" \| "squash" \| "rebase"` | `"merge"` | Git integration strategy on `dirban done` (overridable via `--squash` or `--rebase`). |
 
 ---
 

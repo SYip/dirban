@@ -63,6 +63,7 @@ In `.dirban.json`, Git automation behavior can be customized:
 {
   "baseBranch": "main",
   "autoMerge": true,
+  "mergeStrategy": "merge",
   "vcsStrategy": "branch"
 }
 ```
@@ -70,4 +71,8 @@ In `.dirban.json`, Git automation behavior can be customized:
 - **`baseBranch: "main"` (default)**: The primary trunk branch for task branch creation and auto-merge (can be customized, e.g. `"master"` or `"trunk"`; see planned task [26-028](file:///Users/andrew/Projects/dirban/docs/tasks/backlog/26-028-make-base-branch-configurable-via-config-and-cli-options.md)).
 - **`autoMerge: true` (default)**: Integrates directly into trunk on task completion.
 - **`autoMerge: false`**: Retains the task branch on completion for code review / PR workflows. Can be forced per-run via `dirban done --merge`.
+- **`mergeStrategy`**: Controls how `dirban done` integrates the task branch into `main`:
+  - `"merge"` (default): Standard `git merge --no-ff` merge commit.
+  - `"squash"` (`dirban done --squash`): Squashes all task branch commits into a single atomic commit on `main`.
+  - `"rebase"` (`dirban done --rebase`): Rebases the task branch onto `main` and fast-forwards (`git merge --ff-only`).
 - **`vcsStrategy: "worktree"`**: Isolates task execution into a separate Git worktree under `.worktrees/` rather than switching branches in-place.
