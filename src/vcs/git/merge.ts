@@ -134,6 +134,26 @@ export const mergeWorktreeAndCleanup = (
   options: MergeBranchOptions,
   strategy: MergeStrategy,
 ): Result<{ readonly worktreeRemoved: boolean }, VcsError> => {
+  const headRes = spawnSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+    cwd: repoRoot,
+    encoding: "utf-8",
+    stdio: ["pipe", "pipe", "pipe"],
+  })
+  const currentBranch = headRes.stdout?.trim()
+  if (currentBranch !== options.baseBranch) {
+    const checkoutBase = spawnSync("git", ["checkout", options.baseBranch], {
+      cwd: repoRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    })
+    if (checkoutBase.status !== 0) {
+      return err({
+        kind: "COMMAND_ERROR",
+        message: `Failed to checkout ${options.baseBranch} in ${repoRoot}: ${checkoutBase.stderr.trim()}`,
+      })
+    }
+  }
+
   if (strategy === "rebase") {
     const rebaseRes = spawnSync("git", ["rebase", options.baseBranch], {
       cwd,
