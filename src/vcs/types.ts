@@ -1,4 +1,5 @@
 import type { Result } from "neverthrow"
+import type { MergeStrategy } from "../config/types.ts"
 
 export type VcsError =
   | { readonly kind: "VCS_NOT_AVAILABLE"; readonly message: string }
@@ -50,5 +51,6 @@ export interface VersionControlProvider {
     readonly isWorktree: boolean
     readonly cwd?: string
     readonly commitMessage?: string
+    readonly mergeStrategy?: MergeStrategy
   }): Result<{ readonly worktreeRemoved: boolean }, VcsError>
 }

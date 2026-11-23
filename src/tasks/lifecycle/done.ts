@@ -9,7 +9,7 @@ import {
   resolveNextColumn,
   resolvePreviousColumn,
 } from "../../config/config.ts"
-import type { DirbanConfig } from "../../config/types.ts"
+import type { DirbanConfig, MergeStrategy } from "../../config/types.ts"
 import { getVcsProvider, type VersionControlProvider } from "../../vcs/index.ts"
 import {
   detectWorkspaceDoneStrategy,
@@ -53,6 +53,7 @@ export interface DoneTaskOptions {
   readonly strategy?: LifecycleStrategyType
   readonly noGit?: boolean
   readonly noMerge?: boolean
+  readonly mergeStrategy?: MergeStrategy
   readonly workspaceStrategy?: WorkspaceLifecycleStrategy
 }
 

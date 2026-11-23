@@ -107,6 +107,7 @@ export class GitBranchStrategy implements WorkspaceLifecycleStrategy {
       isWorktree: false,
       cwd: ctx.cwd,
       commitMessage,
+      mergeStrategy: options?.mergeStrategy ?? ctx.config.mergeStrategy,
     })
 
     if (mergeResult.isErr()) {

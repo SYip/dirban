@@ -3,6 +3,7 @@ import pc from "picocolors"
 import { discoverBoard } from "../../board/discovery.ts"
 import { logError, logTip, logWarning, toRelativePath } from "../../cli/formatters.ts"
 import type { CommandDefinition, CommandHandler, CommandParser } from "../../cli/types.ts"
+import type { MergeStrategy } from "../../config/types.ts"
 import type { LifecycleStrategyType } from "../../workspace/types.ts"
 import { type DoneTaskError, doneTask } from "./done.ts"
 
@@ -11,11 +12,15 @@ export interface DoneCommandParams {
   readonly strategy?: LifecycleStrategyType
   readonly noGit?: boolean
   readonly noMerge?: boolean
+  readonly mergeStrategy?: MergeStrategy
 }
 
 export const parseDone: CommandParser<DoneCommandParams> = (ctx) => {
   if (ctx.flags.merge && ctx.flags["no-merge"]) {
     return err({ message: "Cannot specify both --merge and --no-merge." })
+  }
+  if (ctx.flags.squash && ctx.flags.rebase) {
+    return err({ message: "Cannot specify both --squash and --rebase." })
   }
 
   const taskId = ctx.positionals[1]
@@ -36,12 +41,21 @@ export const parseDone: CommandParser<DoneCommandParams> = (ctx) => {
 
   const noGit = ctx.flags["no-git"]
   const noMerge = ctx.flags.merge === true ? false : ctx.flags["no-merge"]
+  let mergeStrategy: MergeStrategy | undefined
+  if (ctx.flags.squash === true) {
+    mergeStrategy = "squash"
+  } else if (ctx.flags.rebase === true) {
+    mergeStrategy = "rebase"
+  } else if (ctx.flags.merge === true) {
+    mergeStrategy = "merge"
+  }
 
   return ok({
     taskId,
     strategy,
     noGit,
     noMerge,
+    mergeStrategy,
   })
 }
 
@@ -81,6 +95,7 @@ export const handleDone: CommandHandler = (ctx) => {
     strategy: params.strategy,
     noGit: params.noGit,
     noMerge: params.noMerge,
+    mergeStrategy: params.mergeStrategy,
   })
   if (doneRes.isErr()) {
     printDoneError(doneRes.error)
@@ -125,6 +140,14 @@ export const doneCommand: CommandDefinition = {
     {
       flag: "--merge",
       description: "Force merge into base branch even if autoMerge is disabled in config",
+    },
+    {
+      flag: "--squash",
+      description: "Squash task branch commits into a single commit on base branch",
+    },
+    {
+      flag: "--rebase",
+      description: "Rebase task branch onto base branch and fast-forward",
     },
     {
       flag: "--no-merge",

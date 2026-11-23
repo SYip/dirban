@@ -1,5 +1,6 @@
 import * as path from "node:path"
 import { err, ok, type Result } from "neverthrow"
+import type { MergeStrategy } from "../config/types.ts"
 import { SLUG_CLEANUP_REGEX, SLUG_TRIM_HYPHENS_REGEX } from "./git/index.ts"
 import type { VcsContext, VcsError, VersionControlProvider, WorktreeEntry } from "./types.ts"
 
@@ -99,6 +100,7 @@ export class NoopVcsProvider implements VersionControlProvider {
     readonly isWorktree: boolean
     readonly cwd?: string
     readonly commitMessage?: string
+    readonly mergeStrategy?: MergeStrategy
   }): Result<{ readonly worktreeRemoved: boolean }, VcsError> {
     return err({
       kind: "VCS_NOT_AVAILABLE",

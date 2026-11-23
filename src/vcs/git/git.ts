@@ -2,8 +2,10 @@ import { spawnSync } from "node:child_process"
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { err, ok, type Result } from "neverthrow"
+import type { MergeStrategy } from "../../config/types.ts"
 import type { VcsContext, VcsError, VersionControlProvider, WorktreeEntry } from "../types.ts"
 import { commitSingleGitFile } from "./commit.ts"
+import { mergeInPlaceBranch, mergeWorktreeAndCleanup } from "./merge.ts"
 import { checkGitWorkingTreeClean } from "./status.ts"
 
 export const TASK_ID_EXTRACT_REGEX = /(?:^|\/)(?:task\/)?([0-9]{2}-[0-9]+)(?:-[^/]*)?$/
@@ -376,6 +378,7 @@ export class GitVcsProvider implements VersionControlProvider {
     readonly isWorktree: boolean
     readonly cwd?: string
     readonly commitMessage?: string
+    readonly mergeStrategy?: MergeStrategy
   }): Result<{ readonly worktreeRemoved: boolean }, VcsError> {
     const cwd = options.cwd ?? process.cwd()
     const ctx = this.getContext(cwd)
@@ -404,68 +407,12 @@ export class GitVcsProvider implements VersionControlProvider {
       })
     }
 
+    const strategy = options.mergeStrategy ?? "merge"
+
     if (options.isWorktree) {
-      const mergeResult = spawnSync(
-        "git",
-        [
-          "merge",
-          "--no-ff",
-          "-m",
-          `Merge branch '${options.taskBranch}' into ${options.baseBranch}`,
-          options.taskBranch,
-        ],
-        { cwd: repoRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
-      )
-
-      if (mergeResult.status !== 0) {
-        return err({
-          kind: "MERGE_ERROR",
-          message: `Failed to merge ${options.taskBranch} into ${options.baseBranch}: ${mergeResult.stderr.trim()}`,
-        })
-      }
-
-      const removeResult = spawnSync("git", ["worktree", "remove", cwd], {
-        cwd: repoRoot,
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-      })
-
-      return ok({ worktreeRemoved: removeResult.status === 0 })
+      return mergeWorktreeAndCleanup(repoRoot, cwd, options, strategy)
     }
 
-    // Standard in-place branch checkout & merge
-    const checkoutBase = spawnSync("git", ["checkout", options.baseBranch], {
-      cwd: repoRoot,
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "pipe"],
-    })
-
-    if (checkoutBase.status !== 0) {
-      return err({
-        kind: "COMMAND_ERROR",
-        message: `Failed to checkout ${options.baseBranch}: ${checkoutBase.stderr.trim()}`,
-      })
-    }
-
-    const mergeResult = spawnSync(
-      "git",
-      [
-        "merge",
-        "--no-ff",
-        "-m",
-        `Merge branch '${options.taskBranch}' into ${options.baseBranch}`,
-        options.taskBranch,
-      ],
-      { cwd: repoRoot, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
-    )
-
-    if (mergeResult.status !== 0) {
-      return err({
-        kind: "MERGE_ERROR",
-        message: `Failed to merge ${options.taskBranch} into ${options.baseBranch}: ${mergeResult.stderr.trim()}`,
-      })
-    }
-
-    return ok({ worktreeRemoved: false })
+    return mergeInPlaceBranch(repoRoot, options, strategy)
   }
 }

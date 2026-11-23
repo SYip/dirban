@@ -125,6 +125,7 @@ export class GitWorktreeStrategy implements WorkspaceLifecycleStrategy {
       isWorktree: ctx.vcsCtx.isWorktree ?? false,
       cwd: ctx.cwd,
       commitMessage,
+      mergeStrategy: options?.mergeStrategy ?? ctx.config.mergeStrategy,
     })
 
     if (mergeResult.isErr()) {

@@ -3,6 +3,8 @@ import type { Result } from "neverthrow"
 import type { DirbanConfig } from "../config/types.ts"
 
 export interface CliFlags {
+  readonly squash?: boolean
+  readonly rebase?: boolean
   readonly help?: boolean
   readonly version?: boolean
   readonly static?: boolean
