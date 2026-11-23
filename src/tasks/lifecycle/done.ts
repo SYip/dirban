@@ -64,6 +64,38 @@ export const countUncheckedCriteria = (task: BoardTask): number => {
   return task.document.acceptanceCriteria.filter((item) => !item.checked).length
 }
 
+const transitionCompletedTaskFile = (
+  board: Board,
+  config: DirbanConfig,
+  taskToDone: BoardTask,
+  focusColName: string | null,
+  cwd: string,
+): Result<BoardTask, DoneTaskError> => {
+  if (focusColName == null) {
+    const archiveResult = archiveTasks(
+      board,
+      config,
+      taskToDone.document.id ?? taskToDone.filename,
+      cwd,
+    )
+    if (archiveResult.isErr()) {
+      return err({ kind: "MOVE_ERROR", message: archiveResult.error.message })
+    }
+    return ok(archiveResult.value.archivedTasks[0] ?? taskToDone)
+  }
+
+  const targetColName = resolveNextColumn(config, focusColName)
+  if (taskToDone.column === targetColName) {
+    return ok(taskToDone)
+  }
+
+  const moveResult = moveTask(board, taskToDone.document.id ?? taskToDone.filename, targetColName)
+  if (moveResult.isErr()) {
+    return err({ kind: "MOVE_ERROR", message: moveResult.error.message })
+  }
+  return ok(moveResult.value)
+}
+
 export const doneTask = (
   board: Board,
   config: DirbanConfig,
@@ -149,52 +181,22 @@ export const doneTask = (
   // 2. Count unchecked acceptance criteria
   const uncheckedCount = countUncheckedCriteria(taskToDone)
 
-  // 3. Transition completed task file:
-  // If no columns are configured, transition directly to flat archive
-  let updatedTask: BoardTask = taskToDone
-
-  if (focusColName == null) {
-    const archiveResult = archiveTasks(
-      board,
-      config,
-      taskToDone.document.id ?? taskToDone.filename,
-      cwd,
-    )
-    if (archiveResult.isErr()) {
-      return err({
-        kind: "MOVE_ERROR",
-        message: archiveResult.error.message,
-      })
-    }
-    const archivedTask = archiveResult.value.archivedTasks[0]
-    if (archivedTask != null) {
-      updatedTask = archivedTask
-    }
-  } else {
-    // Transition to relative next column (focus + 1, e.g. 03-done or test)
-    const targetColName = resolveNextColumn(config, focusColName)
-    if (taskToDone.column !== targetColName) {
-      const moveResult = moveTask(
-        board,
-        taskToDone.document.id ?? taskToDone.filename,
-        targetColName,
-      )
-      if (moveResult.isErr()) {
-        return err({
-          kind: "MOVE_ERROR",
-          message: moveResult.error.message,
-        })
-      }
-      updatedTask = moveResult.value
-    }
-  }
-
-  // 4. VCS branch & worktree auto-merge delegated to lifecycle strategy (with automatic runtime detection)
+  // 3. Resolve workspace strategy and validate before moving files on disk
   const vcsCtx = vcs.getContext(cwd)
   const strategy =
     options?.workspaceStrategy
-    ?? detectWorkspaceDoneStrategy(updatedTask, options, vcsCtx, vcs, config, cwd)
+    ?? detectWorkspaceDoneStrategy(taskToDone, options, vcsCtx, vcs, config, cwd)
   const workspaceCtx = { vcs, vcsCtx, config, cwd }
+
+  const validateRes = strategy.validateDone?.(taskToDone, workspaceCtx, options)
+  if (validateRes?.isErr()) {
+    return err({ kind: "GIT_ERROR", message: validateRes.error.message })
+  }
+
+  // 4. Transition completed task file
+  const transitionRes = transitionCompletedTaskFile(board, config, taskToDone, focusColName, cwd)
+  if (transitionRes.isErr()) return err(transitionRes.error)
+  const updatedTask = transitionRes.value
 
   const doneResult = strategy.onDone(updatedTask, workspaceCtx, options)
   if (doneResult.isErr()) {

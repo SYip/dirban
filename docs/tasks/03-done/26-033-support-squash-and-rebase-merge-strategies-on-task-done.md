@@ -55,9 +55,9 @@ We should introduce configurable Git integration strategies (`squash`, `rebase`,
    - Mocked/unit tests verifying git CLI invocations for `squash`, `rebase`, and standard `merge`.
 
 ## Acceptance Criteria
-- [ ] `DirbanConfig` accepts `mergeStrategy` with `"squash" | "rebase" | "merge"`.
-- [ ] `dirban done --squash` integrates changes as a single squashed commit into base branch.
-- [ ] `dirban done --rebase` rebases task branch onto base branch and fast-forwards.
-- [ ] Automatic fallback and clean error propagation if rebase or merge conflicts occur.
-- [ ] Unit and vector tests pass in `src/workspace/strategy.test.ts`.
-- [ ] Documentation updated in `docs/concepts/git-workflow.md` and `docs/concepts/configuration.md`.
+- [x] `DirbanConfig` accepts `mergeStrategy` with `"squash" | "rebase" | "merge"`.
+- [x] `dirban done --squash` integrates changes as a single squashed commit into base branch.
+- [x] `dirban done --rebase` rebases task branch onto base branch and fast-forwards.
+- [x] Automatic fallback and clean error propagation if rebase or merge conflicts occur.
+- [x] Unit and vector tests pass in `src/workspace/strategy.test.ts`.
+- [x] Documentation updated in `docs/concepts/git-workflow.md` and `docs/concepts/configuration.md`.

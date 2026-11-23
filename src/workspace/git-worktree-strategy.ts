@@ -75,6 +75,24 @@ export class GitWorktreeStrategy implements WorkspaceLifecycleStrategy {
     })
   }
 
+  validateDone(
+    task: BoardTask,
+    ctx: WorkspaceLifecycleContext,
+    options?: WorkspaceDoneOptions,
+  ): Result<void, WorkspaceDoneError> {
+    const willMerge =
+      options?.noMerge !== undefined ? !options.noMerge : ctx.config.autoMerge !== false
+    if (ctx.vcsCtx.isWorktree && willMerge) {
+      const displayId = task.document.id ?? task.filename
+      const mainRepo = ctx.vcsCtx.repoRoot ?? "the main repository"
+      return err({
+        kind: "GIT_ERROR",
+        message: `Cannot run 'dirban done' with auto-merge from inside a linked worktree. Run 'dirban done ${displayId}' from ${mainRepo} instead, or pass --no-merge.`,
+      })
+    }
+    return ok(undefined)
+  }
+
   onDone(
     task: BoardTask,
     ctx: WorkspaceLifecycleContext,

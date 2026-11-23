@@ -166,7 +166,9 @@ describe("Git Merge & Integration Strategies (src/vcs/git/merge.ts)", () => {
     }
     expect(fs.existsSync(wtDir)).toBe(false)
     expect(git(["rev-list", "--count", "main"], repoDir)).toBe("2")
-    expect(git(["log", "-1", "--pretty=%s", "main"], repoDir)).toBe("feat: 26-006 worktree squashed")
+    expect(git(["log", "-1", "--pretty=%s", "main"], repoDir)).toBe(
+      "feat: 26-006 worktree squashed",
+    )
     expect(git(["branch", "--list", "task/26-006-wt-squash"], repoDir)).toBe("")
   })
 })
