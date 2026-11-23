@@ -59,7 +59,8 @@ import { assertWorkingTreeClean, isVcsOperationSkipped } from "./guard.ts"
 const commitStartMoveToTarget = (
   vcs: VersionControlProvider,
   vcsCtx: { readonly isAvailable: boolean },
-  filePath: string,
+  oldFilePath: string,
+  newFilePath: string,
   displayId: string,
   title: string | undefined,
   cwd: string,
@@ -72,7 +73,8 @@ const commitStartMoveToTarget = (
 
   const taskTitle = title ?? displayId
   const commitMsg = `chore(task): start ${displayId} ${taskTitle}`.trim()
-  const commitRes = vcs.commitFile(filePath, commitMsg, cwd)
+  const filesToCommit = oldFilePath !== newFilePath ? [oldFilePath, newFilePath] : [newFilePath]
+  const commitRes = vcs.commitFile(filesToCommit, commitMsg, cwd)
 
   if (commitRes.isErr()) {
     return err({
@@ -180,6 +182,7 @@ export const startTask = (
   const commitRes = commitStartMoveToTarget(
     vcs,
     vcsCtx,
+    task.filePath,
     updatedTask.filePath,
     displayId,
     task.document.frontmatter.title ?? task.document.id,

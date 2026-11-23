@@ -8,7 +8,7 @@ import type { VcsContext, VcsError } from "../types.ts"
  */
 export const commitSingleGitFile = (
   context: VcsContext,
-  filePath: string,
+  filePaths: readonly string[],
   message: string,
   cwd: string = process.cwd(),
 ): Result<void, VcsError> => {
@@ -16,8 +16,12 @@ export const commitSingleGitFile = (
     return ok(undefined)
   }
 
+  if (filePaths.length === 0) {
+    return ok(undefined)
+  }
+
   try {
-    const addRes = spawnSync("git", ["add", filePath], {
+    const addRes = spawnSync("git", ["add", "--", ...filePaths], {
       cwd,
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
@@ -26,11 +30,11 @@ export const commitSingleGitFile = (
     if (addRes.status !== 0) {
       return err({
         kind: "COMMAND_ERROR",
-        message: `Failed to stage file '${filePath}': ${addRes.stderr.trim()}`,
+        message: `Failed to stage file(s) '${filePaths.join(", ")}': ${addRes.stderr.trim()}`,
       })
     }
 
-    const commitRes = spawnSync("git", ["commit", "-m", message, "--", filePath], {
+    const commitRes = spawnSync("git", ["commit", "-m", message, "--", ...filePaths], {
       cwd,
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
@@ -39,7 +43,7 @@ export const commitSingleGitFile = (
     if (commitRes.status !== 0) {
       return err({
         kind: "COMMAND_ERROR",
-        message: `Failed to commit file '${filePath}': ${commitRes.stderr.trim()}`,
+        message: `Failed to commit file(s) '${filePaths.join(", ")}': ${commitRes.stderr.trim()}`,
       })
     }
 

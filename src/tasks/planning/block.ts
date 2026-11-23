@@ -224,7 +224,8 @@ const syncBlockedTaskToRoot = (
       fs.unlinkSync(rootOldPath)
     }
     const commitMsg = `chore(task): block ${effectiveId} (${blockers.join(", ")})`
-    vcs.commitFile(rootTarget, commitMsg, repoRoot)
+    const filesToCommit = rootOldPath !== rootTarget ? [rootOldPath, rootTarget] : [rootTarget]
+    vcs.commitFile(filesToCommit, commitMsg, repoRoot)
   } catch {
     // Non-fatal if target sync fails gracefully
   }
